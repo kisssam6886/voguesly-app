@@ -1,5 +1,7 @@
 # Rules
 
+These are repository coding and testing conventions. Codex command permission rules belong in `.codex/rules/*.rules`; see `.agents/agent-config.md` before adding those.
+
 ## Dart and Flutter Style
 
 `analysis_options.yaml` enforces these non-default rules:
