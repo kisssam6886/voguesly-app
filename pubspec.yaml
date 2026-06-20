@@ -34,6 +34,7 @@ dependencies:
     git:
       url: https://github.com/chen08209/tray_manager.git
       ref: main
+      path: packages/tray_manager
   wifi_ssid:
     path: plugins/wifi_ssid
   collection: ^1.19.1
