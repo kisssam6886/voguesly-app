@@ -44,12 +44,21 @@ class VogueslyAuthNotifier extends Notifier<VogueslyAuthState> {
   VogueslyApi get _api => ref.read(vogueslyApiProvider);
 
   /// 登录: 成功后存令牌 + 拉套餐, 状态变 loggedIn。
-  Future<bool> login(String email, String password) async {
+  Future<bool> login(String email, String password) =>
+      _authenticate(() => _api.login(email: email, password: password));
+
+  /// 注册(XBoard 注册即自动登录)。
+  Future<bool> register(String email, String password) =>
+      _authenticate(() => _api.register(email: email, password: password));
+
+  Future<bool> _authenticate(
+    Future<VogueslyAuthResult> Function() call,
+  ) async {
     state = state.copyWith(
       status: VogueslyAuthStatus.loggingIn,
       clearError: true,
     );
-    final result = await _api.login(email: email.trim(), password: password);
+    final result = await call();
     if (!result.ok) {
       state = state.copyWith(
         status: VogueslyAuthStatus.loggedOut,

@@ -20,28 +20,43 @@ class VogueslyApi {
   Future<VogueslyAuthResult> login({
     required String email,
     required String password,
-  }) async {
+  }) =>
+      _postAuth('/passport/auth/login', email, password, '邮箱或密码错误');
+
+  /// 注册(XBoard 注册即自动登录, 同样返 auth_data)。只需邮箱+密码。
+  Future<VogueslyAuthResult> register({
+    required String email,
+    required String password,
+  }) =>
+      _postAuth('/passport/auth/register', email, password, '注册失败');
+
+  Future<VogueslyAuthResult> _postAuth(
+    String path,
+    String email,
+    String password,
+    String failMsg,
+  ) async {
     try {
       final resp = await _dio.post(
-        '/passport/auth/login',
-        data: {'email': email, 'password': password},
+        path,
+        data: {'email': email.trim(), 'password': password},
       );
       final body = resp.data as Map<String, dynamic>?;
       if (resp.statusCode == 200 && body?['data'] != null) {
         final data = body!['data'] as Map<String, dynamic>;
         final auth = (data['auth_data'] ?? data['token'])?.toString();
         if (auth == null || auth.isEmpty) {
-          return VogueslyAuthResult.error('登录返回为空, 请重试');
+          return VogueslyAuthResult.error('返回为空, 请重试');
         }
         return VogueslyAuthResult.success(auth);
       }
       return VogueslyAuthResult.error(
-        body?['message']?.toString() ?? '邮箱或密码错误',
+        body?['message']?.toString() ?? failMsg,
       );
     } on DioException catch (e) {
       return VogueslyAuthResult.error('网络异常: ${e.message ?? e.type.name}');
     } catch (e) {
-      return VogueslyAuthResult.error('登录失败: $e');
+      return VogueslyAuthResult.error('$failMsg: $e');
     }
   }
 

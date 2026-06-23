@@ -15,6 +15,7 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   bool _obscure = true;
+  bool _registerMode = false;
 
   @override
   void dispose() {
@@ -26,11 +27,13 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     FocusScope.of(context).unfocus();
-    final ok = await ref
-        .read(vogueslyAuthProvider.notifier)
-        .login(_email.text, _password.text);
+    final notifier = ref.read(vogueslyAuthProvider.notifier);
+    final ok = _registerMode
+        ? await notifier.register(_email.text, _password.text)
+        : await notifier.login(_email.text, _password.text);
     if (!ok && mounted) {
-      final err = ref.read(vogueslyAuthProvider).error ?? '登录失败';
+      final err = ref.read(vogueslyAuthProvider).error ??
+          (_registerMode ? '注册失败' : '登录失败');
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(SnackBar(content: Text(err)));
@@ -70,7 +73,7 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '登录账号 · 一键连接',
+                      _registerMode ? '注册账号 · 一键连接' : '登录账号 · 一键连接',
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium
                           ?.copyWith(color: theme.colorScheme.outline),
@@ -123,20 +126,17 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
                               width: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text('登 录'),
+                          : Text(_registerMode ? '注 册' : '登 录'),
                     ),
                     const SizedBox(height: 12),
                     TextButton(
                       onPressed: loading
                           ? null
-                          : () {
-                              ScaffoldMessenger.of(context)
-                                ..hideCurrentSnackBar()
-                                ..showSnackBar(const SnackBar(
-                                  content: Text('请前往 voguesly.com 注册账号'),
-                                ));
-                            },
-                      child: const Text('还没账号? 前往 voguesly.com 注册'),
+                          : () => setState(
+                              () => _registerMode = !_registerMode),
+                      child: Text(
+                        _registerMode ? '已有账号? 去登录' : '还没账号? 注册',
+                      ),
                     ),
                   ],
                 ),
