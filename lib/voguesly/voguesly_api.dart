@@ -27,20 +27,32 @@ class VogueslyApi {
   Future<VogueslyAuthResult> register({
     required String email,
     required String password,
+    String? inviteCode,
   }) =>
-      _postAuth('/passport/auth/register', email, password, '注册失败');
+      _postAuth(
+        '/passport/auth/register',
+        email,
+        password,
+        '注册失败',
+        extra: (inviteCode != null && inviteCode.trim().isNotEmpty)
+            ? {'invite_code': inviteCode.trim()}
+            : null,
+      );
 
   Future<VogueslyAuthResult> _postAuth(
     String path,
     String email,
     String password,
-    String failMsg,
-  ) async {
+    String failMsg, {
+    Map<String, dynamic>? extra,
+  }) async {
     try {
-      final resp = await _dio.post(
-        path,
-        data: {'email': email.trim(), 'password': password},
-      );
+      final data = <String, dynamic>{
+        'email': email.trim(),
+        'password': password,
+      };
+      if (extra != null) data.addAll(extra);
+      final resp = await _dio.post(path, data: data);
       final body = resp.data as Map<String, dynamic>?;
       if (resp.statusCode == 200 && body?['data'] != null) {
         final data = body!['data'] as Map<String, dynamic>;

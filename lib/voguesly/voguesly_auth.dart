@@ -48,8 +48,14 @@ class VogueslyAuthNotifier extends Notifier<VogueslyAuthState> {
       _authenticate(() => _api.login(email: email, password: password));
 
   /// 注册(XBoard 注册即自动登录)。
-  Future<bool> register(String email, String password) =>
-      _authenticate(() => _api.register(email: email, password: password));
+  Future<bool> register(String email, String password, [String? inviteCode]) =>
+      _authenticate(
+        () => _api.register(
+          email: email,
+          password: password,
+          inviteCode: inviteCode,
+        ),
+      );
 
   Future<bool> _authenticate(
     Future<VogueslyAuthResult> Function() call,

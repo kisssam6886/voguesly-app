@@ -14,6 +14,7 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
+  final _inviteCode = TextEditingController();
   bool _obscure = true;
   bool _registerMode = false;
 
@@ -21,6 +22,7 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
   void dispose() {
     _email.dispose();
     _password.dispose();
+    _inviteCode.dispose();
     super.dispose();
   }
 
@@ -29,7 +31,7 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
     FocusScope.of(context).unfocus();
     final notifier = ref.read(vogueslyAuthProvider.notifier);
     final ok = _registerMode
-        ? await notifier.register(_email.text, _password.text)
+        ? await notifier.register(_email.text, _password.text, _inviteCode.text)
         : await notifier.login(_email.text, _password.text);
     if (!ok && mounted) {
       final err = ref.read(vogueslyAuthProvider).error ??
@@ -114,6 +116,21 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
                           (v == null || v.isEmpty) ? '请输入密码' : null,
                       onFieldSubmitted: (_) => _submit(),
                     ),
+                    if (_registerMode) ...[
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _inviteCode,
+                        enabled: !loading,
+                        textInputAction: TextInputAction.done,
+                        decoration: const InputDecoration(
+                          labelText: '邀请码（选填）',
+                          prefixIcon: Icon(Icons.card_giftcard),
+                          border: OutlineInputBorder(),
+                          helperText: '填邀请码注册有优惠',
+                        ),
+                        onFieldSubmitted: (_) => _submit(),
+                      ),
+                    ],
                     const SizedBox(height: 24),
                     FilledButton(
                       onPressed: loading ? null : _submit,
