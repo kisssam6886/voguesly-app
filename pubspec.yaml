@@ -98,6 +98,14 @@ dev_dependencies:
   intl_utils: ^2.8.14
   test: ^1.30.0
   mocktail: ^1.0.4
+  flutter_launcher_icons: ^0.14.1
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/images/icon.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/icon.png"
 
 flutter:
   uses-material-design: true

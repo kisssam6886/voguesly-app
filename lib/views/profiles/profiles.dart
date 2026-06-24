@@ -4,6 +4,7 @@ import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/views/profiles/overwrite/overwrite.dart';
+import 'package:fl_clash/voguesly/voguesly_auth.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -114,6 +115,26 @@ class _ProfilesViewState extends State<ProfilesView> {
     );
   }
 
+  Future<void> _handleLogout(WidgetRef ref) async {
+    final res = await globalState.showMessage(
+      title: '登出账号',
+      message: const TextSpan(text: '确定登出当前账号？登出后需要重新登录。'),
+    );
+    if (res != true) return;
+    // 清走当前账号导入的订阅，避免登出后或换账号仍用旧订阅
+    final action = ref.read(profilesActionProvider.notifier);
+    final ids = ref
+        .read(profilesProvider)
+        .where((p) => p.url.contains('voguesly'))
+        .map((p) => p.id)
+        .toList();
+    for (final id in ids) {
+      await action.deleteProfile(id);
+    }
+    // 清账号状态，VogueslyGate 会自动返回登录页
+    ref.read(vogueslyAuthProvider.notifier).logout();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer(
@@ -126,7 +147,14 @@ class _ProfilesViewState extends State<ProfilesView> {
           isLoading: isLoading,
           title: appLocalizations.profiles,
           floatingActionButton: _buildFAB(),
-          actions: _buildActions(state.profiles),
+          actions: [
+            ..._buildActions(state.profiles),
+            IconButton(
+              onPressed: () => _handleLogout(ref),
+              icon: const Icon(Icons.logout),
+              tooltip: '登出账号',
+            ),
+          ],
           body: state.profiles.isEmpty
               ? NullStatus(
                   label: appLocalizations.nullProfileDesc,

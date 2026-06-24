@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/list.dart';
@@ -9,31 +8,8 @@ import 'package:fl_clash/widgets/scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-@immutable
-class Contributor {
-  final String avatar;
-  final String name;
-  final String link;
-
-  const Contributor({
-    required this.avatar,
-    required this.name,
-    required this.link,
-  });
-}
-
 class AboutView extends StatelessWidget {
   const AboutView({super.key});
-
-  Future<void> _checkUpdate(BuildContext context) async {
-    final data = await globalState.safeRun<Map<String, dynamic>?>(
-      request.checkForUpdate,
-      title: context.appLocalizations.checkUpdate,
-    );
-    globalState.container
-        .read(commonActionProvider.notifier)
-        .checkUpdateResultHandle(data: data, isUser: true);
-  }
 
   List<Widget> _buildMoreSection(BuildContext context) {
     final appLocalizations = context.appLocalizations;
@@ -42,66 +18,18 @@ class AboutView extends StatelessWidget {
       title: appLocalizations.more,
       items: [
         ListItem(
-          title: Text(appLocalizations.checkUpdate),
+          title: const Text('Telegram 客服'),
           onTap: () {
-            _checkUpdate(context);
-          },
-        ),
-        ListItem(
-          title: const Text('Telegram'),
-          onTap: () {
-            globalState.openUrl('https://t.me/FlClash');
+            globalState.openUrl('https://t.me/easysvpn');
           },
           trailing: const Icon(Icons.launch),
         ),
         ListItem(
-          title: Text(appLocalizations.project),
+          title: const Text('官网'),
           onTap: () {
-            globalState.openUrl('https://github.com/$repository');
+            globalState.openUrl('https://voguesly.com');
           },
           trailing: const Icon(Icons.launch),
-        ),
-        ListItem(
-          title: Text(appLocalizations.core),
-          onTap: () {
-            globalState.openUrl(
-              'https://github.com/chen08209/Clash.Meta/tree/FlClash',
-            );
-          },
-          trailing: const Icon(Icons.launch),
-        ),
-      ],
-    );
-  }
-
-  List<Widget> _buildContributorsSection(AppLocalizations appLocalizations) {
-    const contributors = [
-      Contributor(
-        avatar: 'assets/images/avatar/june2.jpg',
-        name: 'June2',
-        link: 'https://t.me/Jibadong',
-      ),
-      Contributor(
-        avatar: 'assets/images/avatar/arue.jpg',
-        name: 'Arue',
-        link: 'https://t.me/xrcm6868',
-      ),
-    ];
-    return generateSection(
-      separated: false,
-      title: appLocalizations.otherContributors,
-      items: [
-        ListItem(
-          title: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Wrap(
-              spacing: 24,
-              children: [
-                for (final contributor in contributors)
-                  Avatar(contributor: contributor),
-              ],
-            ),
-          ),
         ),
       ],
     );
@@ -158,14 +86,13 @@ class AboutView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              appLocalizations.desc,
+              '易联 voguesly · 美国住宅 IP 代理\n稳定连接 ChatGPT、Claude、OKX 等全球服务',
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
         ),
       ),
       const SizedBox(height: 12),
-      ..._buildContributorsSection(appLocalizations),
       ..._buildMoreSection(context),
     ];
     return BaseScaffold(
@@ -174,34 +101,6 @@ class AboutView extends StatelessWidget {
         padding: kMaterialListPadding.copyWith(top: 16, bottom: 16),
         child: generateListView(items),
       ),
-    );
-  }
-}
-
-class Avatar extends StatelessWidget {
-  final Contributor contributor;
-
-  const Avatar({super.key, required this.contributor});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      child: Column(
-        children: [
-          SizedBox(
-            width: 36,
-            height: 36,
-            child: CircleAvatar(
-              foregroundImage: AssetImage(contributor.avatar),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(contributor.name, style: context.textTheme.bodySmall),
-        ],
-      ),
-      // onTap: () {
-      //   globalState.openUrl(contributor.link);
-      // },
     );
   }
 }

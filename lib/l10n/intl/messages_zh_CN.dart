@@ -454,7 +454,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "profileUrlNullValidationDesc": MessageLookupByLibrary.simpleMessage(
       "请输入配置URL",
     ),
-    "profiles": MessageLookupByLibrary.simpleMessage("配置"),
+    "profiles": MessageLookupByLibrary.simpleMessage("账号配置"),
     "profilesSort": MessageLookupByLibrary.simpleMessage("配置排序"),
     "project": MessageLookupByLibrary.simpleMessage("项目"),
     "providers": MessageLookupByLibrary.simpleMessage("提供者"),
