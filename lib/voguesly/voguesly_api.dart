@@ -1,13 +1,25 @@
 import 'package:dio/dio.dart';
 
+/// 易联 API 入口（主 + 中国可达 fallback 镜像，反代同一后端 cp.voguesly.com）。
+/// 主入口偶尔瞬断时自动轮下一个，保证登录 / 拉订阅高可用。
+/// 镜像走自签证书，靠 main.dart 的 HttpOverrides.global(FlClashHttpOverrides)
+/// 全局 badCertificateCallback=>true 接受，无需额外处理。
+const List<String> kVogueslyHosts = [
+  'https://cp.voguesly.com',
+  'https://s1.corelane.xyz',
+  'https://s2.corelane.xyz',
+  'https://s3.octolink.xyz',
+];
+
 /// 易联(voguesly) 后端 XBoard API 服务。
 /// 登录 -> auth_data(令牌, 后续放 Authorization 头) -> 拉套餐/订阅。
 class VogueslyApi {
-  VogueslyApi({String? baseUrl})
-      : _dio = Dio(
+  VogueslyApi({List<String>? hosts})
+      : _hosts = hosts ?? kVogueslyHosts,
+        _dio = Dio(
           BaseOptions(
-            baseUrl: baseUrl ?? 'https://cp.voguesly.com/api/v1',
-            connectTimeout: const Duration(seconds: 15),
+            // 调短连接超时, 主入口挂时尽快轮 fallback
+            connectTimeout: const Duration(seconds: 8),
             receiveTimeout: const Duration(seconds: 20),
             // XBoard 4xx 也返 JSON(含 message), 不要让 dio 直接抛
             validateStatus: (code) => code != null && code < 500,
@@ -15,6 +27,29 @@ class VogueslyApi {
         );
 
   final Dio _dio;
+  final List<String> _hosts;
+
+  /// 逐个入口尝试同一 /api/v1 请求, 第一个成功即返回; 全挂则抛最后错误。
+  Future<Response> _try(
+    String path, {
+    String method = 'GET',
+    Object? data,
+    Map<String, dynamic>? headers,
+  }) async {
+    Object? lastError;
+    for (final host in _hosts) {
+      try {
+        return await _dio.request(
+          '$host/api/v1$path',
+          data: data,
+          options: Options(method: method, headers: headers),
+        );
+      } catch (e) {
+        lastError = e;
+      }
+    }
+    throw lastError ?? Exception('所有入口均不可达');
+  }
 
   /// 登录, 成功返回 auth_data 令牌。
   Future<VogueslyAuthResult> login({
@@ -47,23 +82,23 @@ class VogueslyApi {
     Map<String, dynamic>? extra,
   }) async {
     try {
-      final data = <String, dynamic>{
+      final body = <String, dynamic>{
         'email': email.trim(),
         'password': password,
       };
-      if (extra != null) data.addAll(extra);
-      final resp = await _dio.post(path, data: data);
-      final body = resp.data as Map<String, dynamic>?;
-      if (resp.statusCode == 200 && body?['data'] != null) {
-        final data = body!['data'] as Map<String, dynamic>;
-        final auth = (data['auth_data'] ?? data['token'])?.toString();
+      if (extra != null) body.addAll(extra);
+      final resp = await _try(path, method: 'POST', data: body);
+      final json = resp.data as Map<String, dynamic>?;
+      if (resp.statusCode == 200 && json?['data'] != null) {
+        final d = json!['data'] as Map<String, dynamic>;
+        final auth = (d['auth_data'] ?? d['token'])?.toString();
         if (auth == null || auth.isEmpty) {
           return VogueslyAuthResult.error('返回为空, 请重试');
         }
         return VogueslyAuthResult.success(auth);
       }
       return VogueslyAuthResult.error(
-        body?['message']?.toString() ?? failMsg,
+        json?['message']?.toString() ?? failMsg,
       );
     } on DioException catch (e) {
       return VogueslyAuthResult.error('网络异常: ${e.message ?? e.type.name}');
@@ -72,11 +107,10 @@ class VogueslyApi {
     }
   }
 
-  Options _auth(String token) => Options(headers: {'Authorization': token});
-
   /// 拉订阅链接(Clash 订阅, 内含我们的智能分流规则)。
   Future<String?> getSubscribeUrl(String token) async {
-    final resp = await _dio.get('/user/getSubscribe', options: _auth(token));
+    final resp =
+        await _try('/user/getSubscribe', headers: {'Authorization': token});
     final data = (resp.data as Map<String, dynamic>?)?['data'];
     if (data is Map<String, dynamic>) {
       return data['subscribe_url']?.toString();
@@ -87,7 +121,7 @@ class VogueslyApi {
 
   /// 拉用户套餐/流量信息。
   Future<VogueslyUser?> getUserInfo(String token) async {
-    final resp = await _dio.get('/user/info', options: _auth(token));
+    final resp = await _try('/user/info', headers: {'Authorization': token});
     final data = (resp.data as Map<String, dynamic>?)?['data'];
     if (data is Map<String, dynamic>) {
       return VogueslyUser.fromJson(data);

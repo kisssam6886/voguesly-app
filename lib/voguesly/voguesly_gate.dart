@@ -29,22 +29,44 @@ class _VogueslyGateState extends ConsumerState<VogueslyGate> {
         await ref.read(vogueslyAuthProvider.notifier).fetchSubscribeUrl();
     if (!mounted || url == null || url.isEmpty) return;
     final action = ref.read(profilesActionProvider.notifier);
-    // 删走之前账号导入的 voguesly 订阅，避免新账号继续用紧旧账号订阅
+    // 删走之前账号导入的 voguesly 订阅（含 fallback 镜像域），避免新账号继续用旧订阅
     final staleIds = ref
         .read(profilesProvider)
-        .where((p) => p.url.contains('voguesly'))
+        .where((p) =>
+            p.url.contains('voguesly') ||
+            p.url.contains('corelane') ||
+            p.url.contains('octolink'))
         .map((p) => p.id)
         .toList();
     for (final id in staleIds) {
       await action.deleteProfile(id);
     }
     if (!mounted) return;
-    // 导入当前账号订阅
-    await action.addProfileFormURL(url);
-    if (!mounted) return;
+    // 导入当前账号订阅：主入口 cp + 3 个中国可达 fallback 镜像，逐个试，第一个成功即停。
+    // 主入口偶尔瞬断时自动 fallback，保证订阅 100% 拉到。
+    final uri = Uri.parse(url);
+    String? importedUrl;
+    for (final host in const [
+      'cp.voguesly.com',
+      's1.corelane.xyz',
+      's2.corelane.xyz',
+      's3.octolink.xyz',
+    ]) {
+      try {
+        final tryUrl = uri.replace(host: host).toString();
+        await action.addProfileFormURL(tryUrl);
+        importedUrl = tryUrl;
+        break;
+      } catch (_) {
+        // 此入口失败，试下一个
+      }
+    }
+    if (!mounted || importedUrl == null) return;
     // 强制把当前账号订阅设为活动 profile（防止旧 currentProfileId 残留）
-    final imported =
-        ref.read(profilesProvider).where((p) => p.url == url).toList();
+    final imported = ref
+        .read(profilesProvider)
+        .where((p) => p.url == importedUrl)
+        .toList();
     if (imported.isNotEmpty) {
       ref.read(currentProfileIdProvider.notifier).value = imported.last.id;
     }
