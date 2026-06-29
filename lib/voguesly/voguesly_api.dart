@@ -121,16 +121,22 @@ class VogueslyApi {
     return null;
   }
 
-  /// 拉用户套餐/流量信息。
-  Future<VogueslyUser?> getUserInfo(String token) async {
-    // 用 getSubscribe(有真 u/d/transfer_enable);/user/info 嘅 u/d 系 0
+  /// 一次 /user/getSubscribe 同时攞 用户套餐 + 订阅链接(慳一个 China→HK RT)。
+  /// getSubscribe 响应已含 u/d/transfer_enable/expired_at(套餐卡) 同 subscribe_url。
+  Future<({VogueslyUser? user, String? subscribeUrl})> getSubscribeBundle(
+    String token,
+  ) async {
     final resp =
         await _try('/user/getSubscribe', headers: {'Authorization': token});
     final data = (resp.data as Map<String, dynamic>?)?['data'];
     if (data is Map<String, dynamic>) {
-      return VogueslyUser.fromJson(data);
+      return (
+        user: VogueslyUser.fromJson(data),
+        subscribeUrl: data['subscribe_url']?.toString(),
+      );
     }
-    return null;
+    if (data is String) return (user: null, subscribeUrl: data);
+    return (user: null, subscribeUrl: null);
   }
 
   /// 探测某订阅 URL 是否可达(用于 fallback 选路)。

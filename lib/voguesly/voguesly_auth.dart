@@ -11,12 +11,14 @@ class VogueslyAuthState {
     this.status = VogueslyAuthStatus.loggedOut,
     this.token,
     this.user,
+    this.subscribeUrl,
     this.error,
   });
 
   final VogueslyAuthStatus status;
   final String? token;
   final VogueslyUser? user;
+  final String? subscribeUrl; // 登录时随套餐一齐攞,避免再 call 一次 getSubscribe
   final String? error;
 
   bool get isLoggedIn =>
@@ -26,6 +28,7 @@ class VogueslyAuthState {
     VogueslyAuthStatus? status,
     String? token,
     VogueslyUser? user,
+    String? subscribeUrl,
     String? error,
     bool clearError = false,
   }) =>
@@ -33,6 +36,7 @@ class VogueslyAuthState {
         status: status ?? this.status,
         token: token ?? this.token,
         user: user ?? this.user,
+        subscribeUrl: subscribeUrl ?? this.subscribeUrl,
         error: clearError ? null : (error ?? this.error),
       );
 }
@@ -74,29 +78,40 @@ class VogueslyAuthNotifier extends Notifier<VogueslyAuthState> {
     }
     final token = result.token!;
     VogueslyUser? user;
+    String? subscribeUrl;
     try {
-      user = await _api.getUserInfo(token);
+      final bundle = await _api.getSubscribeBundle(token);
+      user = bundle.user;
+      subscribeUrl = bundle.subscribeUrl;
     } catch (_) {}
     state = VogueslyAuthState(
       status: VogueslyAuthStatus.loggedIn,
       token: token,
       user: user,
+      subscribeUrl: subscribeUrl,
     );
     return true;
   }
 
-  /// 刷新套餐/流量。
+  /// 刷新套餐/流量(顺便更新订阅链接缓存)。
   Future<void> refreshUser() async {
     final token = state.token;
     if (token == null) return;
     try {
-      final user = await _api.getUserInfo(token);
-      if (user != null) state = state.copyWith(user: user);
+      final bundle = await _api.getSubscribeBundle(token);
+      if (bundle.user != null) {
+        state = state.copyWith(
+          user: bundle.user,
+          subscribeUrl: bundle.subscribeUrl,
+        );
+      }
     } catch (_) {}
   }
 
-  /// 拉订阅链接(供自动导入)。
+  /// 拉订阅链接(供自动导入)。登录时已随套餐缓存,直接用慳一个 RT。
   Future<String?> fetchSubscribeUrl() async {
+    final cached = state.subscribeUrl;
+    if (cached != null && cached.isNotEmpty) return cached;
     final token = state.token;
     if (token == null) return null;
     try {
