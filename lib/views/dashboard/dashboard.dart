@@ -232,10 +232,11 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
     final columns = max(4 * ((dashboardState.contentWidth / 280).ceil()), 8);
     final spacing = 14.mAp;
     final savedWidgets = dashboardState.dashboardWidgets;
-    final orderedWidgets =
-        savedWidgets.contains(DashboardWidget.vogueslyAccount)
-        ? savedWidgets
-        : [DashboardWidget.vogueslyAccount, ...savedWidgets];
+    // 账号卡强制置顶 + 去重(旧用户 config 可能已含但喺尾)
+    final orderedWidgets = [
+      DashboardWidget.vogueslyAccount,
+      ...savedWidgets.where((w) => w != DashboardWidget.vogueslyAccount),
+    ];
     final children = [
       ...orderedWidgets
           .where(
