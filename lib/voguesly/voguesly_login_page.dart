@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'voguesly_auth.dart';
+
+const _kRememberEmailKey = 'voguesly_remember_email';
 
 class VogueslyLoginPage extends ConsumerStatefulWidget {
   const VogueslyLoginPage({super.key});
@@ -17,6 +20,21 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
   final _inviteCode = TextEditingController();
   bool _obscure = true;
   bool _registerMode = false;
+  bool _remember = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRemembered();
+  }
+
+  Future<void> _loadRemembered() async {
+    final p = await SharedPreferences.getInstance();
+    final saved = p.getString(_kRememberEmailKey);
+    if (saved != null && saved.isNotEmpty && mounted) {
+      setState(() => _email.text = saved);
+    }
+  }
 
   @override
   void dispose() {
@@ -33,7 +51,15 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
     final ok = _registerMode
         ? await notifier.register(_email.text, _password.text, _inviteCode.text)
         : await notifier.login(_email.text, _password.text);
-    if (!ok && mounted) {
+    if (!mounted) return;
+    if (ok) {
+      final p = await SharedPreferences.getInstance();
+      if (_remember) {
+        await p.setString(_kRememberEmailKey, _email.text.trim());
+      } else {
+        await p.remove(_kRememberEmailKey);
+      }
+    } else {
       final err = ref.read(vogueslyAuthProvider).error ??
           (_registerMode ? '注册失败' : '登录失败');
       ScaffoldMessenger.of(context)
@@ -42,118 +68,215 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
     }
   }
 
+  void _toast(String msg) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(msg)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final loading = ref.watch(
-      vogueslyAuthProvider.select((s) => s.status == VogueslyAuthStatus.loggingIn),
+      vogueslyAuthProvider
+          .select((s) => s.status == VogueslyAuthStatus.loggingIn),
     );
     return Scaffold(
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
+              constraints: const BoxConstraints(maxWidth: 400),
               child: Form(
                 key: _formKey,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Icon(
-                      Icons.shield_moon_outlined,
-                      size: 64,
-                      color: theme.colorScheme.primary,
+                    Center(
+                      child: Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: cs.primaryContainer,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Icon(Icons.shield_outlined,
+                            size: 30, color: cs.primary),
+                      ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 14),
                     Text(
-                      '易联',
+                      _registerMode ? '创建账户' : '登录账户',
                       textAlign: TextAlign.center,
-                      style: theme.textTheme.headlineMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleLarge
+                          ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      _registerMode ? '注册账号 · 一键连接' : '登录账号 · 一键连接',
+                      _registerMode ? '注册即自动连接节点' : '请输入您的凭据继续',
                       textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyMedium
-                          ?.copyWith(color: theme.colorScheme.outline),
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: cs.onSurfaceVariant),
                     ),
-                    const SizedBox(height: 32),
-                    TextFormField(
+                    const SizedBox(height: 28),
+                    _label('邮箱', required: true),
+                    _field(
                       controller: _email,
+                      hint: 'name@email.com',
+                      icon: Icons.mail_outline,
                       keyboardType: TextInputType.emailAddress,
-                      autocorrect: false,
                       enabled: !loading,
-                      textInputAction: TextInputAction.next,
-                      decoration: const InputDecoration(
-                        labelText: '邮箱',
-                        prefixIcon: Icon(Icons.mail_outline),
-                        border: OutlineInputBorder(),
-                      ),
                       validator: (v) =>
                           (v == null || !v.contains('@')) ? '请输入有效邮箱' : null,
                     ),
-                    const SizedBox(height: 16),
-                    TextFormField(
+                    const SizedBox(height: 14),
+                    _label('密码', required: true),
+                    _field(
                       controller: _password,
-                      obscureText: _obscure,
+                      hint: '请输入密码',
+                      icon: Icons.lock_outline,
+                      obscure: _obscure,
                       enabled: !loading,
-                      textInputAction: TextInputAction.done,
-                      decoration: InputDecoration(
-                        labelText: '密码',
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        border: const OutlineInputBorder(),
-                        suffixIcon: IconButton(
-                          icon: Icon(_obscure
+                      suffix: IconButton(
+                        icon: Icon(
+                          _obscure
                               ? Icons.visibility_off_outlined
-                              : Icons.visibility_outlined),
-                          onPressed: () => setState(() => _obscure = !_obscure),
+                              : Icons.visibility_outlined,
+                          size: 20,
                         ),
+                        onPressed: () => setState(() => _obscure = !_obscure),
                       ),
                       validator: (v) =>
                           (v == null || v.isEmpty) ? '请输入密码' : null,
-                      onFieldSubmitted: (_) => _submit(),
+                      onSubmitted: (_) => _submit(),
                     ),
                     if (_registerMode) ...[
-                      const SizedBox(height: 16),
-                      TextFormField(
+                      const SizedBox(height: 14),
+                      _label('邀请码（选填）'),
+                      _field(
                         controller: _inviteCode,
+                        hint: '填邀请码注册有优惠',
+                        icon: Icons.card_giftcard_outlined,
                         enabled: !loading,
-                        textInputAction: TextInputAction.done,
-                        decoration: const InputDecoration(
-                          labelText: '邀请码（选填）',
-                          prefixIcon: Icon(Icons.card_giftcard),
-                          border: OutlineInputBorder(),
-                          helperText: '填邀请码注册有优惠',
-                        ),
-                        onFieldSubmitted: (_) => _submit(),
+                        onSubmitted: (_) => _submit(),
                       ),
                     ],
-                    const SizedBox(height: 24),
+                    if (!_registerMode) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          InkWell(
+                            onTap: loading
+                                ? null
+                                : () => setState(() => _remember = !_remember),
+                            borderRadius: BorderRadius.circular(6),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _remember
+                                        ? Icons.check_box
+                                        : Icons.check_box_outline_blank,
+                                    size: 18,
+                                    color: _remember
+                                        ? cs.primary
+                                        : cs.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text('记住我',
+                                      style: theme.textTheme.bodySmall),
+                                ],
+                              ),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: loading
+                                ? null
+                                : () => _toast('请在网页 cp.voguesly.com 重置密码'),
+                            child: const Text('忘记密码?'),
+                          ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: 16),
                     FilledButton(
                       onPressed: loading ? null : _submit,
                       style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: loading
                           ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
+                              child:
+                                  CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : Text(_registerMode ? '注 册' : '登 录'),
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(_registerMode ? '注册' : '登录'),
+                                const SizedBox(width: 6),
+                                const Icon(Icons.arrow_forward, size: 18),
+                              ],
+                            ),
                     ),
-                    const SizedBox(height: 12),
-                    TextButton(
+                    if (!_registerMode) ...[
+                      const SizedBox(height: 18),
+                      Row(
+                        children: [
+                          const Expanded(child: Divider()),
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text('或',
+                                style: theme.textTheme.bodySmall
+                                    ?.copyWith(color: cs.onSurfaceVariant)),
+                          ),
+                          const Expanded(child: Divider()),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      OutlinedButton.icon(
+                        onPressed:
+                            loading ? null : () => _toast('Google 登录即将推出'),
+                        icon: const Icon(Icons.g_mobiledata, size: 26),
+                        label: const Text('使用 Google 登录'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 18),
+                    Text(
+                      _registerMode ? '已有账户?' : '还没有账户?',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton(
                       onPressed: loading
                           ? null
-                          : () => setState(
-                              () => _registerMode = !_registerMode),
-                      child: Text(
-                        _registerMode ? '已有账号? 去登录' : '还没账号? 注册',
+                          : () => setState(() => _registerMode = !_registerMode),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
+                      child: Text(_registerMode ? '去登录' : '创建账户'),
                     ),
                   ],
                 ),
@@ -162,6 +285,60 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _label(String text, {bool required = false}) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6, left: 2),
+      child: Row(
+        children: [
+          Text(text, style: theme.textTheme.bodySmall),
+          if (required)
+            Text(' *', style: TextStyle(color: theme.colorScheme.error)),
+        ],
+      ),
+    );
+  }
+
+  Widget _field({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    bool obscure = false,
+    bool enabled = true,
+    TextInputType? keyboardType,
+    Widget? suffix,
+    String? Function(String?)? validator,
+    void Function(String)? onSubmitted,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    return TextFormField(
+      controller: controller,
+      obscureText: obscure,
+      enabled: enabled,
+      keyboardType: keyboardType,
+      autocorrect: false,
+      textInputAction:
+          onSubmitted != null ? TextInputAction.done : TextInputAction.next,
+      decoration: InputDecoration(
+        hintText: hint,
+        prefixIcon: Icon(icon, size: 20),
+        suffixIcon: suffix,
+        filled: true,
+        fillColor: cs.surfaceContainerHighest.withValues(alpha: 0.4),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: cs.outlineVariant),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: cs.outlineVariant),
+        ),
+      ),
+      validator: validator,
+      onFieldSubmitted: onSubmitted,
     );
   }
 }
