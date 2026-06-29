@@ -96,7 +96,7 @@ class _ConnectButtonState extends ConsumerState<ConnectButton> {
                       ),
                     );
                     return Text(
-                      '实时  ↓ ${Traffic(down: t.down).speedText}  ·  ↑ ${Traffic(up: t.up).speedText}',
+                      '实时  ${t.speedText}',
                       style: context.textTheme.bodySmall?.copyWith(
                         color: cs.onSurfaceVariant,
                       ),
