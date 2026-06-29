@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 
 /// 易联 API 入口（主 + 中国可达 fallback 镜像，反代同一后端 cp.voguesly.com）。
@@ -144,6 +146,34 @@ class VogueslyApi {
     } catch (_) {
       return false;
     }
+  }
+
+  /// 攞订阅原始内容(bytes)，主 cp 失败逐个轮 fallback 镜像。
+  /// 用本类 dio(全局接受自签证书)，绕开 FlClash 核心 _clashDio
+  /// (后者喺主入口瞬断时会抛 unknown 错 = 用户见到嘅「未知网络错误」)。
+  /// 返回 (bytes, 成功嗰个 url) 或 null。
+  Future<({Uint8List bytes, String url})?> fetchSubscribeBytes(
+    String subscribeUrl,
+  ) async {
+    final uri = Uri.parse(subscribeUrl);
+    for (final base in _hosts) {
+      final host = Uri.parse(base).host;
+      final tryUrl = uri.replace(scheme: 'https', host: host).toString();
+      try {
+        final resp = await _dio.get<List<int>>(
+          tryUrl,
+          options: Options(
+            responseType: ResponseType.bytes,
+            validateStatus: (c) => c == 200,
+          ),
+        );
+        final data = resp.data;
+        if (data != null && data.isNotEmpty) {
+          return (bytes: Uint8List.fromList(data), url: tryUrl);
+        }
+      } catch (_) {}
+    }
+    return null;
   }
 }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:fl_clash/providers/providers.dart';
+import 'package:fl_clash/models/models.dart';
 
 import '../pages/pages.dart';
 import 'voguesly_auth.dart';
@@ -42,29 +43,22 @@ class _VogueslyGateState extends ConsumerState<VogueslyGate> {
       await action.deleteProfile(id);
     }
     if (!mounted) return;
-    // 导入当前账号订阅：主入口 cp + 3 个中国可达 fallback 镜像，逐个试，第一个成功即停。
-    // 主入口偶尔瞬断时自动 fallback，保证订阅 100% 拉到。
-    final uri = Uri.parse(url);
+    // 导入当前账号订阅：主入口 cp + 3 个中国可达 fallback 镜像。
+    // ⚠️ FlClash 核心 addProfileFormURL→update() 走 _clashDio，主入口瞬断会抛
+    // 「未知网络错误」(DioExceptionType.unknown)，且内部 loadingRun 食咗错误唔 throw。
+    // 改成用我哋自己嘅 dio 直接攞 config bytes(主 cp 失败自动轮镜像)，
+    // 再 saveFile(带 validateConfig)+putProfile 本地导入，完全绕开 _clashDio。
     final api = ref.read(vogueslyApiProvider);
-    // ⚠️ addProfileFormURL 内部用 loadingRun 会食咗网络错误(弹 dialog 但唔 throw)，
-    // 所以唔可以靠 try/catch 佢嚟做 fallback。改成先用我哋控制嘅 dio 逐个 probe，
-    // 揾到真正可达嘅 host 先 import 一次(主 cp 瞬断自动轮镜像)。
-    String? workingUrl;
-    for (final host in const [
-      'cp.voguesly.com',
-      's1.corelane.xyz',
-      's2.corelane.xyz',
-      's3.octolink.xyz',
-    ]) {
-      final tryUrl = uri.replace(host: host).toString();
-      if (await api.probeUrl(tryUrl)) {
-        workingUrl = tryUrl;
-        break;
-      }
+    final fetched = await api.fetchSubscribeBytes(url);
+    if (!mounted || fetched == null) return;
+    final Profile profile;
+    try {
+      profile = await Profile.normal(url: fetched.url).saveFile(fetched.bytes);
+    } catch (_) {
+      return; // config 校验失败
     }
-    if (!mounted || workingUrl == null) return;
-    await action.addProfileFormURL(workingUrl);
-    final importedUrl = workingUrl;
+    action.putProfile(profile);
+    final importedUrl = fetched.url;
     if (!mounted) return;
     // 强制把当前账号订阅设为活动 profile（防止旧 currentProfileId 残留）
     final imported = ref
