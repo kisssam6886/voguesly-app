@@ -53,7 +53,11 @@ class _VogueslyGateState extends ConsumerState<VogueslyGate> {
     if (!mounted || fetched == null) return;
     final Profile profile;
     try {
-      profile = await Profile.normal(url: fetched.url).saveFile(fetched.bytes);
+      // 显式 set label, 否则 saveFile 路径会用 profile id 数字做名(令用户误会账号错)
+      profile = await Profile.normal(
+        label: '易聯 Residential IP',
+        url: fetched.url,
+      ).saveFile(fetched.bytes);
     } catch (_) {
       return; // config 校验失败
     }
