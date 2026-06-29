@@ -10,7 +10,6 @@ import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'widgets/start_button.dart';
 
 typedef _IsEditWidgetBuilder = Widget Function(bool isEdit);
 
@@ -163,19 +162,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
             icon: const Icon(Icons.add_circle),
           ),
         ),
-      FadeRotationScaleBox(
-        child: isEdit
-            ? IconButton(
-                key: const ValueKey(true),
-                icon: const Icon(Icons.save, key: ValueKey('save-icon')),
-                onPressed: _handleUpdateIsEdit,
-              )
-            : IconButton(
-                key: const ValueKey(false),
-                icon: const Icon(Icons.edit, key: ValueKey('edit-icon')),
-                onPressed: _handleUpdateIsEdit,
-              ),
-      ),
+      // 简洁主页:移除「编辑布局」笔(固定布局,唔畀用户拖拽)。
     ];
   }
 
@@ -231,11 +218,14 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
     final dashboardState = ref.watch(dashboardStateProvider);
     final columns = max(4 * ((dashboardState.contentWidth / 280).ceil()), 8);
     final spacing = 14.mAp;
-    final savedWidgets = dashboardState.dashboardWidgets;
-    // 账号卡强制置顶 + 去重(旧用户 config 可能已含但喺尾)
-    final orderedWidgets = [
+    // 固定简洁主页:忽略旧 saved grid config,直接用消费者向简洁集
+    // (账号 / 大圆圈连接 / 当前线路 / 网络速度 / 模式)。无编辑、无工程化卡。
+    const orderedWidgets = [
       DashboardWidget.vogueslyAccount,
-      ...savedWidgets.where((w) => w != DashboardWidget.vogueslyAccount),
+      DashboardWidget.connectButton,
+      DashboardWidget.currentRoute,
+      DashboardWidget.networkSpeed,
+      DashboardWidget.outboundMode,
     ];
     final children = [
       ...orderedWidgets
@@ -258,7 +248,6 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
       (isEdit) => CommonScaffold(
         title: context.appLocalizations.dashboard,
         actions: _buildActions(isEdit),
-        floatingActionButton: const StartButton(),
         body: Align(
           alignment: Alignment.topCenter,
           child: SingleChildScrollView(

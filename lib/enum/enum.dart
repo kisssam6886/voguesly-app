@@ -297,6 +297,8 @@ enum FunctionTag {
 enum DashboardWidget {
   networkSpeed(GridItem(crossAxisCellCount: 8, child: NetworkSpeed())),
   vogueslyAccount(GridItem(crossAxisCellCount: 8, child: VogueslyAccount())),
+  connectButton(GridItem(crossAxisCellCount: 8, child: ConnectButton())),
+  currentRoute(GridItem(crossAxisCellCount: 8, child: CurrentRoute())),
   outboundModeV2(GridItem(crossAxisCellCount: 8, child: OutboundModeV2())),
   outboundMode(GridItem(crossAxisCellCount: 4, child: OutboundMode())),
   trafficUsage(GridItem(crossAxisCellCount: 4, child: TrafficUsage())),

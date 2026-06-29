@@ -1,3 +1,5 @@
+export 'connect_button.dart';
+export 'current_route.dart';
 export 'intranet_ip.dart';
 export 'network_detection.dart';
 export 'network_speed.dart';

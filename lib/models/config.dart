@@ -36,15 +36,14 @@ const defaultWindowProps = WindowProps();
 const defaultAccessControlProps = AccessControlProps();
 const defaultThemeProps = ThemeProps(primaryColor: defaultPrimaryColor);
 
+// 简洁消费者向主页:账号 + 大圆圈连接 + 当前线路 + 网络速度 + 模式。
+// 删走工程化嗰啲(网络检测/流量统计/内网IP/系统代理/TUN 掣)。
 const List<DashboardWidget> defaultDashboardWidgets = [
   DashboardWidget.vogueslyAccount,
+  DashboardWidget.connectButton,
+  DashboardWidget.currentRoute,
   DashboardWidget.networkSpeed,
-  DashboardWidget.systemProxyButton,
-  DashboardWidget.tunButton,
   DashboardWidget.outboundMode,
-  DashboardWidget.networkDetection,
-  DashboardWidget.trafficUsage,
-  DashboardWidget.intranetIp,
 ];
 
 List<DashboardWidget> dashboardWidgetsSafeFormJson(
