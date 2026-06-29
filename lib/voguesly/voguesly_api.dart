@@ -165,6 +165,9 @@ class VogueslyApi {
           options: Options(
             responseType: ResponseType.bytes,
             validateStatus: (c) => c == 200,
+            // ⚠️ 必须用 clash UA, 否则面板返 base64 通用格式而非 Clash YAML,
+            // 会令 saveFile 的 validateConfig 失败(表现=无错但无加载)。
+            headers: {'User-Agent': 'clash-verge/2.0.0 FlClash'},
           ),
         );
         final data = resp.data;
