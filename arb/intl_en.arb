@@ -537,5 +537,11 @@
   "editSsid": "Edit SSID",
   "authorized": "Authorized",
   "tapToAuthorize": "Tap to authorize",
-  "suspended": "Suspended..."
+  "suspended": "Suspended...",
+  "vogMyAccount": "My account",
+  "vogExpiry": "Expires",
+  "vogPermanent": "Permanent",
+  "vogRemainTotal": "Left / total",
+  "vogNotLoggedIn": "Not logged in",
+  "vogChooseAvatar": "Choose avatar"
 }

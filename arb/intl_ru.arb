@@ -537,5 +537,11 @@
   "editSsid": "Изменить SSID",
   "authorized": "Разрешено",
   "tapToAuthorize": "Нажмите, чтобы разрешить",
-  "suspended": "Приостановлено..."
+  "suspended": "Приостановлено...",
+  "vogMyAccount": "My account",
+  "vogExpiry": "Expires",
+  "vogPermanent": "Permanent",
+  "vogRemainTotal": "Left / total",
+  "vogNotLoggedIn": "Not logged in",
+  "vogChooseAvatar": "Choose avatar"
 }

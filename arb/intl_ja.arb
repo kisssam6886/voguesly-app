@@ -537,5 +537,11 @@
   "editSsid": "SSIDを編集",
   "authorized": "許可済み",
   "tapToAuthorize": "タップして許可",
-  "suspended": "一時停止中..."
+  "suspended": "一時停止中...",
+  "vogMyAccount": "My account",
+  "vogExpiry": "Expires",
+  "vogPermanent": "Permanent",
+  "vogRemainTotal": "Left / total",
+  "vogNotLoggedIn": "Not logged in",
+  "vogChooseAvatar": "Choose avatar"
 }

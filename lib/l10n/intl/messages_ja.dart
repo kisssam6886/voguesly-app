@@ -815,6 +815,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "value": MessageLookupByLibrary.simpleMessage("値"),
     "vibrantScheme": MessageLookupByLibrary.simpleMessage("ビブラント"),
     "view": MessageLookupByLibrary.simpleMessage("表示"),
+    "vogChooseAvatar": MessageLookupByLibrary.simpleMessage("Choose avatar"),
+    "vogExpiry": MessageLookupByLibrary.simpleMessage("Expires"),
+    "vogMyAccount": MessageLookupByLibrary.simpleMessage("My account"),
+    "vogNotLoggedIn": MessageLookupByLibrary.simpleMessage("Not logged in"),
+    "vogPermanent": MessageLookupByLibrary.simpleMessage("Permanent"),
+    "vogRemainTotal": MessageLookupByLibrary.simpleMessage("Left / total"),
     "vpnConfigChangeDetected": MessageLookupByLibrary.simpleMessage(
       "VPN設定の変更が検出されました",
     ),

@@ -454,7 +454,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "profileUrlNullValidationDesc": MessageLookupByLibrary.simpleMessage(
       "请输入配置URL",
     ),
-    "profiles": MessageLookupByLibrary.simpleMessage("账号配置"),
+    "profiles": MessageLookupByLibrary.simpleMessage("配置"),
     "profilesSort": MessageLookupByLibrary.simpleMessage("配置排序"),
     "project": MessageLookupByLibrary.simpleMessage("项目"),
     "providers": MessageLookupByLibrary.simpleMessage("提供者"),
@@ -703,6 +703,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "value": MessageLookupByLibrary.simpleMessage("值"),
     "vibrantScheme": MessageLookupByLibrary.simpleMessage("活力"),
     "view": MessageLookupByLibrary.simpleMessage("查看"),
+    "vogChooseAvatar": MessageLookupByLibrary.simpleMessage("选择头像"),
+    "vogExpiry": MessageLookupByLibrary.simpleMessage("到期"),
+    "vogMyAccount": MessageLookupByLibrary.simpleMessage("易聯 账号"),
+    "vogNotLoggedIn": MessageLookupByLibrary.simpleMessage("未登录"),
+    "vogPermanent": MessageLookupByLibrary.simpleMessage("长期有效"),
+    "vogRemainTotal": MessageLookupByLibrary.simpleMessage("剩余 / 共"),
     "vpnConfigChangeDetected": MessageLookupByLibrary.simpleMessage(
       "检测到VPN相关配置改动",
     ),

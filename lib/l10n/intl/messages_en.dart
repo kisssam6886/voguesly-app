@@ -1009,6 +1009,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "value": MessageLookupByLibrary.simpleMessage("Value"),
     "vibrantScheme": MessageLookupByLibrary.simpleMessage("Vibrant"),
     "view": MessageLookupByLibrary.simpleMessage("View"),
+    "vogChooseAvatar": MessageLookupByLibrary.simpleMessage("Choose avatar"),
+    "vogExpiry": MessageLookupByLibrary.simpleMessage("Expires"),
+    "vogMyAccount": MessageLookupByLibrary.simpleMessage("My account"),
+    "vogNotLoggedIn": MessageLookupByLibrary.simpleMessage("Not logged in"),
+    "vogPermanent": MessageLookupByLibrary.simpleMessage("Permanent"),
+    "vogRemainTotal": MessageLookupByLibrary.simpleMessage("Left / total"),
     "vpnConfigChangeDetected": MessageLookupByLibrary.simpleMessage(
       "VPN configuration change detected",
     ),

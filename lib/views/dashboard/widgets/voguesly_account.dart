@@ -14,8 +14,8 @@ class VogueslyAccount extends StatelessWidget {
 
   String _gb(int bytes) => '${(bytes / 1073741824).toStringAsFixed(2)} GB';
 
-  String _expiry(int? expiredAt) {
-    if (expiredAt == null || expiredAt == 0) return '长期有效';
+  String _expiry(int? expiredAt, String permanent) {
+    if (expiredAt == null || expiredAt == 0) return permanent;
     final d = DateTime.fromMillisecondsSinceEpoch(expiredAt * 1000);
     return '${d.year}-${d.month.toString().padLeft(2, '0')}-'
         '${d.day.toString().padLeft(2, '0')}';
@@ -35,7 +35,7 @@ class VogueslyAccount extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: Text(
-                  '选择头像',
+                  ctx.appLocalizations.vogChooseAvatar,
                   style: ctx.textTheme.titleMedium,
                 ),
               ),
@@ -81,6 +81,7 @@ class VogueslyAccount extends StatelessWidget {
                 vogueslyAuthProvider.select((s) => s.user),
               );
               final avatar = ref.watch(vogueslyAvatarProvider);
+              final l = context.appLocalizations;
               return Padding(
                 padding: baseInfoEdgeInsets,
                 child: Column(
@@ -109,12 +110,12 @@ class VogueslyAccount extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                user?.email ?? '易聯 账号',
+                                user?.email ?? l.vogMyAccount,
                                 overflow: TextOverflow.ellipsis,
                                 style: context.textTheme.titleSmall,
                               ),
                               Text(
-                                '到期: ${_expiry(user?.expiredAt)}',
+                                '${l.vogExpiry}: ${_expiry(user?.expiredAt, l.vogPermanent)}',
                                 style: context.textTheme.bodySmall?.copyWith(
                                   color: subColor,
                                 ),
@@ -142,7 +143,7 @@ class VogueslyAccount extends StatelessWidget {
                           Padding(
                             padding: const EdgeInsets.only(bottom: 3),
                             child: Text(
-                              '剩余 / 共 ${_gb(user.transferEnable)}',
+                              '${l.vogRemainTotal} ${_gb(user.transferEnable)}',
                               style: context.textTheme.bodySmall?.copyWith(
                                 color: subColor,
                               ),
@@ -163,7 +164,7 @@ class VogueslyAccount extends StatelessWidget {
                       ),
                     ] else
                       Text(
-                        '未登录',
+                        l.vogNotLoggedIn,
                         style: context.textTheme.bodyMedium?.copyWith(
                           color: subColor,
                         ),

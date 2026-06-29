@@ -4378,6 +4378,51 @@ class AppLocalizations {
   String get suspended {
     return Intl.message('Suspended...', name: 'suspended', desc: '', args: []);
   }
+
+  /// `My account`
+  String get vogMyAccount {
+    return Intl.message('My account', name: 'vogMyAccount', desc: '', args: []);
+  }
+
+  /// `Expires`
+  String get vogExpiry {
+    return Intl.message('Expires', name: 'vogExpiry', desc: '', args: []);
+  }
+
+  /// `Permanent`
+  String get vogPermanent {
+    return Intl.message('Permanent', name: 'vogPermanent', desc: '', args: []);
+  }
+
+  /// `Left / total`
+  String get vogRemainTotal {
+    return Intl.message(
+      'Left / total',
+      name: 'vogRemainTotal',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Not logged in`
+  String get vogNotLoggedIn {
+    return Intl.message(
+      'Not logged in',
+      name: 'vogNotLoggedIn',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Choose avatar`
+  String get vogChooseAvatar {
+    return Intl.message(
+      'Choose avatar',
+      name: 'vogChooseAvatar',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {
@@ -4389,6 +4434,7 @@ class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {
       Locale.fromSubtags(languageCode: 'ja'),
       Locale.fromSubtags(languageCode: 'ru'),
       Locale.fromSubtags(languageCode: 'zh', countryCode: 'CN'),
+      Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
     ];
   }
 

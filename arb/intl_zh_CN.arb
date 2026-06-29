@@ -537,5 +537,11 @@
   "editSsid": "编辑SSID",
   "authorized": "已授权",
   "tapToAuthorize": "点击授权",
-  "suspended": "挂起中..."
+  "suspended": "挂起中...",
+  "vogMyAccount": "易聯 账号",
+  "vogExpiry": "到期",
+  "vogPermanent": "长期有效",
+  "vogRemainTotal": "剩余 / 共",
+  "vogNotLoggedIn": "未登录",
+  "vogChooseAvatar": "选择头像"
 }
