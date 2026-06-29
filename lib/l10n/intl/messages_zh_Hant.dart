@@ -681,7 +681,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "tip": MessageLookupByLibrary.simpleMessage("提示"),
     "toggle": MessageLookupByLibrary.simpleMessage("切換"),
     "tonalSpotScheme": MessageLookupByLibrary.simpleMessage("調性點綴"),
-    "tools": MessageLookupByLibrary.simpleMessage("工具"),
+    "tools": MessageLookupByLibrary.simpleMessage("我的"),
     "tproxyPort": MessageLookupByLibrary.simpleMessage("Tproxy端口"),
     "trafficUsage": MessageLookupByLibrary.simpleMessage("流量統計"),
     "tun": MessageLookupByLibrary.simpleMessage("虛擬網卡"),

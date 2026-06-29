@@ -14,9 +14,12 @@ import 'package:fl_clash/views/hotkey.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' show dirname, join;
 
+import '../voguesly/voguesly_auth.dart';
+import '../voguesly/voguesly_avatar.dart';
 import 'config/advanced.dart';
 import 'developer.dart';
 import 'theme.dart';
@@ -60,6 +63,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
         const _DisclaimerItem(),
         if (enableDeveloperMode) const _DeveloperItem(),
         const _InfoItem(),
+        const _LogoutItem(),
       ],
     );
   }
@@ -86,6 +90,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
       ),
     );
     final items = [
+      const _AccountHeader(),
       Consumer(
         builder: (_, ref, _) {
           final state = ref.watch(moreToolsSelectorStateProvider);
@@ -349,6 +354,119 @@ class _DeveloperItem extends StatelessWidget {
       leading: const Icon(Icons.developer_board),
       title: Text(context.appLocalizations.developerMode),
       delegate: const OpenDelegate(widget: DeveloperView()),
+    );
+  }
+}
+
+/// 「我的」页顶账号卡:头像 + 邮箱 + 剩余/总流量。数据来自 vogueslyAuthProvider。
+class _AccountHeader extends ConsumerWidget {
+  const _AccountHeader();
+
+  String _gb(int b) => '${(b / 1073741824).toStringAsFixed(0)} GB';
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(vogueslyAuthProvider.select((s) => s.user));
+    final avatar = ref.watch(vogueslyAvatarProvider);
+    final cs = context.colorScheme;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              ClipOval(
+                child: SvgPicture.asset(
+                  vogueslyAvatarAsset(avatar),
+                  width: 44,
+                  height: 44,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  user?.email ?? context.appLocalizations.vogNotLoggedIn,
+                  style: context.textTheme.titleSmall,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          if (user != null) ...[
+            const SizedBox(height: 14),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  _gb(user.remain),
+                  style: context.textTheme.titleLarge?.copyWith(
+                    color: cs.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  '${context.appLocalizations.vogRemainTotal} ${_gb(user.transferEnable)}',
+                  style: context.textTheme.bodySmall
+                      ?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: user.remainRatio,
+                minHeight: 6,
+                backgroundColor: cs.surfaceContainerHighest,
+                color: cs.primary,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _LogoutItem extends ConsumerWidget {
+  const _LogoutItem();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cs = context.colorScheme;
+    return ListItem(
+      leading: Icon(Icons.logout, color: cs.error),
+      title: Text('退出登录', style: TextStyle(color: cs.error)),
+      onTap: () async {
+        final ok = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('退出登录'),
+            content: const Text('确定退出当前账户?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(context.appLocalizations.cancel),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('退出'),
+              ),
+            ],
+          ),
+        );
+        if (ok == true) {
+          ref.read(vogueslyAuthProvider.notifier).logout();
+        }
+      },
     );
   }
 }
