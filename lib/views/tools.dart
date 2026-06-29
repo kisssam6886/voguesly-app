@@ -123,7 +123,14 @@ class _LocaleItem extends ConsumerWidget {
 
   String _getLocaleString(BuildContext context, Locale? locale) {
     if (locale == null) return context.appLocalizations.defaultText;
-    return Intl.message(locale.toString());
+    const names = {
+      'zh_CN': '简体中文',
+      'zh_Hant': '繁體中文',
+      'en': 'English',
+      'ja': '日本語',
+      'ru': 'Русский',
+    };
+    return names[locale.toString()] ?? Intl.message(locale.toString());
   }
 
   @override

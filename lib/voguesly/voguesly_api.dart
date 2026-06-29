@@ -123,7 +123,9 @@ class VogueslyApi {
 
   /// 拉用户套餐/流量信息。
   Future<VogueslyUser?> getUserInfo(String token) async {
-    final resp = await _try('/user/info', headers: {'Authorization': token});
+    // 用 getSubscribe(有真 u/d/transfer_enable);/user/info 嘅 u/d 系 0
+    final resp =
+        await _try('/user/getSubscribe', headers: {'Authorization': token});
     final data = (resp.data as Map<String, dynamic>?)?['data'];
     if (data is Map<String, dynamic>) {
       return VogueslyUser.fromJson(data);

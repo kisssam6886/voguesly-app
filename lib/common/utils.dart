@@ -107,6 +107,12 @@ class Utils {
       return Locale(localSplit[0]);
     }
     if (localSplit.length == 2) {
+      if (localSplit[1].length == 4) {
+        return Locale.fromSubtags(
+          languageCode: localSplit[0],
+          scriptCode: localSplit[1],
+        );
+      }
       return Locale(localSplit[0], localSplit[1]);
     }
     if (localSplit.length == 3) {

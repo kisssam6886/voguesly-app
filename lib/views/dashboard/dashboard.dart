@@ -231,8 +231,13 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
     final dashboardState = ref.watch(dashboardStateProvider);
     final columns = max(4 * ((dashboardState.contentWidth / 280).ceil()), 8);
     final spacing = 14.mAp;
+    final savedWidgets = dashboardState.dashboardWidgets;
+    final orderedWidgets =
+        savedWidgets.contains(DashboardWidget.vogueslyAccount)
+        ? savedWidgets
+        : [DashboardWidget.vogueslyAccount, ...savedWidgets];
     final children = [
-      ...dashboardState.dashboardWidgets
+      ...orderedWidgets
           .where(
             (item) => item.platforms.contains(SupportPlatform.currentPlatform),
           )
