@@ -74,9 +74,9 @@ class AppLocalizations {
     return Intl.message('Dashboard', name: 'dashboard', desc: '', args: []);
   }
 
-  /// `Proxies`
+  /// `Routes`
   String get proxies {
-    return Intl.message('Proxies', name: 'proxies', desc: '', args: []);
+    return Intl.message('Routes', name: 'proxies', desc: '', args: []);
   }
 
   /// `Profile`
@@ -84,9 +84,14 @@ class AppLocalizations {
     return Intl.message('Profile', name: 'profile', desc: '', args: []);
   }
 
-  /// `Profiles`
+  /// `My subscription`
   String get profiles {
-    return Intl.message('Profiles', name: 'profiles', desc: '', args: []);
+    return Intl.message(
+      'My subscription',
+      name: 'profiles',
+      desc: '',
+      args: [],
+    );
   }
 
   /// `Me`

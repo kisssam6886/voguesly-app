@@ -663,11 +663,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "profileUrlNullValidationDesc": MessageLookupByLibrary.simpleMessage(
       "Please input the profile URL",
     ),
-    "profiles": MessageLookupByLibrary.simpleMessage("Profiles"),
+    "profiles": MessageLookupByLibrary.simpleMessage("My subscription"),
     "profilesSort": MessageLookupByLibrary.simpleMessage("Profiles sort"),
     "project": MessageLookupByLibrary.simpleMessage("Project"),
     "providers": MessageLookupByLibrary.simpleMessage("Providers"),
-    "proxies": MessageLookupByLibrary.simpleMessage("Proxies"),
+    "proxies": MessageLookupByLibrary.simpleMessage("Routes"),
     "proxiesEmpty": MessageLookupByLibrary.simpleMessage("Proxies is empty"),
     "proxyChains": MessageLookupByLibrary.simpleMessage("Proxy chains"),
     "proxyDetectedAbnormal": MessageLookupByLibrary.simpleMessage(

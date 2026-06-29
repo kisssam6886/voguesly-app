@@ -32,8 +32,8 @@ class Navigation {
         label: PageLabel.profiles,
         builder: (_) =>
             const ProfilesView(key: GlobalObjectKey(PageLabel.profiles)),
-        // 移出手机底栏,收埋落「我的」(更多)。桌面照旧。
-        modes: [NavigationItemMode.desktop, NavigationItemMode.more],
+        // 手机端唔入底栏、唔入「更多」;改由「我的」页顶嘅突出「我的订阅」入口入。桌面照旧。
+        modes: [NavigationItemMode.desktop],
       ),
       NavigationItem(
         icon: const Icon(Icons.view_timeline),

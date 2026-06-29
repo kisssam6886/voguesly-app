@@ -20,6 +20,7 @@ import 'package:path/path.dart' show dirname, join;
 
 import '../voguesly/voguesly_auth.dart';
 import '../voguesly/voguesly_avatar.dart';
+import 'profiles/profiles.dart';
 import 'config/advanced.dart';
 import 'developer.dart';
 import 'theme.dart';
@@ -91,6 +92,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
     );
     final items = [
       const _AccountHeader(),
+      const _SubscriptionEntry(),
       Consumer(
         builder: (_, ref, _) {
           final state = ref.watch(moreToolsSelectorStateProvider);
@@ -431,6 +433,63 @@ class _AccountHeader extends ConsumerWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// 突出嘅「我的订阅」入口(用户常用,唔折叠)。开 ProfilesView。
+class _SubscriptionEntry extends StatelessWidget {
+  const _SubscriptionEntry();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      child: Material(
+        color: cs.primaryContainer.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (ctx) => CommonScaffoldBackActionProvider(
+                  backAction: () => Navigator.of(ctx).pop(),
+                  child: const ProfilesView(),
+                ),
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Icon(Icons.cloud_sync_outlined, color: cs.primary),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.appLocalizations.profiles,
+                        style: context.textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '更新 / 管理订阅',
+                        style: context.textTheme.bodySmall
+                            ?.copyWith(color: cs.onSurfaceVariant),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

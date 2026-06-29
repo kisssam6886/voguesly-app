@@ -455,11 +455,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "profileUrlNullValidationDesc": MessageLookupByLibrary.simpleMessage(
       "请输入配置URL",
     ),
-    "profiles": MessageLookupByLibrary.simpleMessage("配置"),
+    "profiles": MessageLookupByLibrary.simpleMessage("我的订阅"),
     "profilesSort": MessageLookupByLibrary.simpleMessage("配置排序"),
     "project": MessageLookupByLibrary.simpleMessage("项目"),
     "providers": MessageLookupByLibrary.simpleMessage("提供者"),
-    "proxies": MessageLookupByLibrary.simpleMessage("代理"),
+    "proxies": MessageLookupByLibrary.simpleMessage("线路"),
     "proxiesEmpty": MessageLookupByLibrary.simpleMessage("代理为空"),
     "proxyChains": MessageLookupByLibrary.simpleMessage("代理链"),
     "proxyDetectedAbnormal": MessageLookupByLibrary.simpleMessage(

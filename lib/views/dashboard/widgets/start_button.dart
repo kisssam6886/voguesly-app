@@ -5,6 +5,8 @@ import 'package:fl_clash/state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+/// 连接按钮:为普通用户做成明显嘅「点击连接」extended FAB(原 FlClash 停咗只得一个 play icon,太隐蔽)。
+/// 停=主色「点击连接」+电源 icon;连=计时 + 暂停 icon。
 class StartButton extends ConsumerStatefulWidget {
   const StartButton({super.key});
 
@@ -12,58 +14,27 @@ class StartButton extends ConsumerStatefulWidget {
   ConsumerState<StartButton> createState() => _StartButtonState();
 }
 
-class _StartButtonState extends ConsumerState<StartButton>
-    with SingleTickerProviderStateMixin {
-  AnimationController? _controller;
-  late Animation<double> _animation;
+class _StartButtonState extends ConsumerState<StartButton> {
   bool isStart = false;
 
   @override
   void initState() {
     super.initState();
     isStart = ref.read(isStartProvider);
-    _controller = AnimationController(
-      vsync: this,
-      value: isStart ? 1 : 0,
-      duration: const Duration(milliseconds: 200),
-    );
-    _animation = CurvedAnimation(
-      parent: _controller!,
-      curve: Curves.easeOutBack,
-    );
     ref.listenManual(isStartProvider, (prev, next) {
-      if (next != isStart) {
-        isStart = next;
-        updateController();
+      if (next != isStart && mounted) {
+        setState(() => isStart = next);
       }
     }, fireImmediately: true);
   }
 
-  @override
-  void dispose() {
-    _controller?.dispose();
-    _controller = null;
-    super.dispose();
-  }
-
   void handleSwitchStart() {
-    isStart = !isStart;
-    updateController();
+    setState(() => isStart = !isStart);
     debouncer.call(FunctionTag.updateStatus, () {
       globalState.container
           .read(setupActionProvider.notifier)
           .updateStatus(isStart, isInit: !ref.read(initProvider));
     }, duration: commonDuration);
-  }
-
-  void updateController() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (isStart && mounted) {
-        _controller?.forward();
-      } else {
-        _controller?.reverse();
-      }
-    });
   }
 
   @override
@@ -75,88 +46,28 @@ class _StartButtonState extends ConsumerState<StartButton>
       return Container();
     }
     final suspend = ref.watch(suspendProvider);
-    final theme = Theme.of(context);
+    final cs = context.colorScheme;
     final appLocalizations = context.appLocalizations;
+    final runTime = ref.watch(runTimeProvider);
+    final label = suspend
+        ? appLocalizations.suspended
+        : (isStart ? utils.getTimeText(runTime) : '点击连接');
     return RepaintBoundary(
-      child: Theme(
-        data: theme.copyWith(
-          floatingActionButtonTheme: theme.floatingActionButtonTheme.copyWith(
-            sizeConstraints: const BoxConstraints(minWidth: 56, maxWidth: 200),
+      child: FloatingActionButton.extended(
+        heroTag: null,
+        materialTapTargetSize: MaterialTapTargetSize.padded,
+        backgroundColor: isStart ? cs.primaryContainer : cs.primary,
+        foregroundColor: isStart ? cs.onPrimaryContainer : cs.onPrimary,
+        onPressed: handleSwitchStart,
+        icon: Icon(isStart ? Icons.pause_rounded : Icons.power_settings_new),
+        label: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.visible,
+          style: context.textTheme.titleMedium?.copyWith(
+            color: isStart ? cs.onPrimaryContainer : cs.onPrimary,
+            fontWeight: FontWeight.w600,
           ),
-        ),
-        child: AnimatedBuilder(
-          animation: _controller!.view,
-          builder: (_, child) {
-            final textWidth = suspend
-                ? globalState.measure
-                          .computeTextSize(
-                            Text(
-                              appLocalizations.suspended,
-                              style: context.textTheme.titleMedium,
-                            ),
-                          )
-                          .width +
-                      24
-                : globalState.measure
-                          .computeTextSize(
-                            Text(
-                              utils.getTimeDifference(DateTime.now()),
-                              style: context.textTheme.titleMedium?.toSoftBold,
-                            ),
-                          )
-                          .width +
-                      16;
-            return FloatingActionButton(
-              clipBehavior: Clip.antiAlias,
-              materialTapTargetSize: MaterialTapTargetSize.padded,
-              heroTag: null,
-              onPressed: () {
-                handleSwitchStart();
-              },
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    height: 56,
-                    padding: EdgeInsets.only(
-                      left: 16,
-                      right: 16 - 8 * _animation.value,
-                    ),
-                    alignment: Alignment.centerLeft,
-                    child: AnimatedIcon(
-                      icon: AnimatedIcons.play_pause,
-                      progress: _animation,
-                    ),
-                  ),
-                  SizedBox(width: textWidth * _animation.value, child: child!),
-                ],
-              ),
-            );
-          },
-          child: suspend
-              ? Text(
-                  appLocalizations.suspended,
-                  maxLines: 1,
-                  overflow: TextOverflow.visible,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: context.colorScheme.onPrimaryContainer,
-                  ),
-                )
-              : Consumer(
-                  builder: (_, ref, _) {
-                    final runTime = ref.watch(runTimeProvider);
-                    final text = utils.getTimeText(runTime);
-                    return Text(
-                      text,
-                      maxLines: 1,
-                      overflow: TextOverflow.visible,
-                      style: Theme.of(context).textTheme.titleMedium?.toSoftBold
-                          .copyWith(
-                            color: context.colorScheme.onPrimaryContainer,
-                          ),
-                    );
-                  },
-                ),
         ),
       ),
     );
