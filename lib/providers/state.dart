@@ -284,15 +284,31 @@ ProxiesListState proxiesListState(Ref ref) {
 ProxiesTabState proxiesTabState(Ref ref) {
   final query = ref.watch(queryProvider(QueryTag.proxies));
   final currentGroups = ref.watch(filterGroupsStateProvider(query));
-  final currentGroupName = ref.watch(
+  final savedGroupName = ref.watch(
     currentProfileProvider.select((state) => state?.currentGroupName),
   );
   final cardType = ref.watch(
     proxiesStyleSettingProvider.select((state) => state.cardType),
   );
   final columns = ref.watch(proxiesColumnsProvider);
+  final groups = currentGroups.value;
+  // 用户未拣过时,默认落主选组「易聯 Residential IP」而唔系第一组「套餐信息」。
+  // 一拣过(savedGroupName 有效)就尊重用户选择。
+  final hasSaved =
+      savedGroupName != null && groups.any((g) => g.name == savedGroupName);
+  final currentGroupName = hasSaved || groups.isEmpty
+      ? savedGroupName
+      : groups
+            .firstWhere(
+              (g) =>
+                  g.name.contains('Residential') ||
+                  g.name.contains('易聯') ||
+                  g.name.contains('易联'),
+              orElse: () => groups.first,
+            )
+            .name;
   return ProxiesTabState(
-    groups: currentGroups.value,
+    groups: groups,
     currentGroupName: currentGroupName,
     proxyCardType: cardType,
     columns: columns,
