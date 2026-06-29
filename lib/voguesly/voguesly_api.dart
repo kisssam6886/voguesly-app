@@ -201,6 +201,7 @@ class VogueslyUser {
     required this.transferEnable,
     required this.expiredAt,
     required this.planId,
+    this.email,
   });
 
   final int upload;
@@ -208,9 +209,14 @@ class VogueslyUser {
   final int transferEnable;
   final int? expiredAt;
   final int? planId;
+  final String? email;
 
   int get used => upload + download;
   int get remain => (transferEnable - used).clamp(0, transferEnable);
+
+  /// 剩余流量百分比 0..1（transferEnable=0 时返 0，避免除零）。
+  double get remainRatio =>
+      transferEnable <= 0 ? 0 : (remain / transferEnable).clamp(0, 1);
 
   static int _toInt(Object? v) =>
       v is int ? v : (v is num ? v.toInt() : int.tryParse('$v') ?? 0);
@@ -221,5 +227,6 @@ class VogueslyUser {
         transferEnable: _toInt(j['transfer_enable']),
         expiredAt: j['expired_at'] == null ? null : _toInt(j['expired_at']),
         planId: j['plan_id'] == null ? null : _toInt(j['plan_id']),
+        email: j['email']?.toString(),
       );
 }
