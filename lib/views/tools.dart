@@ -75,9 +75,8 @@ class _ToolViewState extends ConsumerState<ToolsView> {
       items: [
         const _LocaleItem(),
         const _ThemeItem(),
-        const _ConfigItem(),
         const _SettingItem(),
-        // 进阶项收埋落子页(备份/访问控制/进阶配置/快捷键/loopback),保持主页简洁
+        // 进阶项全部收埋落子页(基本配置/请求/连接/资源/备份/访问控制/进阶配置),保持简洁
         const _AdvancedItem(),
       ],
     );
@@ -93,6 +92,8 @@ class _ToolViewState extends ConsumerState<ToolsView> {
     final items = [
       const _AccountHeader(),
       const _SubscriptionEntry(),
+      ..._getSettingList(),
+      // 诊断项(请求/连接/资源)摆设置之后,唔抢普通用户视线
       Consumer(
         builder: (_, ref, _) {
           final state = ref.watch(moreToolsSelectorStateProvider);
@@ -107,7 +108,6 @@ class _ToolViewState extends ConsumerState<ToolsView> {
           );
         },
       ),
-      ..._getSettingList(),
       ..._getOtherList(vm2.b),
     ];
     return CommonScaffold(
@@ -285,6 +285,7 @@ class _AdvancedToolsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = <Widget>[
+      const _ConfigItem(),
       const _BackupItem(),
       if (system.isDesktop) const _HotkeyItem(),
       if (system.isWindows) const _LoopbackItem(),

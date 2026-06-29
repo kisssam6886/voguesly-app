@@ -1,10 +1,8 @@
-import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/core/controller.dart';
 import 'package:fl_clash/database/database.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
-import 'package:fl_clash/state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -547,22 +545,20 @@ ColorScheme genColorScheme(
       (state) => VM2(state.primaryColor, state.schemeVariant),
     ),
   );
-  if (color == null && (ignoreConfig == true || vm2.a == null)) {
-    // if (globalState.corePalette != null) {
-    //   return globalState.corePalette!.toColorScheme(brightness: brightness);
-    // }
+  // 旧 FlClash 默认色(0xD8C0C3 玫瑰灰)视为「未自定义」,连同 null 一律用品牌靛蓝。
+  // 唔再跟系统 Material You(用户壁纸色),保证全 app 品牌色一致。
+  const oldDefaultColor = 0xFFD8C0C3;
+  final customColor =
+      (vm2.a == null || vm2.a == oldDefaultColor) ? null : vm2.a;
+  if (color == null && (ignoreConfig == true || customColor == null)) {
     return ColorScheme.fromSeed(
-      seedColor:
-          globalState.corePalette
-              ?.toColorScheme(brightness: brightness)
-              .primary ??
-          globalState.accentColor,
+      seedColor: const Color(defaultPrimaryColor),
       brightness: brightness,
       dynamicSchemeVariant: vm2.b,
     );
   }
   return ColorScheme.fromSeed(
-    seedColor: color ?? Color(vm2.a!),
+    seedColor: color ?? Color(customColor!),
     brightness: brightness,
     dynamicSchemeVariant: vm2.b,
   );
