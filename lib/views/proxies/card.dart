@@ -71,12 +71,33 @@ class ProxyCard extends StatelessWidget {
     );
   }
 
+  /// 从节点名推地区旗(只对明确含地区词嘅真节点;信息横幅/decoy 唔 match 唔加)。
+  static String _regionFlag(String name) {
+    bool has(List<String> kws) => kws.any((k) => name.contains(k));
+    if (has(['香港', '香港', 'HK', 'Hong'])) return '🇭🇰';
+    if (has(['新加坡', '狮城', '獅城', 'Singapore', 'SG'])) return '🇸🇬';
+    if (has(['日本', '東京', '东京', 'Japan', 'JP'])) return '🇯🇵';
+    if (has(['韩国', '韓國', '首尔', 'Korea', 'KR'])) return '🇰🇷';
+    if (has(['荷兰', '荷蘭', 'Netherlands', 'NL'])) return '🇳🇱';
+    if (has(['英国', '英國', 'UK', 'London', 'GB'])) return '🇬🇧';
+    if (has(['德国', '德國', 'Germany', 'DE'])) return '🇩🇪';
+    if (has(['台湾', '台灣', 'Taiwan', 'TW'])) return '🇨🇳';
+    if (has(['美国', '美國', 'US', 'United States'])) return '🇺🇸';
+    return '';
+  }
+
+  String _displayName() {
+    final flag = _regionFlag(proxy.name);
+    return flag.isEmpty ? proxy.name : '$flag ${proxy.name}';
+  }
+
   Widget _buildProxyNameText(BuildContext context) {
+    final name = _displayName();
     if (type == ProxyCardType.min) {
       return SizedBox(
         height: measure.bodyMediumHeight * 1,
         child: EmojiText(
-          proxy.name,
+          name,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: context.textTheme.bodyMedium,
@@ -86,7 +107,7 @@ class ProxyCard extends StatelessWidget {
       return SizedBox(
         height: measure.bodyMediumHeight * 2,
         child: EmojiText(
-          proxy.name,
+          name,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: context.textTheme.bodyMedium,
