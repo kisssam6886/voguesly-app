@@ -51,13 +51,19 @@ class VogueslyAuthNotifier extends Notifier<VogueslyAuthState> {
   Future<bool> login(String email, String password) =>
       _authenticate(() => _api.login(email: email, password: password));
 
-  /// 注册(XBoard 注册即自动登录)。
-  Future<bool> register(String email, String password, [String? inviteCode]) =>
+  /// 注册(XBoard 注册即自动登录)。emailCode: 后台开 email_verify 时必填。
+  Future<bool> register(
+    String email,
+    String password, [
+    String? inviteCode,
+    String? emailCode,
+  ]) =>
       _authenticate(
         () => _api.register(
           email: email,
           password: password,
           inviteCode: inviteCode,
+          emailCode: emailCode,
         ),
       );
 
@@ -121,6 +127,9 @@ class VogueslyAuthNotifier extends Notifier<VogueslyAuthState> {
     }
   }
 
+  /// 发送邮箱验证码(注册前,后台 email_verify 开时用)。
+  Future<bool> sendEmailVerify(String email) => _api.sendEmailVerify(email);
+
   void logout() {
     state = const VogueslyAuthState();
   }
@@ -130,3 +139,10 @@ final vogueslyAuthProvider =
     NotifierProvider<VogueslyAuthNotifier, VogueslyAuthState>(
   VogueslyAuthNotifier.new,
 );
+
+/// 后台开关配置(邮箱验证码 / 人机验证),登录页据此决定显示。
+/// 后台关时返默认(全 false),即唔显示额外位。
+final vogueslyClientConfigProvider =
+    FutureProvider<VogueslyClientConfig>((ref) async {
+  return ref.read(vogueslyApiProvider).getClientConfig();
+});

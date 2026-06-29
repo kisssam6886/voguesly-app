@@ -60,21 +60,56 @@ class VogueslyApi {
   }) =>
       _postAuth('/passport/auth/login', email, password, '邮箱或密码错误');
 
-  /// 注册(XBoard 注册即自动登录, 同样返 auth_data)。只需邮箱+密码。
+  /// 注册(XBoard 注册即自动登录, 同样返 auth_data)。
+  /// emailCode: 后台 email_verify 开时必填(邮箱验证码)。
   Future<VogueslyAuthResult> register({
     required String email,
     required String password,
     String? inviteCode,
-  }) =>
-      _postAuth(
-        '/passport/auth/register',
-        email,
-        password,
-        '注册失败',
-        extra: (inviteCode != null && inviteCode.trim().isNotEmpty)
-            ? {'invite_code': inviteCode.trim()}
-            : null,
+    String? emailCode,
+  }) {
+    final extra = <String, dynamic>{};
+    if (inviteCode != null && inviteCode.trim().isNotEmpty) {
+      extra['invite_code'] = inviteCode.trim();
+    }
+    if (emailCode != null && emailCode.trim().isNotEmpty) {
+      extra['email_code'] = emailCode.trim();
+    }
+    return _postAuth(
+      '/passport/auth/register',
+      email,
+      password,
+      '注册失败',
+      extra: extra.isEmpty ? null : extra,
+    );
+  }
+
+  /// 拉客户端配置(后台是否开 邮箱验证码 / 人机验证)。
+  Future<VogueslyClientConfig> getClientConfig() async {
+    try {
+      final resp = await _try('/guest/comm/config');
+      final data = (resp.data as Map<String, dynamic>?)?['data'];
+      if (data is Map<String, dynamic>) {
+        return VogueslyClientConfig.fromJson(data);
+      }
+    } catch (_) {}
+    return const VogueslyClientConfig();
+  }
+
+  /// 发送邮箱验证码(后台 email_verify 开时,注册前调用)。返回是否成功。
+  Future<bool> sendEmailVerify(String email) async {
+    try {
+      final resp = await _try(
+        '/passport/comm/sendEmailVerify',
+        method: 'POST',
+        data: {'email': email.trim()},
       );
+      final json = resp.data as Map<String, dynamic>?;
+      return resp.statusCode == 200 && (json?['data'] == true);
+    } catch (_) {
+      return false;
+    }
+  }
 
   Future<VogueslyAuthResult> _postAuth(
     String path,
@@ -236,5 +271,31 @@ class VogueslyUser {
         expiredAt: j['expired_at'] == null ? null : _toInt(j['expired_at']),
         planId: j['plan_id'] == null ? null : _toInt(j['plan_id']),
         email: j['email']?.toString(),
+      );
+}
+
+/// 后台 /guest/comm/config 下发:登录/注册页据此决定显示验证码 / 邮箱码。
+class VogueslyClientConfig {
+  const VogueslyClientConfig({
+    this.isEmailVerify = false,
+    this.isCaptcha = false,
+    this.captchaType = 'recaptcha-v3',
+    this.recaptchaV3SiteKey,
+    this.turnstileSiteKey,
+  });
+
+  final bool isEmailVerify;
+  final bool isCaptcha;
+  final String captchaType; // recaptcha | recaptcha-v3 | turnstile
+  final String? recaptchaV3SiteKey;
+  final String? turnstileSiteKey;
+
+  factory VogueslyClientConfig.fromJson(Map<String, dynamic> j) =>
+      VogueslyClientConfig(
+        isEmailVerify: j['is_email_verify'] == 1 || j['is_email_verify'] == true,
+        isCaptcha: j['is_captcha'] == 1 || j['is_captcha'] == true,
+        captchaType: j['captcha_type']?.toString() ?? 'recaptcha-v3',
+        recaptchaV3SiteKey: j['recaptcha_v3_site_key']?.toString(),
+        turnstileSiteKey: j['turnstile_site_key']?.toString(),
       );
 }

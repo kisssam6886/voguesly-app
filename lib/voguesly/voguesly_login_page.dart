@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,9 +20,12 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _inviteCode = TextEditingController();
+  final _emailCode = TextEditingController();
   bool _obscure = true;
   bool _registerMode = false;
   bool _remember = true;
+  int _codeCooldown = 0;
+  Timer? _codeTimer;
 
   @override
   void initState() {
@@ -41,7 +46,31 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
     _email.dispose();
     _password.dispose();
     _inviteCode.dispose();
+    _emailCode.dispose();
+    _codeTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _sendCode() async {
+    if (!_email.text.contains('@')) {
+      _toast('请先输入有效邮箱');
+      return;
+    }
+    final ok =
+        await ref.read(vogueslyAuthProvider.notifier).sendEmailVerify(_email.text);
+    if (!mounted) return;
+    _toast(ok ? '验证码已发送' : '发送失败,请稍后再试');
+    if (ok) {
+      setState(() => _codeCooldown = 60);
+      _codeTimer?.cancel();
+      _codeTimer = Timer.periodic(const Duration(seconds: 1), (t) {
+        if (!mounted || _codeCooldown <= 0) {
+          t.cancel();
+          return;
+        }
+        setState(() => _codeCooldown--);
+      });
+    }
   }
 
   Future<void> _submit() async {
@@ -49,7 +78,8 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
     FocusScope.of(context).unfocus();
     final notifier = ref.read(vogueslyAuthProvider.notifier);
     final ok = _registerMode
-        ? await notifier.register(_email.text, _password.text, _inviteCode.text)
+        ? await notifier.register(
+            _email.text, _password.text, _inviteCode.text, _emailCode.text)
         : await notifier.login(_email.text, _password.text);
     if (!mounted) return;
     if (ok) {
@@ -82,6 +112,9 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
       vogueslyAuthProvider
           .select((s) => s.status == VogueslyAuthStatus.loggingIn),
     );
+    // 后台开关:邮箱验证码 / 人机验证。关时全 false,唔显示额外位。
+    final config = ref.watch(vogueslyClientConfigProvider).asData?.value;
+    final showEmailCode = _registerMode && (config?.isEmailVerify ?? false);
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -132,6 +165,44 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
                       validator: (v) =>
                           (v == null || !v.contains('@')) ? '请输入有效邮箱' : null,
                     ),
+                    if (showEmailCode) ...[
+                      const SizedBox(height: 14),
+                      _label('邮箱验证码', required: true),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _field(
+                              controller: _emailCode,
+                              hint: '6 位验证码',
+                              icon: Icons.mail_lock_outlined,
+                              keyboardType: TextInputType.number,
+                              enabled: !loading,
+                              validator: (v) => (showEmailCode &&
+                                      (v == null || v.trim().isEmpty))
+                                  ? '请输入验证码'
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            height: 50,
+                            child: OutlinedButton(
+                              onPressed: (loading || _codeCooldown > 0)
+                                  ? null
+                                  : _sendCode,
+                              style: OutlinedButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Text(
+                                  _codeCooldown > 0 ? '${_codeCooldown}s' : '发送'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 14),
                     _label('密码', required: true),
                     _field(
