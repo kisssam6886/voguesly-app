@@ -128,6 +128,23 @@ class VogueslyApi {
     }
     return null;
   }
+
+  /// 探测某订阅 URL 是否可达(用于 fallback 选路)。
+  /// 用本类 dio(我们控制超时 + 全局接受自签证书)，可达返 true，不弹任何 UI。
+  Future<bool> probeUrl(String url) async {
+    try {
+      final resp = await _dio.get<String>(
+        url,
+        options: Options(
+          responseType: ResponseType.plain,
+          validateStatus: (c) => c != null && c < 500,
+        ),
+      );
+      return resp.statusCode == 200 && (resp.data?.isNotEmpty ?? false);
+    } catch (_) {
+      return false;
+    }
+  }
 }
 
 class VogueslyAuthResult {

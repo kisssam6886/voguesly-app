@@ -45,23 +45,27 @@ class _VogueslyGateState extends ConsumerState<VogueslyGate> {
     // 导入当前账号订阅：主入口 cp + 3 个中国可达 fallback 镜像，逐个试，第一个成功即停。
     // 主入口偶尔瞬断时自动 fallback，保证订阅 100% 拉到。
     final uri = Uri.parse(url);
-    String? importedUrl;
+    final api = ref.read(vogueslyApiProvider);
+    // ⚠️ addProfileFormURL 内部用 loadingRun 会食咗网络错误(弹 dialog 但唔 throw)，
+    // 所以唔可以靠 try/catch 佢嚟做 fallback。改成先用我哋控制嘅 dio 逐个 probe，
+    // 揾到真正可达嘅 host 先 import 一次(主 cp 瞬断自动轮镜像)。
+    String? workingUrl;
     for (final host in const [
       'cp.voguesly.com',
       's1.corelane.xyz',
       's2.corelane.xyz',
       's3.octolink.xyz',
     ]) {
-      try {
-        final tryUrl = uri.replace(host: host).toString();
-        await action.addProfileFormURL(tryUrl);
-        importedUrl = tryUrl;
+      final tryUrl = uri.replace(host: host).toString();
+      if (await api.probeUrl(tryUrl)) {
+        workingUrl = tryUrl;
         break;
-      } catch (_) {
-        // 此入口失败，试下一个
       }
     }
-    if (!mounted || importedUrl == null) return;
+    if (!mounted || workingUrl == null) return;
+    await action.addProfileFormURL(workingUrl);
+    final importedUrl = workingUrl;
+    if (!mounted) return;
     // 强制把当前账号订阅设为活动 profile（防止旧 currentProfileId 残留）
     final imported = ref
         .read(profilesProvider)
