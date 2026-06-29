@@ -289,6 +289,7 @@
   "basicConfig": "Basic configuration",
   "basicConfigDesc": "Modify the basic configuration globally",
   "advancedConfig": "Advanced configuration",
+  "advancedTools": "Advanced",
   "advancedConfigDesc": "Provide diverse configuration options",
   "selectedCountTitle": "{count} items have been selected",
   "addRule": "Add rule",

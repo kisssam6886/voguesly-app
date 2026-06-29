@@ -70,13 +70,10 @@ class _ToolViewState extends ConsumerState<ToolsView> {
       items: [
         const _LocaleItem(),
         const _ThemeItem(),
-        const _BackupItem(),
-        if (system.isDesktop) const _HotkeyItem(),
-        if (system.isWindows) const _LoopbackItem(),
-        if (system.isAndroid) const _AccessItem(),
         const _ConfigItem(),
-        const _AdvancedConfigItem(),
         const _SettingItem(),
+        // 进阶项收埋落子页(备份/访问控制/进阶配置/快捷键/loopback),保持主页简洁
+        const _AdvancedItem(),
       ],
     );
   }
@@ -257,6 +254,43 @@ class _AdvancedConfigItem extends StatelessWidget {
       title: Text(context.appLocalizations.advancedConfig),
       subtitle: Text(context.appLocalizations.advancedConfigDesc),
       delegate: const OpenDelegate(widget: AdvancedConfigView()),
+    );
+  }
+}
+
+/// 进阶入口:把唔常用嘅项(备份/访问控制/进阶配置/快捷键/loopback)收埋落子页,保持工具页简洁。
+class _AdvancedItem extends StatelessWidget {
+  const _AdvancedItem();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListItem.open(
+      leading: const Icon(Icons.tune),
+      title: Text(context.appLocalizations.advancedTools),
+      delegate: const OpenDelegate(widget: _AdvancedToolsView()),
+    );
+  }
+}
+
+class _AdvancedToolsView extends StatelessWidget {
+  const _AdvancedToolsView();
+
+  @override
+  Widget build(BuildContext context) {
+    final items = <Widget>[
+      const _BackupItem(),
+      if (system.isDesktop) const _HotkeyItem(),
+      if (system.isWindows) const _LoopbackItem(),
+      if (system.isAndroid) const _AccessItem(),
+      const _AdvancedConfigItem(),
+    ];
+    return BaseScaffold(
+      title: context.appLocalizations.advancedTools,
+      body: ListView.builder(
+        itemCount: items.length,
+        itemBuilder: (_, index) => items[index],
+        padding: const EdgeInsets.only(bottom: 20),
+      ),
     );
   }
 }

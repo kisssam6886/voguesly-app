@@ -2214,6 +2214,11 @@ class AppLocalizations {
     );
   }
 
+  /// `Advanced`
+  String get advancedTools {
+    return Intl.message('Advanced', name: 'advancedTools', desc: '', args: []);
+  }
+
   /// `Provide diverse configuration options`
   String get advancedConfigDesc {
     return Intl.message(

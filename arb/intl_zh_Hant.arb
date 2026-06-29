@@ -289,6 +289,7 @@
   "basicConfig": "基本配置",
   "basicConfigDesc": "全局修改基本配置",
   "advancedConfig": "進階配置",
+  "advancedTools": "進階",
   "advancedConfigDesc": "提供多樣化配置",
   "selectedCountTitle": "已選擇 {count} 項",
   "addRule": "添加規則",
