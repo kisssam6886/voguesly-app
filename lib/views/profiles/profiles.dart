@@ -233,9 +233,13 @@ class ProfileItem extends StatelessWidget {
   Future updateProfile() async {
     if (profile.type == ProfileType.file) return;
     await globalState.loadingRun(() async {
-      await globalState.container
+      // 用镜像 fallback 版,绕开 FlClash 直打 cp.voguesly.com 嘅 connection reset。
+      final ok = await globalState.container
           .read(profilesActionProvider.notifier)
-          .updateProfile(profile, showLoading: true);
+          .refreshVogueslyProfile(profile, showLoading: true);
+      if (!ok) {
+        globalState.showNotifier('更新订阅失败,请稍后重试');
+      }
     }, tag: LoadingTag.profiles);
   }
 

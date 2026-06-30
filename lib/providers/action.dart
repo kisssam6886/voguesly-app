@@ -15,6 +15,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../voguesly/voguesly_auth.dart';
+
 part 'generated/action.g.dart';
 
 @Riverpod(keepAlive: true)
@@ -903,6 +905,36 @@ class ProfilesAction extends _$ProfilesAction {
             .read(setupActionProvider.notifier)
             .applyProfileDebounce(silence: true);
       }
+    } finally {
+      ref.read(isUpdatingProvider(profile.updatingKey).notifier).value = false;
+    }
+  }
+
+  /// 用 voguesly 自家 dio 更新订阅(主 cp 失败自动轮 fallback 镜像),绕开 FlClash 核心
+  /// _clashDio(后者直打 cp.voguesly.com,China→HK 瞬断会抛「未知网络错误」/connection reset)。
+  /// 返回是否成功。
+  Future<bool> refreshVogueslyProfile(
+    Profile profile, {
+    bool showLoading = false,
+  }) async {
+    try {
+      if (showLoading) {
+        ref.read(isUpdatingProvider(profile.updatingKey).notifier).value = true;
+      }
+      final fetched =
+          await ref.read(vogueslyApiProvider).fetchSubscribeBytes(profile.url);
+      if (fetched == null) return false;
+      final updated =
+          await profile.copyWith(url: fetched.url).saveFile(fetched.bytes);
+      ref.read(profilesProvider.notifier).put(updated);
+      if (profile.id == ref.read(currentProfileIdProvider)) {
+        ref
+            .read(setupActionProvider.notifier)
+            .applyProfileDebounce(silence: true);
+      }
+      return true;
+    } catch (_) {
+      return false;
     } finally {
       ref.read(isUpdatingProvider(profile.updatingKey).notifier).value = false;
     }
