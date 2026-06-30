@@ -8,6 +8,9 @@ import 'package:fl_clash/state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../voguesly/voguesly_onboarding_sheet.dart';
+import '../../../voguesly/voguesly_subscription.dart';
+
 /// 仪表盘大圆圈连接掣(消费者向):
 /// 未连=白底醒目圈「开启易联」+ 脉冲动效;撳后 3-2-1 倒计时;已连=绿圈「已连接·轻触断开」。
 /// 连接逻辑复用 setupActionProvider.updateStatus(同原 StartButton)。
@@ -50,7 +53,13 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
   }
 
   void _onTap(bool hasProfile) {
-    if (!hasProfile) return;
+    if (!hasProfile) {
+      // 正在载入订阅时唔好弹引导(避免有套餐用户启动期误开引导)。
+      if (ref.read(vogueslyImportingProvider)) return;
+      // 未有套餐/订阅:弹引导卡(免费测试一键开通 / 购买验证包),唔好净系冷冰冰禁用。
+      showVogueslyOnboarding(context);
+      return;
+    }
     if (isStart) {
       // 断开
       _toggleCore(false);
@@ -98,9 +107,13 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
     final hasProfile = ref.watch(
       profilesProvider.select((state) => state.isNotEmpty),
     );
+    // China→HK 拉订阅通常十几秒;载入期显示「正在载入订阅」而非误显示「点我开通」。
+    final importing = ref.watch(vogueslyImportingProvider) && !hasProfile;
     final suspend = ref.watch(suspendProvider);
     final cs = context.colorScheme;
-    final connecting = _connecting && !isStart;
+    // 倒计时期间(_connecting)就显示「正在开启 3-2-1」,唔好因为连接太快(isStart变true)
+    // 而提早绕过倒计时;倒计时行足由 timer 清 _connecting 先显示真实状态。
+    final connecting = _connecting;
 
     // 配色
     final Color fill;
@@ -116,7 +129,7 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
       fg = cs.primary;
     }
     final title = !hasProfile
-        ? '请先添加订阅'
+        ? (importing ? '正在载入订阅…' : '点我开通')
         : suspend
             ? context.appLocalizations.suspended
             : isStart
@@ -137,8 +150,8 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // 脉冲动效(只喺未连+空闲时)
-                if (!isStart && !connecting)
+                // 脉冲动效(只喺未连+空闲时;载入订阅时唔脉冲,改显示 spinner)
+                if (!isStart && !connecting && !importing)
                   AnimatedBuilder(
                     animation: _pulse,
                     builder: (_, _) {
@@ -177,7 +190,7 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
                             fontWeight: FontWeight.bold,
                           ),
                         )
-                      else if (connecting)
+                      else if (connecting || importing)
                         SizedBox(
                           width: 34,
                           height: 34,

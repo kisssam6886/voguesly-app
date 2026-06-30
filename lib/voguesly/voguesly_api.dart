@@ -221,6 +221,80 @@ class VogueslyApi {
     }
     return null;
   }
+
+  /// 查询当前用户免费测试资格(后端 GET /user/trial/status)。
+  /// eligible=可领;hasUsed=已领过;hasActivePaidPlan=已有付费套餐。
+  Future<VogueslyTrialStatus> getTrialStatus(String token) async {
+    try {
+      final resp = await _try(
+        '/user/trial/status',
+        headers: {'Authorization': token},
+      );
+      final data = (resp.data as Map<String, dynamic>?)?['data'];
+      if (data is Map<String, dynamic>) {
+        return VogueslyTrialStatus.fromJson(data);
+      }
+    } catch (_) {}
+    return const VogueslyTrialStatus();
+  }
+
+  /// 领取免费测试(后端 POST /user/trial/apply)。成功后该账号即得 6小时/500MB 套餐。
+  /// 返回 (ok, message)。失败 message 系后端文案(已领过/已有套餐/未开放等)。
+  Future<({bool ok, String message})> applyTrial(
+    String token, {
+    String source = 'android_app',
+    String goal = 'app内一键体验',
+  }) async {
+    try {
+      final resp = await _try(
+        '/user/trial/apply',
+        method: 'POST',
+        data: {'source': source, 'goal': goal},
+        headers: {'Authorization': token},
+      );
+      final json = resp.data as Map<String, dynamic>?;
+      if (resp.statusCode == 200 && json?['data'] != null) {
+        final d = json!['data'];
+        final msg = (d is Map<String, dynamic> ? d['message'] : null)
+                ?.toString() ??
+            '免费测试已开通';
+        return (ok: true, message: msg);
+      }
+      return (
+        ok: false,
+        message: json?['message']?.toString() ?? '开通失败,请稍后再试',
+      );
+    } on DioException catch (e) {
+      return (ok: false, message: '网络异常: ${e.message ?? e.type.name}');
+    } catch (e) {
+      return (ok: false, message: '开通失败: $e');
+    }
+  }
+}
+
+/// 免费测试资格(后端 /user/trial/status)。
+class VogueslyTrialStatus {
+  const VogueslyTrialStatus({
+    this.eligible = false,
+    this.hasUsed = false,
+    this.hasActivePaidPlan = false,
+    this.templateAvailable = false,
+  });
+
+  final bool eligible; // 可领免费测试
+  final bool hasUsed; // 已领取过
+  final bool hasActivePaidPlan; // 已有有效付费套餐
+  final bool templateAvailable; // 后台免费测试模板是否开放
+
+  static bool _b(Object? v) => v == 1 || v == true;
+
+  factory VogueslyTrialStatus.fromJson(Map<String, dynamic> j) =>
+      VogueslyTrialStatus(
+        eligible: _b(j['eligible']),
+        hasUsed: _b(j['has_used']),
+        hasActivePaidPlan: _b(j['has_active_paid_plan']),
+        templateAvailable: _b(j['template_available']),
+      );
 }
 
 class VogueslyAuthResult {
