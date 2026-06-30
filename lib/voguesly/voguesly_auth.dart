@@ -1,10 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'voguesly_api.dart';
 
 final vogueslyApiProvider = Provider<VogueslyApi>((ref) => VogueslyApi());
 
-enum VogueslyAuthStatus { loggedOut, loggingIn, loggedIn }
+/// 登录令牌持久化 key(SharedPreferences,app 私有目录,免每次开 app 重登)。
+const String _kAuthTokenKey = 'voguesly_auth_token';
+
+/// restoring=启动时正从持久化恢复(显示 splash,唔闪登录页);
+/// loggedOut/loggingIn/loggedIn 同前。
+enum VogueslyAuthStatus { restoring, loggedOut, loggingIn, loggedIn }
 
 class VogueslyAuthState {
   const VogueslyAuthState({
@@ -43,9 +51,48 @@ class VogueslyAuthState {
 
 class VogueslyAuthNotifier extends Notifier<VogueslyAuthState> {
   @override
-  VogueslyAuthState build() => const VogueslyAuthState();
+  VogueslyAuthState build() {
+    _restore();
+    return const VogueslyAuthState(status: VogueslyAuthStatus.restoring);
+  }
 
   VogueslyApi get _api => ref.read(vogueslyApiProvider);
+
+  /// 启动时从持久化恢复登录态。XBoard auth_data 长期有效(改密前唔过期),
+  /// 故读到即直接进已登录,唔阻塞等 China→HK 网络;套餐卡后台 refresh。
+  /// 读唔到 → loggedOut(显示登录页)。
+  Future<void> _restore() async {
+    String? token;
+    try {
+      // 加超时:万一 SharedPreferences 卡住,亦保证状态机到达终态(loggedOut),唔会永久 splash。
+      final p = await SharedPreferences.getInstance()
+          .timeout(const Duration(seconds: 5));
+      token = p.getString(_kAuthTokenKey);
+    } catch (_) {}
+    if (token == null || token.isEmpty) {
+      state = const VogueslyAuthState(status: VogueslyAuthStatus.loggedOut);
+      return;
+    }
+    state = VogueslyAuthState(
+      status: VogueslyAuthStatus.loggedIn,
+      token: token,
+    );
+    unawaited(refreshUser());
+  }
+
+  Future<void> _saveToken(String token) async {
+    try {
+      final p = await SharedPreferences.getInstance();
+      await p.setString(_kAuthTokenKey, token);
+    } catch (_) {}
+  }
+
+  Future<void> _clearToken() async {
+    try {
+      final p = await SharedPreferences.getInstance();
+      await p.remove(_kAuthTokenKey);
+    } catch (_) {}
+  }
 
   /// 登录: 成功后存令牌 + 拉套餐, 状态变 loggedIn。
   Future<bool> login(String email, String password) =>
@@ -87,6 +134,7 @@ class VogueslyAuthNotifier extends Notifier<VogueslyAuthState> {
       user: user,
       subscribeUrl: subscribeUrl,
     );
+    unawaited(_saveToken(authData));
     return true;
   }
 
@@ -119,6 +167,7 @@ class VogueslyAuthNotifier extends Notifier<VogueslyAuthState> {
       user: user,
       subscribeUrl: subscribeUrl,
     );
+    unawaited(_saveToken(token));
     return true;
   }
 
@@ -128,6 +177,16 @@ class VogueslyAuthNotifier extends Notifier<VogueslyAuthState> {
     if (token == null) return;
     try {
       final bundle = await _api.getSubscribeBundle(token);
+      // 会话已变(登出/换账号)→ 丢弃呢个迟到结果,唔好把旧账号资料写返去新状态。
+      if (state.status != VogueslyAuthStatus.loggedIn || state.token != token) {
+        return;
+      }
+      // 明确 401/403 = token 失效(如改密)→ 自动登出返登录页。
+      // ⚠️ 只喺收到明确 4xx 先登出;China→HK 网络瞬断会 throw 入 catch,唔会误登出。
+      if (bundle.status == 401 || bundle.status == 403) {
+        logout();
+        return;
+      }
       if (bundle.user != null) {
         state = state.copyWith(
           user: bundle.user,
@@ -154,7 +213,8 @@ class VogueslyAuthNotifier extends Notifier<VogueslyAuthState> {
   Future<bool> sendEmailVerify(String email) => _api.sendEmailVerify(email);
 
   void logout() {
-    state = const VogueslyAuthState();
+    unawaited(_clearToken());
+    state = const VogueslyAuthState(status: VogueslyAuthStatus.loggedOut);
   }
 }
 

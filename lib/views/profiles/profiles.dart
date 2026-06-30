@@ -5,6 +5,7 @@ import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/views/profiles/overwrite/overwrite.dart';
 import 'package:fl_clash/voguesly/voguesly_auth.dart';
+import 'package:fl_clash/voguesly/voguesly_subscription.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -121,16 +122,9 @@ class _ProfilesViewState extends State<ProfilesView> {
       message: const TextSpan(text: '确定登出当前账号？登出后需要重新登录。'),
     );
     if (res != true) return;
-    // 清走当前账号导入的订阅，避免登出后或换账号仍用旧订阅
-    final action = ref.read(profilesActionProvider.notifier);
-    final ids = ref
-        .read(profilesProvider)
-        .where((p) => p.url.contains('voguesly'))
-        .map((p) => p.id)
-        .toList();
-    for (final id in ids) {
-      await action.deleteProfile(id);
-    }
+    // 清走当前账号导入的订阅(含 corelane/octolink 镜像域),避免登出后或换账号仍用旧订阅。
+    // 与 tools.dart 登出共用同一清理,杜绝匹配器漂移。
+    await clearVogueslyProfiles();
     // 清账号状态，VogueslyGate 会自动返回登录页
     ref.read(vogueslyAuthProvider.notifier).logout();
   }

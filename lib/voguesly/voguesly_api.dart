@@ -158,20 +158,23 @@ class VogueslyApi {
 
   /// 一次 /user/getSubscribe 同时攞 用户套餐 + 订阅链接(慳一个 China→HK RT)。
   /// getSubscribe 响应已含 u/d/transfer_enable/expired_at(套餐卡) 同 subscribe_url。
-  Future<({VogueslyUser? user, String? subscribeUrl})> getSubscribeBundle(
+  Future<({VogueslyUser? user, String? subscribeUrl, int? status})>
+      getSubscribeBundle(
     String token,
   ) async {
     final resp =
         await _try('/user/getSubscribe', headers: {'Authorization': token});
+    final status = resp.statusCode;
     final data = (resp.data as Map<String, dynamic>?)?['data'];
     if (data is Map<String, dynamic>) {
       return (
         user: VogueslyUser.fromJson(data),
         subscribeUrl: data['subscribe_url']?.toString(),
+        status: status,
       );
     }
-    if (data is String) return (user: null, subscribeUrl: data);
-    return (user: null, subscribeUrl: null);
+    if (data is String) return (user: null, subscribeUrl: data, status: status);
+    return (user: null, subscribeUrl: null, status: status);
   }
 
   /// 探测某订阅 URL 是否可达(用于 fallback 选路)。
@@ -224,7 +227,8 @@ class VogueslyApi {
 
   /// 查询当前用户免费测试资格(后端 GET /user/trial/status)。
   /// eligible=可领;hasUsed=已领过;hasActivePaidPlan=已有付费套餐。
-  Future<VogueslyTrialStatus> getTrialStatus(String token) async {
+  /// 返 null = 拉取失败(网络),应让 UI 显示「重试」而非误当「不合资格」走购买路径。
+  Future<VogueslyTrialStatus?> getTrialStatus(String token) async {
     try {
       final resp = await _try(
         '/user/trial/status',
@@ -235,7 +239,7 @@ class VogueslyApi {
         return VogueslyTrialStatus.fromJson(data);
       }
     } catch (_) {}
-    return const VogueslyTrialStatus();
+    return null;
   }
 
   /// 领取免费测试(后端 POST /user/trial/apply)。成功后该账号即得 6小时/500MB 套餐。

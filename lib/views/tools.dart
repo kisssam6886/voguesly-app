@@ -20,6 +20,7 @@ import 'package:path/path.dart' show dirname, join;
 
 import '../voguesly/voguesly_auth.dart';
 import '../voguesly/voguesly_avatar.dart';
+import '../voguesly/voguesly_subscription.dart';
 import 'profiles/profiles.dart';
 import 'config/advanced.dart';
 import 'developer.dart';
@@ -524,6 +525,8 @@ class _LogoutItem extends ConsumerWidget {
           ),
         );
         if (ok == true) {
+          // 先删本账号订阅(防换账号串号),再清登录态。两条登出路径共用同一清理。
+          await clearVogueslyProfiles();
           ref.read(vogueslyAuthProvider.notifier).logout();
         }
       },

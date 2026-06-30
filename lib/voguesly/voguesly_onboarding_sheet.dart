@@ -35,6 +35,8 @@ class _OnboardingBody extends ConsumerStatefulWidget {
 class _OnboardingBodyState extends ConsumerState<_OnboardingBody> {
   VogueslyTrialStatus? _status;
   bool _loadingStatus = true;
+  bool _fetchFailed = false; // /trial/status 拉取失败(网络)≠ 不合资格
+  bool _trialGranted = false; // 免费测试已发,只差导入(导入失败可重试)
   bool _busy = false;
   String? _error;
 
@@ -45,52 +47,80 @@ class _OnboardingBodyState extends ConsumerState<_OnboardingBody> {
   }
 
   Future<void> _fetchStatus() async {
-    final token = ref.read(vogueslyAuthProvider).token;
+    if (mounted) {
+      setState(() {
+        _loadingStatus = true;
+        _fetchFailed = false;
+      });
+    }
+    // 用稳定 container,免弹窗中途 dispose 令 ref 抛错。
+    final container = globalState.container;
+    final token = container.read(vogueslyAuthProvider).token;
     if (token == null) {
       if (mounted) setState(() => _loadingStatus = false);
       return;
     }
-    final status = await ref.read(vogueslyApiProvider).getTrialStatus(token);
+    final status =
+        await container.read(vogueslyApiProvider).getTrialStatus(token);
     if (!mounted) return;
     setState(() {
       _status = status;
+      _fetchFailed = status == null; // null = 拉取失败 → 显示重试,唔好误当不合资格
       _loadingStatus = false;
     });
   }
 
   /// 一键开通免费测试 → 导入订阅 → 关闭引导。
   Future<void> _applyTrial() async {
-    final token = ref.read(vogueslyAuthProvider).token;
+    final container = globalState.container;
+    final token = container.read(vogueslyAuthProvider).token;
     if (token == null) return;
     setState(() {
       _busy = true;
       _error = null;
     });
-    final res = await ref.read(vogueslyApiProvider).applyTrial(token);
+    final res = await container.read(vogueslyApiProvider).applyTrial(token);
     if (!mounted) return;
-    if (!res.ok) {
-      setState(() {
-        _busy = false;
-        _error = res.message;
-      });
-      // 后端可能因「已有套餐」拒绝 → 仍尝试导入一次现有订阅
-      if (res.message.contains('已有')) await _subscribeAndClose();
+    if (res.ok) {
+      _trialGranted = true; // 试用已发,导入失败亦只需重试导入(唔好再 call apply)
+      await _subscribeAndClose();
       return;
     }
-    await _subscribeAndClose();
+    // 「已有套餐」唔算错 → 直接导入(保持 busy 到 _subscribeAndClose 完)。
+    if (res.message.contains('已有')) {
+      await _subscribeAndClose();
+      return;
+    }
+    // 已领过 / 未开放等 → 显示后端文案,退出 busy。
+    setState(() {
+      _busy = false;
+      _error = res.message;
+    });
   }
 
-  /// 已有套餐(或刚开通)→ 拉订阅导入 → 关闭。
+  /// 拉订阅导入 → 成功关闭;失败留喺弹窗俾用户重试。
   Future<void> _subscribeAndClose() async {
-    await ref.read(vogueslyAuthProvider.notifier).refreshUser();
-    final ok = await importVogueslySubscription(ref);
+    if (mounted) {
+      setState(() {
+        _busy = true;
+        _error = null;
+      });
+    }
+    // ⚠️ 全程用稳定 container:用户中途关弹窗,导入照样喺稳定容器完成、importing flag 正常复位,
+    //    唔会因 widget dispose 抛错或卡死 spinner。
+    await globalState.container
+        .read(vogueslyAuthProvider.notifier)
+        .refreshUser();
+    final ok = await importVogueslySubscription();
     if (!mounted) return;
     setState(() => _busy = false);
     if (ok) {
       Navigator.of(context).pop();
       globalState.showNotifier('✅ 已开通,点中间圆圈即可连接');
     } else {
-      setState(() => _error = '订阅导入失败,请稍后在「更新订阅」重试');
+      setState(() => _error = _trialGranted
+          ? '已开通,但订阅导入失败(可能网络瞬断)。点下面「重试导入」即可。'
+          : '订阅导入失败,请稍后重试。');
     }
   }
 
@@ -106,17 +136,26 @@ class _OnboardingBodyState extends ConsumerState<_OnboardingBody> {
     final canTrial = status?.eligible ?? false;
     final hasPaid = status?.hasActivePaidPlan ?? false;
 
+    final String header;
+    if (_trialGranted) {
+      header = '免费测试已开通,导入节点即可连接';
+    } else if (_fetchFailed) {
+      header = '网络不稳,暂时取唔到套餐信息';
+    } else if (hasPaid) {
+      header = '你已有套餐';
+    } else if (canTrial) {
+      header = '先免费体验,或购买验证包做完整测试';
+    } else {
+      header = '购买验证包开始完整测试';
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            hasPaid
-                ? '你已有套餐'
-                : canTrial
-                    ? '先免费体验,或购买验证包做完整测试'
-                    : '购买验证包开始完整测试',
+            header,
             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: 20),
@@ -126,8 +165,26 @@ class _OnboardingBodyState extends ConsumerState<_OnboardingBody> {
               child: Center(child: CircularProgressIndicator()),
             )
           else ...[
+            // 试用已发但导入失败:只需重试导入(唔好再 call apply 否则报「已领过」)
+            if (_trialGranted)
+              _PrimaryOption(
+                icon: Icons.refresh_rounded,
+                title: '重试导入订阅',
+                subtitle: '免费测试已开通,导入节点即可连接',
+                busy: _busy,
+                onTap: _busy ? null : _subscribeAndClose,
+              )
+            // /trial/status 拉取失败(网络)→ 重试,唔好误走购买路径
+            else if (_fetchFailed)
+              _PrimaryOption(
+                icon: Icons.refresh_rounded,
+                title: '网络不稳,点我重试',
+                subtitle: '重新获取套餐与免费测试资格',
+                busy: false,
+                onTap: _busy ? null : _fetchStatus,
+              )
             // 已有套餐:直接一键订阅
-            if (hasPaid)
+            else if (hasPaid)
               _PrimaryOption(
                 icon: Icons.bolt_rounded,
                 title: '立即一键订阅',
