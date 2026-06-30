@@ -37,15 +37,12 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
     isStart = ref.read(isStartProvider);
     ref.listenManual(isStartProvider, (prev, next) {
       if (!mounted) return;
-      if (next != isStart) {
-        setState(() {
-          isStart = next;
-          if (next) {
-            _connecting = false;
-            _timer?.cancel();
-          }
-        });
-      }
+      // 真实状态一变就同步 UI + 退出「正在开启」中间态。
+      setState(() {
+        isStart = next;
+        _connecting = false;
+        _timer?.cancel();
+      });
     }, fireImmediately: true);
   }
 
@@ -81,10 +78,16 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
         setState(() => _count--);
       }
     });
+    // 连接超时保护:15s 仲未连上(isStartProvider 冇变 true),退出「正在开启」中间态。
+    Future.delayed(const Duration(seconds: 15), () {
+      if (mounted && _connecting && !isStart) {
+        setState(() => _connecting = false);
+      }
+    });
   }
 
   void _toggleCore(bool start) {
-    isStart = start;
+    // 唔做乐观更新:isStart 由 isStartProvider 监听器做唯一真相源,确保 UI 同实际连接状态一致。
     debouncer.call(FunctionTag.updateStatus, () {
       globalState.container
           .read(setupActionProvider.notifier)
