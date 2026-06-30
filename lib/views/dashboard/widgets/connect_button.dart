@@ -37,12 +37,8 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
     isStart = ref.read(isStartProvider);
     ref.listenManual(isStartProvider, (prev, next) {
       if (!mounted) return;
-      // 真实状态一变就同步 UI + 退出「正在开启」中间态。
-      setState(() {
-        isStart = next;
-        _connecting = false;
-        _timer?.cancel();
-      });
+      // 只同步真实状态;「正在开启」中间态(3-2-1)由倒计时管,唔畀连接太快冲走个倒计时。
+      setState(() => isStart = next);
     }, fireImmediately: true);
   }
 
@@ -67,13 +63,15 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
     });
     _toggleCore(true);
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(milliseconds: 700), (t) {
+    _timer = Timer.periodic(const Duration(milliseconds: 600), (t) {
       if (!mounted) {
         t.cancel();
         return;
       }
       if (_count <= 1) {
+        // 倒计时 3-2-1 行足,先退出中间态显示真实状态(已连接/失败)。
         t.cancel();
+        setState(() => _connecting = false);
       } else {
         setState(() => _count--);
       }
