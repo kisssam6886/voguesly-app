@@ -71,6 +71,8 @@ const _$RestoreStrategyEnumMap = {
 const _$DashboardWidgetEnumMap = {
   DashboardWidget.networkSpeed: 'networkSpeed',
   DashboardWidget.vogueslyAccount: 'vogueslyAccount',
+  DashboardWidget.connectButton: 'connectButton',
+  DashboardWidget.currentRoute: 'currentRoute',
   DashboardWidget.outboundModeV2: 'outboundModeV2',
   DashboardWidget.outboundMode: 'outboundMode',
   DashboardWidget.trafficUsage: 'trafficUsage',
