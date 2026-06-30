@@ -38,7 +38,10 @@ class _VogueslyGateState extends ConsumerState<VogueslyGate> {
         await vogueslyProfileOwnedByCurrentToken()) {
       return; // 确属同账号,免重载
     }
-    await importVogueslySubscription();
+    final ok = await importVogueslySubscription();
+    // 导入失败(网络)→ 复位守卫,令下次 rebuild(如 resume/网络恢复/重测)可自动重导,
+    // 唔会一次失败就永久停喺空订阅。失败态由 vogueslyImportFailedProvider 反映到连接圈。
+    if (!ok) _importTried = false;
   }
 
   @override

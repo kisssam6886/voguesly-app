@@ -869,7 +869,16 @@ class ProfilesAction extends _$ProfilesAction {
         continue;
       }
       try {
-        await updateProfile(profile);
+        // voguesly 订阅走镜像 fallback(cp 被封时核心 _clashDio 直连必失败,后台静默更新唔到节点);
+        // 判定同 voguesly_subscription.isVogueslyProfile 一致(此处 inline 避免 providers→voguesly 反向依赖)。
+        final isVoguesly = profile.url.contains('voguesly') ||
+            profile.url.contains('corelane') ||
+            profile.url.contains('octolink');
+        if (isVoguesly) {
+          await refreshVogueslyProfile(profile);
+        } else {
+          await updateProfile(profile);
+        }
       } catch (e) {
         commonPrint.log(e.toString(), logLevel: LogLevel.warning);
       }

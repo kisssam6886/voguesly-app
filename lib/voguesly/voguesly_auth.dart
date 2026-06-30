@@ -125,6 +125,15 @@ class VogueslyAuthNotifier extends Notifier<VogueslyAuthState> {
     String? subscribeUrl;
     try {
       final bundle = await _api.getSubscribeBundle(authData);
+      // 明确 401/403(所有镜像一致)= authData 无效/被篡改 → 拒绝登录,唔置 loggedIn、唔存盘,
+      // 免坏 token 持久化后下次 _restore 又卡入死登录态。网络异常(throw 入 catch)则宽容进。
+      if (bundle.status == 401 || bundle.status == 403) {
+        state = state.copyWith(
+          status: VogueslyAuthStatus.loggedOut,
+          error: '登录已失效,请重新登录',
+        );
+        return false;
+      }
       user = bundle.user;
       subscribeUrl = bundle.subscribeUrl;
     } catch (_) {}

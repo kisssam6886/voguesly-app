@@ -24,6 +24,7 @@ class ConnectButton extends ConsumerStatefulWidget {
 class _ConnectButtonState extends ConsumerState<ConnectButton>
     with SingleTickerProviderStateMixin {
   static const _green = Color(0xFF22C55E);
+  static const _amber = Color(0xFFF59E0B); // 已连但被排除SSID旁路(suspend):唔显绿,警示直连
   bool isStart = false;
   bool _connecting = false;
   int _count = 0;
@@ -56,12 +57,24 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
     if (!hasProfile) {
       // 正在载入订阅时唔好弹引导(避免有套餐用户启动期误开引导)。
       if (ref.read(vogueslyImportingProvider)) return;
+      // 网络导入失败(≠未开通)→ 点圆圈重试导入,唔好当未开通弹引导。
+      if (ref.read(vogueslyImportFailedProvider)) {
+        importVogueslySubscription();
+        return;
+      }
       // 未有套餐/订阅:弹引导卡(免费测试一键开通 / 购买验证包),唔好净系冷冰冰禁用。
       showVogueslyOnboarding(context);
       return;
     }
     if (isStart) {
-      // 断开
+      // 断开:先 cancel 倒计时 + 清中间态,免倒计时未行完就断开令圆圈卡喺「正在开启」。
+      _timer?.cancel();
+      if (_connecting) {
+        setState(() {
+          _connecting = false;
+          _count = 0;
+        });
+      }
       _toggleCore(false);
       return;
     }
@@ -85,10 +98,11 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
         setState(() => _count--);
       }
     });
-    // 连接超时保护:15s 仲未连上(isStartProvider 冇变 true),退出「正在开启」中间态。
+    // 连接超时保护:15s 仲未连上(isStartProvider 冇变 true),退出「正在开启」中间态 + 明确提示。
     Future.delayed(const Duration(seconds: 15), () {
       if (mounted && _connecting && !isStart) {
         setState(() => _connecting = false);
+        globalState.showNotifier('连接超时,请检查网络,或喺「当前线路」换一条线路再试');
       }
     });
   }
@@ -109,7 +123,12 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
     );
     // China→HK 拉订阅通常十几秒;载入期显示「正在载入订阅」而非误显示「点我开通」。
     final importing = ref.watch(vogueslyImportingProvider) && !hasProfile;
+    // 网络导入失败(≠未开通套餐):空 profile 态显「载入失败·点我重试」而非「点我开通」。
+    final importFailed =
+        ref.watch(vogueslyImportFailedProvider) && !hasProfile && !importing;
     final suspend = ref.watch(suspendProvider);
+    // 已连接但被排除SSID旁路(suspend)→ 流量实际走直连,圆圈唔可以显示「已连接·绿色」。
+    final bypassed = isStart && suspend;
     final cs = context.colorScheme;
     // 倒计时期间(_connecting)就显示「正在开启 3-2-1」,唔好因为连接太快(isStart变true)
     // 而提早绕过倒计时;倒计时行足由 timer 清 _connecting 先显示真实状态。
@@ -118,7 +137,10 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
     // 配色
     final Color fill;
     final Color fg;
-    if (isStart) {
+    if (bypassed) {
+      fill = _amber;
+      fg = Colors.white;
+    } else if (isStart) {
       fill = _green;
       fg = Colors.white;
     } else if (connecting) {
@@ -129,8 +151,12 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
       fg = cs.primary;
     }
     final title = !hasProfile
-        ? (importing ? '正在载入订阅…' : '点我开通')
-        : suspend
+        ? (importing
+            ? '正在载入订阅…'
+            : importFailed
+                ? '载入失败·点我重试'
+                : '点我开通')
+        : bypassed
             ? context.appLocalizations.suspended
             : isStart
                 ? '已连接'
@@ -150,8 +176,8 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // 脉冲动效(只喺未连+空闲时;载入订阅时唔脉冲,改显示 spinner)
-                if (!isStart && !connecting && !importing)
+                // 脉冲动效(只喺未连+空闲时;载入/载入失败时唔脉冲,改显示 spinner/重试图标)
+                if (!isStart && !connecting && !importing && !importFailed)
                   AnimatedBuilder(
                     animation: _pulse,
                     builder: (_, _) {
@@ -174,7 +200,11 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
                     shape: BoxShape.circle,
                     color: fill,
                     border: Border.all(
-                      color: (isStart ? _green : cs.primary)
+                      color: (bypassed
+                              ? _amber
+                              : isStart
+                                  ? _green
+                                  : cs.primary)
                           .withValues(alpha: 0.5),
                       width: 3,
                     ),
@@ -199,6 +229,8 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
                             color: fg,
                           ),
                         )
+                      else if (importFailed)
+                        Icon(Icons.refresh_rounded, size: 52, color: fg)
                       else
                         Icon(Icons.power_settings_new_rounded,
                             size: 52, color: fg),
@@ -220,23 +252,30 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
         // 已连接:轻触断开提示 + 实时速度;未连:留白
         SizedBox(
           height: 20,
-          child: isStart
-              ? Consumer(
-                  builder: (_, ref, _) {
-                    final t = ref.watch(
-                      trafficsProvider.select(
-                        (s) => s.list.safeLast(const Traffic()),
-                      ),
-                    );
-                    return Text(
-                      '轻触断开  ·  ${t.speedText}',
+          child: !isStart
+              ? null
+              : bypassed
+                  ? Text(
+                      '当前网络已跳过加速 · 走直连',
                       style: context.textTheme.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
+                        color: _amber,
                       ),
-                    );
-                  },
-                )
-              : null,
+                    )
+                  : Consumer(
+                      builder: (_, ref, _) {
+                        final t = ref.watch(
+                          trafficsProvider.select(
+                            (s) => s.list.safeLast(const Traffic()),
+                          ),
+                        );
+                        return Text(
+                          '轻触断开  ·  ${t.speedText}',
+                          style: context.textTheme.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        );
+                      },
+                    ),
         ),
       ],
     );

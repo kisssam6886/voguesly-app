@@ -23,6 +23,19 @@ final vogueslyImportingProvider =
   VogueslyImportingNotifier.new,
 );
 
+/// 上次导入订阅是否因**网络**失败(≠未开通套餐)。
+/// 连接圈据此把空 profile 态分两种:网络失败显「载入失败·点我重试」,未开通显「点我开通」。
+class VogueslyImportFailedNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+  void set(bool v) => state = v;
+}
+
+final vogueslyImportFailedProvider =
+    NotifierProvider<VogueslyImportFailedNotifier, bool>(
+  VogueslyImportFailedNotifier.new,
+);
+
 /// 统一判定:呢个 profile 系咪 voguesly 账号订阅(主域 cp + 中国可达镜像 corelane/octolink)。
 /// 三处(导入删 stale / gate 判断 / 登出清理)共用,杜绝匹配器漂移(China 用户最常落镜像域)。
 bool isVogueslyProfile(Profile p) =>
@@ -65,25 +78,26 @@ Future<void> clearVogueslyProfiles() async {
 Future<bool> importVogueslySubscription() async {
   final container = globalState.container;
   container.read(vogueslyImportingProvider.notifier).set(true);
+  container.read(vogueslyImportFailedProvider.notifier).set(false);
   try {
     final auth = container.read(vogueslyAuthProvider.notifier);
     final token = container.read(vogueslyAuthProvider).token;
     final action = container.read(profilesActionProvider.notifier);
-    // 1) 先删走上一账号订阅(fail-safe,放喺拉取之前,任何后续失败都唔会串号)
-    final staleIds = container
-        .read(profilesProvider)
-        .where(isVogueslyProfile)
-        .map((p) => p.id)
-        .toList();
-    for (final id in staleIds) {
-      await action.deleteProfile(id);
-    }
+    // 1) 先拉成功新订阅(**先拉后删**):任何拉取/校验失败都唔会删走旧订阅,
+    //    用户最多停喺「旧订阅(仍可用)」而非掉到「无订阅·点我开通」。
+    //    串号防线唔靠呢度删——靠 owner token 绑定(restore-skip 校验 + 下面成功后删旧账号 profile)。
     final url = await auth.fetchSubscribeUrl();
-    if (url == null || url.isEmpty) return false;
+    if (url == null || url.isEmpty) {
+      container.read(vogueslyImportFailedProvider.notifier).set(true);
+      return false; // 网络:攞唔到订阅链接
+    }
     final api = container.read(vogueslyApiProvider);
     final fetched = await api.fetchSubscribeBytes(url);
-    if (fetched == null) return false;
-    final Profile profile;
+    if (fetched == null) {
+      container.read(vogueslyImportFailedProvider.notifier).set(true);
+      return false; // 网络:全镜像拉 config 失败
+    }
+    Profile profile;
     try {
       // 显式 set label,否则 saveFile 路径会用 profile id 数字做名(令用户误会账号错)
       profile = await Profile.normal(
@@ -91,19 +105,25 @@ Future<bool> importVogueslySubscription() async {
         url: fetched.url,
       ).saveFile(fetched.bytes);
     } catch (_) {
-      return false; // config 校验失败(例如未开通套餐→订阅无节点)
+      return false; // config 校验失败(例如未开通套餐→订阅无节点),旧订阅保留
     }
+    // 缩短自动更新周期(默认 1 天太慢→续费/换套餐后最长 24h 先换新节点);
+    // 走镜像 fallback 见 ProfilesActions.autoUpdateProfiles。
+    profile = profile.copyWith(autoUpdateDuration: const Duration(hours: 1));
+    final newId = profile.id;
+    // 2) 新订阅就绪 → 写入 + 设为活动(putProfile 只在无活动时自动切,故显式设)
     action.putProfile(profile);
-    final importedUrl = fetched.url;
-    // 强制把当前账号订阅设为活动 profile(防止旧 currentProfileId 残留)
-    final imported = container
+    container.read(currentProfileIdProvider.notifier).value = newId;
+    // 3) 再删走其余(旧账号)voguesly 订阅,只保留刚导入嗰个(按 id 排他,避免同 url 残留)
+    final staleIds = container
         .read(profilesProvider)
-        .where((p) => p.url == importedUrl)
+        .where((p) => isVogueslyProfile(p) && p.id != newId)
+        .map((p) => p.id)
         .toList();
-    if (imported.isEmpty) return false;
-    container.read(currentProfileIdProvider.notifier).value =
-        imported.last.id;
-    // 2) 记 owner = 当前账号 token(restore-skip 凭此判定 profile 属本账号)
+    for (final id in staleIds) {
+      await action.deleteProfile(id);
+    }
+    // 4) 记 owner = 当前账号 token(restore-skip 凭此判定 profile 属本账号)
     if (token != null && token.isNotEmpty) {
       try {
         final prefs = await SharedPreferences.getInstance();

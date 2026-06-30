@@ -32,24 +32,49 @@ class VogueslyApi {
   final List<String> _hosts;
 
   /// 逐个入口尝试同一 /api/v1 请求, 第一个成功即返回; 全挂则抛最后错误。
+  ///
+  /// [idempotent]=false(写操作 POST,如注册/领试用/发邮件码):只在「连接根本未建立」
+  /// (connectionTimeout/connectionError)时先轮下一个镜像;若请求已发出(receiveTimeout/
+  /// sendTimeout/响应阶段错误,服务端可能已处理)则唔重试,避免重复副作用(重复领试用/重复下单)。
+  ///
+  /// [retryOn401]=true(token 校验类,如 getSubscribe):某镜像反代异常返 401/403 唔代表
+  /// token 真失效 → 记住佢继续轮下一个 host,只有所有 host 都 401/403 先返回,避免单镜像 glitch 误登出。
   Future<Response> _try(
     String path, {
     String method = 'GET',
     Object? data,
     Map<String, dynamic>? headers,
+    bool idempotent = true,
+    bool retryOn401 = false,
   }) async {
     Object? lastError;
+    Response? soft401;
     for (final host in _hosts) {
       try {
-        return await _dio.request(
+        final resp = await _dio.request(
           '$host/api/v1$path',
           data: data,
           options: Options(method: method, headers: headers),
         );
+        if (retryOn401 &&
+            (resp.statusCode == 401 || resp.statusCode == 403)) {
+          soft401 = resp;
+          continue;
+        }
+        return resp;
+      } on DioException catch (e) {
+        lastError = e;
+        if (!idempotent &&
+            e.type != DioExceptionType.connectionTimeout &&
+            e.type != DioExceptionType.connectionError) {
+          rethrow; // 写操作:请求可能已落地,唔轮镜像重发
+        }
       } catch (e) {
         lastError = e;
+        if (!idempotent) rethrow;
       }
     }
+    if (soft401 != null) return soft401; // 所有 host 一致 401/403 → 认定真失效
     throw lastError ?? Exception('所有入口均不可达');
   }
 
@@ -81,6 +106,7 @@ class VogueslyApi {
       password,
       '注册失败',
       extra: extra.isEmpty ? null : extra,
+      idempotent: false, // 注册创建账号:已发出唔轮镜像重发,免重复注册/竞态
     );
   }
 
@@ -103,6 +129,7 @@ class VogueslyApi {
         '/passport/comm/sendEmailVerify',
         method: 'POST',
         data: {'email': email.trim()},
+        idempotent: false, // 发邮件:已发出唔重试,免重复发码
       );
       final json = resp.data as Map<String, dynamic>?;
       return resp.statusCode == 200 && (json?['data'] == true);
@@ -117,6 +144,7 @@ class VogueslyApi {
     String password,
     String failMsg, {
     Map<String, dynamic>? extra,
+    bool idempotent = true,
   }) async {
     try {
       final body = <String, dynamic>{
@@ -124,7 +152,8 @@ class VogueslyApi {
         'password': password,
       };
       if (extra != null) body.addAll(extra);
-      final resp = await _try(path, method: 'POST', data: body);
+      final resp =
+          await _try(path, method: 'POST', data: body, idempotent: idempotent);
       final json = resp.data as Map<String, dynamic>?;
       if (resp.statusCode == 200 && json?['data'] != null) {
         final d = json!['data'] as Map<String, dynamic>;
@@ -147,7 +176,8 @@ class VogueslyApi {
   /// 拉订阅链接(Clash 订阅, 内含我们的智能分流规则)。
   Future<String?> getSubscribeUrl(String token) async {
     final resp =
-        await _try('/user/getSubscribe', headers: {'Authorization': token});
+        await _try('/user/getSubscribe',
+            headers: {'Authorization': token}, retryOn401: true);
     final data = (resp.data as Map<String, dynamic>?)?['data'];
     if (data is Map<String, dynamic>) {
       return data['subscribe_url']?.toString();
@@ -163,7 +193,8 @@ class VogueslyApi {
     String token,
   ) async {
     final resp =
-        await _try('/user/getSubscribe', headers: {'Authorization': token});
+        await _try('/user/getSubscribe',
+            headers: {'Authorization': token}, retryOn401: true);
     final status = resp.statusCode;
     final data = (resp.data as Map<String, dynamic>?)?['data'];
     if (data is Map<String, dynamic>) {
@@ -255,6 +286,7 @@ class VogueslyApi {
         method: 'POST',
         data: {'source': source, 'goal': goal},
         headers: {'Authorization': token},
+        idempotent: false, // 领试用:已发出唔轮镜像重发,免「重复领→已领过」误判
       );
       final json = resp.data as Map<String, dynamic>?;
       if (resp.statusCode == 200 && json?['data'] != null) {
