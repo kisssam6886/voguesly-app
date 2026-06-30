@@ -75,7 +75,16 @@ Future<void> clearVogueslyProfiles() async {
 /// ⚠️ 用我哋自己嘅 dio 攞 config bytes(主 cp 失败自动轮镜像),绕开 FlClash 核心 _clashDio
 /// (后者主入口瞬断会抛「未知网络错误」且食咗错误唔 throw)。
 /// 返回 true=成功导入并设为活动 profile。
-Future<bool> importVogueslySubscription() async {
+///
+/// 并发互斥:gate 自动导入 / onboarding 手动一键订阅 / 其它触发可能同时 call,
+/// 用 in-flight Future 合并 —— 同一刻只跑一条导入,后到嘅 await 同一结果,免重复删/导+竞态。
+Future<bool>? _inFlightImport;
+Future<bool> importVogueslySubscription() {
+  return _inFlightImport ??=
+      _doImportVogueslySubscription().whenComplete(() => _inFlightImport = null);
+}
+
+Future<bool> _doImportVogueslySubscription() async {
   final container = globalState.container;
   container.read(vogueslyImportingProvider.notifier).set(true);
   container.read(vogueslyImportFailedProvider.notifier).set(false);

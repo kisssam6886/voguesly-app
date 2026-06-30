@@ -93,6 +93,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
     final items = [
       const _AccountHeader(),
       const _SubscriptionEntry(),
+      const _SupportItem(),
       ..._getSettingList(),
       // 诊断项(请求/连接/资源)摆设置之后,唔抢普通用户视线
       Consumer(
@@ -345,6 +346,20 @@ class _InfoItem extends StatelessWidget {
       leading: const Icon(Icons.info),
       title: Text(context.appLocalizations.about),
       delegate: const OpenDelegate(widget: AboutView()),
+    );
+  }
+}
+
+/// 一级「联系客服」入口(原本只埋喺关于页底,求助无门)。直接开 Telegram 即时支援。
+class _SupportItem extends StatelessWidget {
+  const _SupportItem();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListItem(
+      leading: const Icon(Icons.support_agent),
+      title: const Text('联系客服'),
+      onTap: () => globalState.openUrl('https://t.me/easysvpn'),
     );
   }
 }

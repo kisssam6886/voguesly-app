@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -74,9 +75,20 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
     }
   }
 
+  /// 离线预检:无网络时直接提示,唔好发请求等满 4 host × 8s 超时(最坏 32s)令用户以为卡死。
+  Future<bool> _offlineGuard() async {
+    final res = await Connectivity().checkConnectivity();
+    if (res.contains(ConnectivityResult.none) || res.isEmpty) {
+      if (mounted) _toast('网络不可用,请检查网络连接后重试');
+      return true;
+    }
+    return false;
+  }
+
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     FocusScope.of(context).unfocus();
+    if (await _offlineGuard()) return;
     final notifier = ref.read(vogueslyAuthProvider.notifier);
     final ok = _registerMode
         ? await notifier.register(
@@ -100,6 +112,7 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
   }
 
   Future<void> _googleLogin() async {
+    if (await _offlineGuard()) return;
     // 内置浏览器(Custom Tab/ASWebAuthenticationSession)一气呵成:开 web OAuth →
     // 后端 callback 跳 voguesly://auth?auth_data= → 由 flutter_web_auth_2 直接捕获返 app。
     try {
