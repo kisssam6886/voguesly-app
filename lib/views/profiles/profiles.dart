@@ -313,10 +313,26 @@ class ProfileItem extends StatelessWidget {
         key: Key(profile.id.toString()),
         horizontalTitleGap: 16,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        trailing: SizedBox(
-          height: 40,
-          width: 40,
-          child: Consumer(
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 一键更新订阅(唔使开 kebab,用得多)
+            if (profile.type == ProfileType.url)
+              Consumer(
+                builder: (_, ref, _) {
+                  final updating =
+                      ref.watch(isUpdatingProvider(profile.updatingKey));
+                  return IconButton(
+                    tooltip: appLocalizations.updateSubscription,
+                    onPressed: updating ? null : updateProfile,
+                    icon: Icon(Icons.sync, color: context.colorScheme.primary),
+                  );
+                },
+              ),
+            SizedBox(
+              height: 40,
+              width: 40,
+              child: Consumer(
             builder: (_, ref, _) {
               final isUpdating = ref.watch(
                 isUpdatingProvider(profile.updatingKey),
@@ -349,7 +365,7 @@ class ProfileItem extends StatelessWidget {
                             if (profile.type == ProfileType.url) ...[
                               PopupMenuItemData(
                                 icon: Icons.sync_alt_sharp,
-                                label: appLocalizations.sync,
+                                label: appLocalizations.updateSubscription,
                                 onPressed: () {
                                   updateProfile();
                                 },
@@ -422,6 +438,8 @@ class ProfileItem extends StatelessWidget {
               );
             },
           ),
+            ),
+          ],
         ),
         title: Container(
           padding: const EdgeInsets.symmetric(vertical: 4),

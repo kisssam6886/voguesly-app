@@ -153,6 +153,7 @@
   "paste": "粘贴",
   "testUrl": "测速链接",
   "sync": "同步",
+  "updateSubscription": "更新订阅",
   "exclude": "从最近任务中隐藏",
   "excludeDesc": "应用在后台时,从最近任务中隐藏应用",
   "expand": "标准",

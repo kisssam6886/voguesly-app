@@ -153,6 +153,7 @@
   "paste": "Paste",
   "testUrl": "Test url",
   "sync": "Sync",
+  "updateSubscription": "Update",
   "exclude": "Hidden from recent tasks",
   "excludeDesc": "When the app is in the background, the app is hidden from the recent task",
   "expand": "Standard",

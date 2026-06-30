@@ -1194,6 +1194,16 @@ class AppLocalizations {
     return Intl.message('Sync', name: 'sync', desc: '', args: []);
   }
 
+  /// `Update`
+  String get updateSubscription {
+    return Intl.message(
+      'Update',
+      name: 'updateSubscription',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Hidden from recent tasks`
   String get exclude {
     return Intl.message(
