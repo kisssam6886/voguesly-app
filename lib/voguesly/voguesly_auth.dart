@@ -67,6 +67,29 @@ class VogueslyAuthNotifier extends Notifier<VogueslyAuthState> {
         ),
       );
 
+  /// Google OAuth deep-link 回调登录:已攞到 auth_data(Bearer token),直接拉套餐 + 登入。
+  Future<bool> loginWithToken(String authData) async {
+    if (authData.isEmpty) return false;
+    state = state.copyWith(
+      status: VogueslyAuthStatus.loggingIn,
+      clearError: true,
+    );
+    VogueslyUser? user;
+    String? subscribeUrl;
+    try {
+      final bundle = await _api.getSubscribeBundle(authData);
+      user = bundle.user;
+      subscribeUrl = bundle.subscribeUrl;
+    } catch (_) {}
+    state = VogueslyAuthState(
+      status: VogueslyAuthStatus.loggedIn,
+      token: authData,
+      user: user,
+      subscribeUrl: subscribeUrl,
+    );
+    return true;
+  }
+
   Future<bool> _authenticate(
     Future<VogueslyAuthResult> Function() call,
   ) async {

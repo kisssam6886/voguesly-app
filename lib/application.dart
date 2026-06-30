@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'voguesly/voguesly_auth.dart';
 import 'voguesly/voguesly_gate.dart';
 
 class Application extends ConsumerStatefulWidget {
@@ -60,6 +61,16 @@ class ApplicationState extends ConsumerState<Application> {
 
   void _initLink() {
     linkManager.initAppLinksListen((url) async {
+      // Google OAuth 回调:voguesly://auth?auth_data=Bearer...,直接登入,唔走 profile 导入。
+      if (url.startsWith('voguesly://')) {
+        final authData = Uri.tryParse(url)?.queryParameters['auth_data'];
+        if (authData != null && authData.isNotEmpty) {
+          await ref
+              .read(vogueslyAuthProvider.notifier)
+              .loginWithToken(authData);
+        }
+        return;
+      }
       final res = await globalState.showMessage(
         title: currentAppLocalizations.addProfile,
         message: TextSpan(

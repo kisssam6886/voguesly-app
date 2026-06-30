@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'voguesly_auth.dart';
 
@@ -96,6 +97,16 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
         ..hideCurrentSnackBar()
         ..showSnackBar(SnackBar(content: Text(err)));
     }
+  }
+
+  Future<void> _googleLogin() async {
+    // 开 web OAuth(后端固定 cp.voguesly.com),授权后 callback 跳返 voguesly://auth?auth_data=
+    // 由 application.dart _initLink 接收登入。
+    final uri = Uri.parse(
+      'https://cp.voguesly.com/api/v2/passport/auth/google?redirect=voguesly://auth',
+    );
+    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!ok && mounted) _toast('无法打开浏览器');
   }
 
   void _toast(String msg) {
@@ -317,8 +328,7 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
                       ),
                       const SizedBox(height: 18),
                       OutlinedButton.icon(
-                        onPressed:
-                            loading ? null : () => _toast('Google 登录即将推出'),
+                        onPressed: loading ? null : _googleLogin,
                         icon: const Icon(Icons.g_mobiledata, size: 26),
                         label: const Text('使用 Google 登录'),
                         style: OutlinedButton.styleFrom(
