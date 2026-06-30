@@ -74,8 +74,13 @@ class VogueslyApi {
         if (!idempotent) rethrow;
       }
     }
-    if (soft401 != null) return soft401; // 所有 host 一致 401/403 → 认定真失效
-    throw lastError ?? Exception('所有入口均不可达');
+    // soft401 只在「全程无网络错误」时先作准(= 所有可达 host 一致 401/403 = token 真失效)。
+    // 若有 host 抛网络错误(部分镜像 China→HK 瞬断),宁可抛错入调用方 catch 保住会话,
+    // 唔好凭单一镜像 glitch 嘅 401 误判 token 失效而登出。
+    if (soft401 != null && lastError == null) return soft401;
+    if (lastError != null) throw lastError;
+    if (soft401 != null) return soft401;
+    throw Exception('所有入口均不可达');
   }
 
   /// 登录, 成功返回 auth_data 令牌。

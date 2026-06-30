@@ -26,7 +26,8 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
   static const _green = Color(0xFF22C55E);
   static const _amber = Color(0xFFF59E0B); // 已连但被排除SSID旁路(suspend):唔显绿,警示直连
   bool isStart = false;
-  bool _connecting = false;
+  bool _connecting = false; // 仅控制 3-2-1 倒计时显示(只活 ~1.8s)
+  bool _attempting = false; // 本次连接尝试仍在进行(未连上/未取消):供 15s 超时判定
   int _count = 0;
   Timer? _timer;
   late final AnimationController _pulse;
@@ -42,6 +43,7 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
     ref.listenManual(isStartProvider, (prev, next) {
       if (!mounted) return;
       // 只同步真实状态;「正在开启」中间态(3-2-1)由倒计时管,唔畀连接太快冲走个倒计时。
+      if (next) _attempting = false; // 已连上 → 本次尝试结束
       setState(() => isStart = next);
     }, fireImmediately: true);
   }
@@ -69,6 +71,7 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
     if (isStart) {
       // 断开:先 cancel 倒计时 + 清中间态,免倒计时未行完就断开令圆圈卡喺「正在开启」。
       _timer?.cancel();
+      _attempting = false;
       if (_connecting) {
         setState(() {
           _connecting = false;
@@ -79,6 +82,7 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
       return;
     }
     // 开启:3-2-1 倒计时 + 真连接
+    _attempting = true;
     setState(() {
       _connecting = true;
       _count = 3;
@@ -98,10 +102,12 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
         setState(() => _count--);
       }
     });
-    // 连接超时保护:15s 仲未连上(isStartProvider 冇变 true),退出「正在开启」中间态 + 明确提示。
+    // 连接超时保护:15s 仍未连上(本次尝试仍在进行 + isStart 冇变 true)→ 明确提示。
+    // ⚠️ 用 _attempting(活到连上/断开/超时)而非 _connecting(倒计时 ~1.8s 就清),否则永远唔触发。
     Future.delayed(const Duration(seconds: 15), () {
-      if (mounted && _connecting && !isStart) {
-        setState(() => _connecting = false);
+      if (mounted && _attempting && !isStart) {
+        _attempting = false;
+        if (_connecting) setState(() => _connecting = false);
         globalState.showNotifier('连接超时,请检查网络,或喺「当前线路」换一条线路再试');
       }
     });

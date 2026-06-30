@@ -109,13 +109,22 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
         callbackUrlScheme: 'voguesly',
       );
       final authData = Uri.parse(result).queryParameters['auth_data'];
-      if (authData != null && authData.isNotEmpty) {
-        await ref.read(vogueslyAuthProvider.notifier).loginWithToken(authData);
-      } else if (mounted) {
-        _toast('Google 登录失败,请重试');
+      if (authData == null || authData.isEmpty) {
+        if (mounted) _toast('Google 登录失败,请重试');
+        return;
       }
-    } catch (_) {
-      if (mounted) _toast('已取消 Google 登录');
+      final ok =
+          await ref.read(vogueslyAuthProvider.notifier).loginWithToken(authData);
+      if (!ok && mounted) {
+        // loginWithToken 喺 401/403 会置 state.error='登录已失效…' 并返 false。
+        _toast(ref.read(vogueslyAuthProvider).error ?? 'Google 登录失败,请重试');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      // flutter_web_auth_2 用户取消会抛 cancel 类异常;其余系网络/配置错误,
+      // 唔好一律当「已取消」误导用户(令佢以为系自己取消咗)。
+      final canceled = e.toString().toLowerCase().contains('cancel');
+      _toast(canceled ? '已取消 Google 登录' : 'Google 登录失败,请检查网络后重试');
     }
   }
 

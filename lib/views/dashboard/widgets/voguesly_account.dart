@@ -80,8 +80,22 @@ class VogueslyAccount extends StatelessWidget {
               final user = ref.watch(
                 vogueslyAuthProvider.select((s) => s.user),
               );
+              // 登录态(经登录门后基本恒 true);user==null 时区分「载入中」vs「未登录」。
+              final loggedIn = ref.watch(
+                vogueslyAuthProvider.select((s) => s.isLoggedIn),
+              );
               final avatar = ref.watch(vogueslyAvatarProvider);
               final l = context.appLocalizations;
+              // 套餐到期 / 流量耗尽:红色警示,免「假连接」用户唔知自己冇得用。
+              const warnColor = Color(0xFFEF4444);
+              final nowMs = DateTime.now().millisecondsSinceEpoch;
+              final expired = user?.expiredAt != null &&
+                  user!.expiredAt! > 0 &&
+                  user.expiredAt! * 1000 < nowMs;
+              final exhausted = user != null &&
+                  user.transferEnable > 0 &&
+                  user.remain <= 0;
+              final warn = expired || exhausted;
               return Padding(
                 padding: baseInfoEdgeInsets,
                 child: Column(
@@ -110,14 +124,19 @@ class VogueslyAccount extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                user?.email ?? l.vogMyAccount,
+                                user?.email ??
+                                    (loggedIn ? '正在载入账号…' : l.vogMyAccount),
                                 overflow: TextOverflow.ellipsis,
                                 style: context.textTheme.titleSmall,
                               ),
                               Text(
-                                '${l.vogExpiry}: ${_expiry(user?.expiredAt, l.vogPermanent)}',
+                                user == null
+                                    ? '${l.vogExpiry}: ${loggedIn ? '载入中…' : '—'}'
+                                    : expired
+                                        ? '${l.vogExpiry}: 已过期'
+                                        : '${l.vogExpiry}: ${_expiry(user.expiredAt, l.vogPermanent)}',
                                 style: context.textTheme.bodySmall?.copyWith(
-                                  color: subColor,
+                                  color: expired ? warnColor : subColor,
                                 ),
                               ),
                             ],
@@ -134,7 +153,9 @@ class VogueslyAccount extends StatelessWidget {
                               _gb(user.remain),
                               overflow: TextOverflow.ellipsis,
                               style: context.textTheme.headlineSmall?.copyWith(
-                                color: context.colorScheme.primary,
+                                color: warn
+                                    ? warnColor
+                                    : context.colorScheme.primary,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -143,9 +164,13 @@ class VogueslyAccount extends StatelessWidget {
                           Padding(
                             padding: const EdgeInsets.only(bottom: 3),
                             child: Text(
-                              '${l.vogRemainTotal} ${_gb(user.transferEnable)}',
+                              expired
+                                  ? '已过期 · 请续费'
+                                  : exhausted
+                                      ? '流量已用尽 · 请续费'
+                                      : '${l.vogRemainTotal} ${_gb(user.transferEnable)}',
                               style: context.textTheme.bodySmall?.copyWith(
-                                color: subColor,
+                                color: warn ? warnColor : subColor,
                               ),
                             ),
                           ),
@@ -159,12 +184,13 @@ class VogueslyAccount extends StatelessWidget {
                           minHeight: 6,
                           backgroundColor:
                               context.colorScheme.surfaceContainerHighest,
-                          color: context.colorScheme.primary,
+                          color:
+                              warn ? warnColor : context.colorScheme.primary,
                         ),
                       ),
                     ] else
                       Text(
-                        l.vogNotLoggedIn,
+                        loggedIn ? '正在载入套餐…' : l.vogNotLoggedIn,
                         style: context.textTheme.bodyMedium?.copyWith(
                           color: subColor,
                         ),
