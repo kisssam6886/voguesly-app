@@ -18,6 +18,14 @@ class CurrentRoute extends ConsumerWidget {
     final selected = (groupName == null)
         ? ''
         : (ref.watch(selectedProxyNameProvider(groupName)) ?? '');
+    // 有订阅但 now 未就绪(核心载入中 / 主组 select 默认走第一项 url-test「快线」)→
+    // 唔好显示「未选择」吓人(其实连得到):显示「自动选择中…」。
+    final hasProfile = ref.watch(
+      profilesProvider.select((s) => s.isNotEmpty),
+    );
+    final routeText = selected.isNotEmpty
+        ? selected
+        : (hasProfile ? '自动选择中…' : '未选择 · 去选线路');
     return SizedBox(
       width: double.infinity,
       child: CommonCard(
@@ -44,7 +52,7 @@ class CurrentRoute extends ConsumerWidget {
                     ),
                     const SizedBox(height: 2),
                     EmojiText(
-                      selected.isEmpty ? '未选择 · 去选线路' : selected,
+                      routeText,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: context.textTheme.titleSmall,
