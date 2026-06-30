@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 
 import 'voguesly_auth.dart';
 
@@ -100,13 +100,23 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
   }
 
   Future<void> _googleLogin() async {
-    // 开 web OAuth(后端固定 cp.voguesly.com),授权后 callback 跳返 voguesly://auth?auth_data=
-    // 由 application.dart _initLink 接收登入。
-    final uri = Uri.parse(
-      'https://cp.voguesly.com/api/v2/passport/auth/google?redirect=voguesly://auth',
-    );
-    final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
-    if (!ok && mounted) _toast('无法打开浏览器');
+    // 内置浏览器(Custom Tab/ASWebAuthenticationSession)一气呵成:开 web OAuth →
+    // 后端 callback 跳 voguesly://auth?auth_data= → 由 flutter_web_auth_2 直接捕获返 app。
+    try {
+      final result = await FlutterWebAuth2.authenticate(
+        url:
+            'https://cp.voguesly.com/api/v2/passport/auth/google?redirect=voguesly://auth',
+        callbackUrlScheme: 'voguesly',
+      );
+      final authData = Uri.parse(result).queryParameters['auth_data'];
+      if (authData != null && authData.isNotEmpty) {
+        await ref.read(vogueslyAuthProvider.notifier).loginWithToken(authData);
+      } else if (mounted) {
+        _toast('Google 登录失败,请重试');
+      }
+    } catch (_) {
+      if (mounted) _toast('已取消 Google 登录');
+    }
   }
 
   void _toast(String msg) {

@@ -65,13 +65,17 @@
 
                 <data android:host="install-config" />
             </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
+        </activity>
 
+        <!-- flutter_web_auth_2: Google OAuth 回调(voguesly://) 捕获 -->
+        <activity
+            android:name="com.linusu.flutter_web_auth_2.CallbackActivity"
+            android:exported="true">
+            <intent-filter android:label="flutter_web_auth_2">
+                <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-
-                <data android:scheme="voguesly" android:host="auth" />
+                <data android:scheme="voguesly" />
             </intent-filter>
         </activity>
 
