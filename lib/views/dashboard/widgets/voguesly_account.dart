@@ -1,4 +1,6 @@
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/providers/providers.dart';
+import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -74,7 +76,12 @@ class VogueslyAccount extends StatelessWidget {
       height: getWidgetHeight(2),
       child: RepaintBoundary(
         child: CommonCard(
-          onPressed: () {},
+          // 轻触账号卡 → 跳「我的订阅」(用户名/流量位可点,方便直达)。
+          onPressed: () {
+            globalState.container
+                .read(currentPageLabelProvider.notifier)
+                .toProfiles();
+          },
           child: Consumer(
             builder: (_, ref, _) {
               final user = ref.watch(

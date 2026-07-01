@@ -223,8 +223,9 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
     const orderedWidgets = [
       DashboardWidget.vogueslyAccount,
       DashboardWidget.connectButton,
-      // 出口 IP/地区 信任信号:连上后显示「🇺🇸 + 出口IP」,用户确认真喺海外节点出网。
-      DashboardWidget.networkDetection,
+      // 网络检测卡暂时收起:佢打外部 IP 服务(中国常不稳)→ 经常永久转圈,令用户混乱。
+      // 出口 IP 信任信号日后用更稳做法(直连线路健康探测)再上,唔用会转死圈嘅外部服务。
+      // DashboardWidget.networkDetection,
       DashboardWidget.currentRoute,
       DashboardWidget.networkSpeed,
       DashboardWidget.outboundMode,
