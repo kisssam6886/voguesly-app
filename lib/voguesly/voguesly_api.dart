@@ -2,15 +2,15 @@ import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 
-/// 易联 API 入口（主 + 中国可达 fallback 镜像，反代同一后端 cp.voguesly.com）。
-/// 主入口偶尔瞬断时自动轮下一个，保证登录 / 拉订阅高可用。
-/// 镜像走自签证书，靠 main.dart 的 HttpOverrides.global(FlClashHttpOverrides)
-/// 全局 badCertificateCallback=>true 接受，无需额外处理。
+/// 易联 API + 订阅入口。
+/// ⚠️ 2026-07-01 由 cp.voguesly.com 迁到 cp.samseah.qzz.io:
+///   voguesly.com 已被 GFW SNI 污染(裸IP 100% RST + 套CF间歇被打),且旧域名嘅 /s/ 订阅
+///   畀 Cloudflare 缓存(max-age=14400 = 4小时)serve 旧配置 → app 攞唔到 Sam 新加嘅节点。
+///   cp.samseah.qzz.io 系后端 app_url/subscribe_url 设定嘅现役 panel(CF DYNAMIC 唔缓存,干净)。
+///   corelane/octolink 旧镜像已死(HTTP 000),移除。待 Sam 开多个干净备用子域再加返 fallback。
+/// 后续如换品牌门面(如 ylink.im)只需改呢度。
 const List<String> kVogueslyHosts = [
-  'https://cp.voguesly.com',
-  'https://s1.corelane.xyz',
-  'https://s2.corelane.xyz',
-  'https://s3.octolink.xyz',
+  'https://cp.samseah.qzz.io',
 ];
 
 /// 易联(voguesly) 后端 XBoard API 服务。

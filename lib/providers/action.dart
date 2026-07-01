@@ -902,9 +902,12 @@ class ProfilesAction extends _$ProfilesAction {
         continue;
       }
       try {
-        // voguesly 订阅走镜像 fallback(cp 被封时核心 _clashDio 直连必失败,后台静默更新唔到节点);
+        // voguesly 订阅走我哋自家 dio(cp 被封时核心 _clashDio 直连必失败,后台静默更新唔到节点);
         // 判定同 voguesly_subscription.isVogueslyProfile 一致(此处 inline 避免 providers→voguesly 反向依赖)。
-        final isVoguesly = profile.url.contains('voguesly') ||
+        final isVoguesly = profile.url.contains('samseah') ||
+            profile.url.contains('qzz.io') ||
+            profile.url.contains('ccwu') ||
+            profile.url.contains('voguesly') ||
             profile.url.contains('corelane') ||
             profile.url.contains('octolink');
         if (isVoguesly) {

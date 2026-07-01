@@ -36,9 +36,14 @@ final vogueslyImportFailedProvider =
   VogueslyImportFailedNotifier.new,
 );
 
-/// 统一判定:呢个 profile 系咪 voguesly 账号订阅(主域 cp + 中国可达镜像 corelane/octolink)。
-/// 三处(导入删 stale / gate 判断 / 登出清理)共用,杜绝匹配器漂移(China 用户最常落镜像域)。
+/// 统一判定:呢个 profile 系咪 voguesly 账号订阅。
+/// 三处(导入删 stale / gate 判断 / 登出清理)共用,杜绝匹配器漂移。
+/// ⚠️ 现役域名 samseah.qzz.io(见 kVogueslyHosts);旧域名 voguesly/corelane/octolink 保留,
+/// 令旧安装升级后仍识别到旧订阅并清理(防串号)。加新干净域名到呢度。
 bool isVogueslyProfile(Profile p) =>
+    p.url.contains('samseah') ||
+    p.url.contains('qzz.io') ||
+    p.url.contains('ccwu') ||
     p.url.contains('voguesly') ||
     p.url.contains('corelane') ||
     p.url.contains('octolink');

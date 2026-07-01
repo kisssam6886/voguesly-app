@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../pages/pages.dart';
+import 'voguesly_api.dart';
 import 'voguesly_auth.dart';
 import 'voguesly_login_page.dart';
 import 'voguesly_subscription.dart';
@@ -21,8 +22,12 @@ class _VogueslyGateState extends ConsumerState<VogueslyGate> {
   // 本次进入已登录态是否经由「持久化恢复」(同账号),用于决定要唔要重导订阅。
   bool _sawRestoring = false;
 
-  bool get _hasVogueslyProfile =>
-      ref.read(profilesProvider).any(isVogueslyProfile);
+  // 现役域名订阅(kVogueslyHosts.first 嘅 host)。旧域名(cp.voguesly.com 等已弃用)嘅 profile
+  // 唔算,令旧安装升级后强制重导迁到新域名,唔会 restore-skip 继续用旧坏订阅。
+  bool get _hasCurrentDomainProfile {
+    final host = Uri.parse(kVogueslyHosts.first).host; // cp.samseah.qzz.io
+    return ref.read(profilesProvider).any((p) => p.url.contains(host));
+  }
 
   /// 登录后确保订阅就绪。
   /// - 持久化恢复 且 已有订阅 且 **owner token == 当前账号** → 直接用,唔重载(慳 China→HK 十几秒)。
@@ -34,9 +39,9 @@ class _VogueslyGateState extends ConsumerState<VogueslyGate> {
     // ⚠️ 必须校验 owner:只「有 voguesly profile」唔够 —— 磁盘 profile 同当前 token 之间冇身份绑定,
     // 单凭存在就 skip 会令 B 账号复用 A 账号订阅(串号)。
     if (restored &&
-        _hasVogueslyProfile &&
+        _hasCurrentDomainProfile &&
         await vogueslyProfileOwnedByCurrentToken()) {
-      return; // 确属同账号,免重载
+      return; // 确属同账号 + 现役域名订阅,免重载
     }
     final ok = await importVogueslySubscription();
     // 导入失败(网络)→ 复位守卫,令下次 rebuild(如 resume/网络恢复/重测)可自动重导,
