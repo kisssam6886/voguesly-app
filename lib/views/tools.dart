@@ -93,6 +93,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
     final items = [
       const _AccountHeader(),
       const _SubscriptionEntry(),
+      const _BuyPlanItem(),
       const _SupportItem(),
       ..._getSettingList(),
       // 诊断项(请求/连接/资源)摆设置之后,唔抢普通用户视线
@@ -360,6 +361,21 @@ class _SupportItem extends StatelessWidget {
       leading: const Icon(Icons.support_agent),
       title: const Text('联系客服'),
       onTap: () => globalState.openUrl('https://t.me/easysvpn'),
+    );
+  }
+}
+
+/// 一级「购买 / 续费套餐」入口 —— 随时可入官网套餐页(登入状态下直接买/续)。
+/// 用现役 panel 域名 cp.samseah.qzz.io(唔用弃用嘅 voguesly.com)。
+class _BuyPlanItem extends StatelessWidget {
+  const _BuyPlanItem();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListItem(
+      leading: const Icon(Icons.shopping_bag_outlined),
+      title: const Text('购买 / 续费套餐'),
+      onTap: () => globalState.openUrl('https://cp.samseah.qzz.io/#/plan'),
     );
   }
 }
