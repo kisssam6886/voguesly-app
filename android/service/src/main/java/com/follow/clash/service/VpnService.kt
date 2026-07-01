@@ -220,8 +220,12 @@ class VpnService : SystemVpnService(), IBaseService,
                     )
                 )
             }
-            establish()?.detachFd()
-                ?: throw NullPointerException("Establish VPN rejected by system")
+            GlobalState.log("VPN establish() 开始建立 TUN...")
+            establish()?.detachFd()?.also {
+                GlobalState.log("VPN establish() 成功 fd=$it")
+            } ?: throw NullPointerException(
+                "Establish VPN rejected by system(可能有其他 VPN 占用/常连VPN/权限)"
+            )
         }
         Core.startTun(
             fd,
@@ -239,7 +243,11 @@ class VpnService : SystemVpnService(), IBaseService,
             State.options?.let {
                 handleStart(it)
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            // ⚠️ establish 被系统拒绝(其他VPN占用/常连VPN)会喺呢度被 catch。之前静默 stop(),
+            // 令 UI 侧仍显示「已连接」(核心 runTime 已set)但实际 VPN 未建立 → 概览「VPN 无」+走直连。
+            // 记 log 令呢个失败可见,方便定位。
+            GlobalState.log("VPN start() 失败(establish 被拒或核心启动失败): ${e.message}")
             stop()
         }
     }

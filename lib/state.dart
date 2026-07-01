@@ -317,8 +317,12 @@ class GlobalState {
       window?.hide();
     }
     await _handleFailedPreference();
-    await _handlerDisclaimer();
-    await _showCrashlyticsTip();
+    // 移除 FlClash 默认两个开屏提示(消费者产品唔需要):
+    // 1) 免责声明「仅供学习交流·非商业」— 同商业 VPN 产品自相矛盾,且强制「不同意就退出」好突兀
+    // 2) Firebase 数据收集提示 — 非必要弹窗(Crashlytics 本身仍工作,只係唔再首启弹)
+    // 正式合规靠《隐私政策》《服务条款》(见 legal/),唔靠呢个 FlClash 占位免责声明。
+    // await _handlerDisclaimer();
+    // await _showCrashlyticsTip();
     await container.read(coreActionProvider.notifier).connectCore();
     await container.read(coreActionProvider.notifier).initCore();
     await container.read(setupActionProvider.notifier).initStatus();
@@ -364,6 +368,7 @@ class GlobalState {
         false;
   }
 
+  // ignore: unused_element
   Future<void> _showCrashlyticsTip() async {
     if (!system.isAndroid) return;
     if (container.read(
@@ -381,6 +386,7 @@ class GlobalState {
         .update((state) => state.copyWith(crashlyticsTip: true));
   }
 
+  // ignore: unused_element
   Future<void> _handlerDisclaimer() async {
     if (container.read(
       appSettingProvider.select((state) => state.disclaimerAccepted),
