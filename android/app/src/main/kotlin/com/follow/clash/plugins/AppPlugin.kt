@@ -19,6 +19,8 @@ import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.net.toUri
 import com.android.tools.smali.dexlib2.dexbacked.DexBackedDexFile
+import com.follow.clash.RunState
+import com.follow.clash.State
 import com.follow.clash.R
 import com.follow.clash.common.Components
 import com.follow.clash.common.GlobalState
@@ -443,6 +445,12 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
         if (requestCode == VPN_PERMISSION_REQUEST_CODE) {
             if (resultCode == FlutterActivity.RESULT_OK) {
                 invokeVpnPrepareCallback()
+            } else {
+                // 用户拒绝 VPN 授权:之前呢度冇 else,vpnPrepareCallback 永远唔会 fire,
+                // runStateFlow 会卡喺 PENDING(令 UI/native 状态长期唔一致)。
+                // 清走 pending callback + 显式归 STOP,令下次连接可以正常重试。
+                vpnPrepareCallback = null
+                State.runStateFlow.tryEmit(RunState.STOP)
             }
         }
         return true

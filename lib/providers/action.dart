@@ -116,6 +116,8 @@ class CommonAction extends _$CommonAction {
 class SetupAction extends _$SetupAction {
   Timer? _updateTimer;
   DateTime? startTime;
+  int _updateTick = 0;
+  int _nativeVerifyFailCount = 0;
 
   bool get isStart => startTime != null && startTime!.isBeforeNow;
 
@@ -146,10 +148,41 @@ class SetupAction extends _$SetupAction {
     if (!ref.read(suspendProvider)) {
       await coreController.startListener();
     }
+    _updateTick = 0;
+    _nativeVerifyFailCount = 0;
     _updateTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       ref.read(commonActionProvider.notifier).updateRunTime();
       ref.read(commonActionProvider.notifier).updateTraffic();
+      // updateRunTime() 只靠 Dart 本地 startTime 计时,唔核实 native 是否真系建立咗 VPN
+      // (例如权限被拒/核心启动失败时,native 侧从未真正连接,但 UI 会永久停喺「已连接」)。
+      // 每 3s 向 native 核实一次真实状态,连续 2 次唔一致先纠正(避免瞬时抖动误判)。
+      _updateTick++;
+      if (_updateTick % 3 == 0) {
+        _verifyNativeConnected();
+      }
     });
+  }
+
+  /// 向 native 核实真实连接状态,防止 UI 同实际(VPN 权限被拒/核心启动失败等)脱节。
+  Future<void> _verifyNativeConnected() async {
+    if (startTime == null) return; // 已经断咗(或已被纠正),唔使核实
+    final nativeRunTime = await service?.getRunTime();
+    if (nativeRunTime != null) {
+      _nativeVerifyFailCount = 0;
+      return;
+    }
+    _nativeVerifyFailCount++;
+    if (_nativeVerifyFailCount < 2) return;
+    commonPrint.log(
+      'VPN native 未建立但 UI 显示已连接,自动纠正',
+      logLevel: LogLevel.warning,
+    );
+    startTime = null;
+    _updateTimer?.cancel();
+    _updateTimer = null;
+    _nativeVerifyFailCount = 0;
+    ref.read(runTimeProvider.notifier).value = null;
+    globalState.showNotifier('VPN 未能建立连接(可能权限被拒或系统限制),请重新连接');
   }
 
   Future _updateStartTime() async {
