@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/core/core.dart';
 import 'package:fl_clash/database/database.dart';
@@ -163,10 +164,24 @@ class SetupAction extends _$SetupAction {
     });
   }
 
-  /// 向 native 核实真实连接状态,防止 UI 同实际(VPN 权限被拒/核心启动失败等)脱节。
+  /// 向 native 核实真实连接状态 + 打印诊断(入 in-app 日志,方便 Sam send 出嚟睇真相)。
+  /// ⚠️ 关键:getRunTime 只反映核心 mixed-port running;系统有冇 VPN 接口(hasVpnTransport)
+  /// 先係 TUN 真建立嘅信号 —— 「已连接但概览 VPN 无 + 走直连」= 核心起咗但 TUN 未建立。
   Future<void> _verifyNativeConnected() async {
     if (startTime == null) return; // 已经断咗(或已被纠正),唔使核实
     final nativeRunTime = await service?.getRunTime();
+    List<ConnectivityResult> conn = const [];
+    try {
+      conn = await Connectivity().checkConnectivity();
+    } catch (_) {}
+    final hasVpn = conn.contains(ConnectivityResult.vpn);
+    // 诊断日志(入 in-app 日志页):睇 TUN 到底有冇真建立
+    commonPrint.log(
+      'VPN核实 nativeRunTime=$nativeRunTime hasVpnTransport=$hasVpn conn=$conn',
+      logLevel: LogLevel.info,
+    );
+    // 保守纠正:仅当核心都唔 running(nativeRunTime==null)先纠正,避免误断「已建立但泄漏」情况。
+    // hasVpn 只做诊断打印,唔用嚟触发纠正(等睇真 log 先定 native 修法)。
     if (nativeRunTime != null) {
       _nativeVerifyFailCount = 0;
       return;
@@ -174,7 +189,7 @@ class SetupAction extends _$SetupAction {
     _nativeVerifyFailCount++;
     if (_nativeVerifyFailCount < 2) return;
     commonPrint.log(
-      'VPN native 未建立但 UI 显示已连接,自动纠正',
+      'VPN 核心未 running,UI 显示已连接=假,自动纠正',
       logLevel: LogLevel.warning,
     );
     startTime = null;
