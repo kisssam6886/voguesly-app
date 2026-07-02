@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
+import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.IconCompat
 import androidx.core.net.toUri
 import com.android.tools.smali.dexlib2.dexbacked.DexBackedDexFile
@@ -174,9 +175,66 @@ class AppPlugin : FlutterPlugin, MethodChannel.MethodCallHandler, ActivityAware 
                 result.success(openAppSettings())
             }
 
+            "canRequestInstallPackages" -> {
+                result.success(canRequestInstallPackages())
+            }
+
+            "requestInstallPackagesPermission" -> {
+                result.success(requestInstallPackagesPermission())
+            }
+
+            "installApk" -> {
+                result.success(installApk(call.argument<String>("path")))
+            }
+
             else -> {
                 result.notImplemented()
             }
+        }
+    }
+
+    // Android O(26)+ 先需要呢个权限;之前版本装非Store来源apk唔使额外授权。
+    private fun canRequestInstallPackages(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return true
+        return GlobalState.application.packageManager.canRequestPackageInstalls()
+    }
+
+    // 带用户去「允许安装未知来源app」设置页(呢个权限冇 onActivityResult 直接话你知
+    // 批准定拒绝,用户由设置页返嚟后要再 call canRequestInstallPackages() 确认)。
+    private fun requestInstallPackagesPermission(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return true
+        return try {
+            val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                data = "package:${GlobalState.application.packageName}".toUri()
+            }
+            activityRef?.get()?.startActivity(intent)
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    // 用 FileProvider 攞 content:// URI(Android 7+ 唔可以直接用 file:// 起安装 intent,
+    // 会掟 FileUriExposedException),起 ACTION_VIEW intent 交返系统安装器处理。
+    private fun installApk(path: String?): Boolean {
+        if (path.isNullOrEmpty()) return false
+        return try {
+            val file = File(path)
+            if (!file.exists()) return false
+            val uri = FileProvider.getUriForFile(
+                GlobalState.application,
+                "${GlobalState.application.packageName}.fileprovider",
+                file
+            )
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            (activityRef?.get() ?: GlobalState.application).startActivity(intent)
+            true
+        } catch (_: Exception) {
+            false
         }
     }
 

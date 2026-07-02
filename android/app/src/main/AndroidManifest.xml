@@ -25,6 +25,8 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- app内自我更新:下载apk后直接安装,唔使跳浏览器再手动去Downloads揾文件 -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:name=".Application"
@@ -123,6 +125,18 @@
                 <action android:name="${applicationId}.intent.action.SERVICE_DESTROYED" />
             </intent-filter>
         </receiver>
+
+        <!-- app内自我更新:俾下载落嚟嘅apk文件生成content://URI,供安装intent用
+             (Android 7+ 唔畀直接用 file:// URI,唔声明呢个会 FileUriExposedException) -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
         <meta-data
             android:name="flutterEmbedding"

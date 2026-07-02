@@ -16,6 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../voguesly/voguesly_apk_installer.dart';
 import '../voguesly/voguesly_auth.dart';
 
 part 'generated/action.g.dart';
@@ -107,10 +108,25 @@ class CommonAction extends _$CommonAction {
       if (res == true) {
         final downloadUrl = data['download_url'] as String?;
         if (downloadUrl != null && downloadUrl.isNotEmpty) {
-          launchUrl(
-            Uri.parse(downloadUrl),
-            mode: LaunchMode.externalApplication,
-          );
+          if (system.isAndroid) {
+            // app 内下载+安装(免用户手动去浏览器/Downloads揾文件再装)。
+            if (context.mounted) {
+              showModalBottomSheet(
+                context: context,
+                showDragHandle: true,
+                isScrollControlled: true,
+                builder: (_) => ApkUpdateSheet(
+                  url: downloadUrl,
+                  version: tagName.toString().replaceFirst('v', ''),
+                ),
+              );
+            }
+          } else {
+            launchUrl(
+              Uri.parse(downloadUrl),
+              mode: LaunchMode.externalApplication,
+            );
+          }
         }
       } else if (!isUser && res == false) {
         ref

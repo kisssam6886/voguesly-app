@@ -106,6 +106,34 @@ class App {
     if (!Platform.isAndroid) return false;
     return methodChannel.invokeMethod<bool>('openAppSettings');
   }
+
+  // app内自我更新:Android O(26)+先需要「允许安装未知来源app」权限。
+  Future<bool> canRequestInstallPackages() async {
+    if (!Platform.isAndroid) return false;
+    return await methodChannel.invokeMethod<bool>(
+          'canRequestInstallPackages',
+        ) ??
+        false;
+  }
+
+  // 带用户去设置页开权限;冇即时结果,由 caller 喺用户返嚟 app 后再检查一次
+  // canRequestInstallPackages()。
+  Future<bool> requestInstallPackagesPermission() async {
+    if (!Platform.isAndroid) return false;
+    return await methodChannel.invokeMethod<bool>(
+          'requestInstallPackagesPermission',
+        ) ??
+        false;
+  }
+
+  // 传入已下载嘅 apk 本地绝对路径,起系统安装器。
+  Future<bool> installApk(String path) async {
+    if (!Platform.isAndroid) return false;
+    return await methodChannel.invokeMethod<bool>('installApk', {
+          'path': path,
+        }) ??
+        false;
+  }
 }
 
 final app = system.isAndroid ? App() : null;
