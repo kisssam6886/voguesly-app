@@ -4,6 +4,7 @@ import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../voguesly/voguesly_auth.dart';
 import '../../../voguesly/voguesly_avatar.dart';
@@ -21,9 +22,9 @@ class VogueslyAccount extends StatelessWidget {
     return '${(bytes / 1073741824).toStringAsFixed(1)} GB';
   }
 
-  // 套餐名前缀:「Plus · 到期: …」;无套餐名则唔加。
+  // 明确标签「当前套餐: Plus · 到期: …」;无套餐名则唔加个标签。
   String _planPrefix(String? name) =>
-      (name == null || name.isEmpty) ? '' : '$name · ';
+      (name == null || name.isEmpty) ? '' : '当前套餐: $name · ';
 
   String _expiry(int? expiredAt, String permanent) {
     if (expiredAt == null || expiredAt == 0) return permanent;
@@ -166,6 +167,37 @@ class VogueslyAccount extends StatelessWidget {
                             ],
                           ),
                         ),
+                        if (user != null)
+                          Material(
+                            color: warn
+                                ? warnColor.withValues(alpha: 0.12)
+                                : context.colorScheme.primary
+                                    .withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(20),
+                            clipBehavior: Clip.antiAlias,
+                            child: InkWell(
+                              onTap: () => launchUrl(
+                                Uri.parse('https://cp.samseah.qzz.io/#/shop'),
+                                mode: LaunchMode.externalApplication,
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 7,
+                                ),
+                                child: Text(
+                                  '购买/续费',
+                                  style: context.textTheme.labelMedium
+                                      ?.copyWith(
+                                        color: warn
+                                            ? warnColor
+                                            : context.colorScheme.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                     if (user != null) ...[

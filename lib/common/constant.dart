@@ -56,7 +56,11 @@ const localhost = '127.0.0.1';
 const clashConfigKey = 'clash_config';
 const configKey = 'config';
 const double dialogCommonWidth = 300;
-const repository = 'chen08209/FlClash';
+// ⚠️ 呢个 fork 已经唔再检查上游 chen08209/FlClash 嘅 release(旧代码打
+// api.github.com/repos/chen08209/FlClash/releases/latest,会引导用户去装返
+// 原版 FlClash——完全错嘅方向,而且 api.github.com 喺国内冇 VPN 好大机会连唔到)。
+// 改用自己域名(cp 面板同 host,登录/订阅都靠佢,已确认国内可达)。
+const vogueslyVersionCheckUrl = 'https://cp.samseah.qzz.io/downloads/version.json';
 const defaultExternalController = '127.0.0.1:9090';
 const maxMobileWidth = 600;
 const maxLaptopWidth = 840;

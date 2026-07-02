@@ -70,20 +70,27 @@ class Request {
     return MemoryImage(data);
   }
 
+  // 用自己域名嘅 version.json(唔再打 api.github.com/chen08209 上游 repo——
+  // 嗰个会引导用户装返原版 FlClash,而且国内冇 VPN 好大机会连唔到)。
+  // 返回形状保持同旧代码一致(tag_name/body/download_url),方便 checkUpdateResultHandle 唔使大改。
   Future<Map<String, dynamic>?> checkForUpdate() async {
     try {
       final response = await dio.get(
-        'https://api.github.com/repos/$repository/releases/latest',
+        vogueslyVersionCheckUrl,
         options: Options(responseType: ResponseType.json),
       );
       if (response.statusCode != 200) return null;
       final data = response.data as Map<String, dynamic>;
-      final remoteVersion = data['tag_name'];
+      final remoteVersion = data['latest_version'] as String?;
+      if (remoteVersion == null || remoteVersion.isEmpty) return null;
       final version = globalState.packageInfo.version;
-      final hasUpdate =
-          utils.compareVersions(remoteVersion.replaceAll('v', ''), version) > 0;
+      final hasUpdate = utils.compareVersions(remoteVersion, version) > 0;
       if (!hasUpdate) return null;
-      return data;
+      return {
+        'tag_name': 'v$remoteVersion',
+        'body': data['changelog'],
+        'download_url': data['download_url'],
+      };
     } catch (e) {
       commonPrint.log('checkForUpdate failed', logLevel: LogLevel.warning);
       return null;

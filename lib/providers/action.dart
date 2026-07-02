@@ -73,6 +73,13 @@ class CommonAction extends _$CommonAction {
     checkUpdateResultHandle(data: res);
   }
 
+  // 「我的」页版本号手动点检查:唔理「不再提示」开关,一定检查+一定显示结果
+  // (含「已是最新版」个案),俾 checkUpdateResultHandle 现成嘅 isUser 分支处理。
+  Future<void> manualCheckUpdate() async {
+    final res = await request.checkForUpdate();
+    checkUpdateResultHandle(data: res, isUser: true);
+  }
+
   Future<void> checkUpdateResultHandle({
     Map<String, dynamic>? data,
     bool isUser = false,
@@ -98,7 +105,13 @@ class CommonAction extends _$CommonAction {
         cancelText: isUser ? null : currentAppLocalizations.noLongerRemind,
       );
       if (res == true) {
-        launchUrl(Uri.parse('https://github.com/$repository/releases/latest'));
+        final downloadUrl = data['download_url'] as String?;
+        if (downloadUrl != null && downloadUrl.isNotEmpty) {
+          launchUrl(
+            Uri.parse(downloadUrl),
+            mode: LaunchMode.externalApplication,
+          );
+        }
       } else if (!isUser && res == false) {
         ref
             .read(appSettingProvider.notifier)

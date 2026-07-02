@@ -45,6 +45,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
         // 移除 FlClash 免责声明项(「仅供学习交流·严禁商业」同付费产品自打脸,且点退出会强杀App)。
         if (enableDeveloperMode) const _DeveloperItem(),
         const _InfoItem(),
+        const _VersionItem(),
         const _LogoutItem(),
       ],
     );
@@ -327,6 +328,45 @@ class _InfoItem extends StatelessWidget {
       leading: const Icon(Icons.info),
       title: Text(context.appLocalizations.about),
       delegate: const OpenDelegate(widget: AboutView()),
+    );
+  }
+}
+
+/// 版本号展示 + 点击手动检查更新(唔理「不再提示」开关,一定检查+一定俾结果,
+/// 含「已是最新版」个案)。数据源见 [[vogueslyVersionCheckUrl]] 自家域名,唔再打上游 GitHub。
+class _VersionItem extends ConsumerStatefulWidget {
+  const _VersionItem();
+
+  @override
+  ConsumerState<_VersionItem> createState() => _VersionItemState();
+}
+
+class _VersionItemState extends ConsumerState<_VersionItem> {
+  bool _checking = false;
+
+  Future<void> _check() async {
+    if (_checking) return;
+    setState(() => _checking = true);
+    await ref.read(commonActionProvider.notifier).manualCheckUpdate();
+    if (!mounted) return;
+    setState(() => _checking = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pkg = globalState.packageInfo;
+    return ListItem(
+      leading: const Icon(Icons.system_update_outlined),
+      title: const Text('版本'),
+      subtitle: Text('v${pkg.version} · 点击检查更新'),
+      trailing: _checking
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : null,
+      onTap: _check,
     );
   }
 }
