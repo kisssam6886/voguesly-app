@@ -74,8 +74,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
     final items = [
       const _AccountHeader(),
       const _SubscriptionEntry(),
-      const _BuyPlanItem(),
-      const _SupportItem(),
+      const _QuickActions(),
       const _FeedbackItem(),
       ..._getSettingList(),
       // 诊断项(请求/连接/资源)收入「进阶工具」子页,「我的」一级唔再露工程化菜单。
@@ -333,18 +332,79 @@ class _InfoItem extends StatelessWidget {
 }
 
 /// 一级「联系客服」入口(原本只埋喺关于页底,求助无门)。直接开 Telegram 即时支援。
-class _SupportItem extends StatelessWidget {
-  const _SupportItem();
+/// 顶部「购买/续费 + 联系客服」并排大按钮(显眼,唔再埋喺设置 list 度)。
+/// 两个都係自家可信链接,直接开外部 app,唔弹「外部链接」确认框。
+class _QuickActions extends StatelessWidget {
+  const _QuickActions();
 
   @override
   Widget build(BuildContext context) {
-    return ListItem(
-      leading: const Icon(Icons.support_agent),
-      title: const Text('联系客服'),
-      // 自家可信链接直接开,唔弹「外部链接+裸URL」确认框。
-      onTap: () => launchUrl(
-        Uri.parse('https://t.me/easysvpn'),
-        mode: LaunchMode.externalApplication,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: _QuickActionCard(
+              icon: Icons.shopping_bag_outlined,
+              label: '购买 / 续费',
+              // 面板套餐页路由係 /#/shop(ez-voguesly 主题)。
+              onTap: () => launchUrl(
+                Uri.parse('https://cp.samseah.qzz.io/#/shop'),
+                mode: LaunchMode.externalApplication,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _QuickActionCard(
+              icon: Icons.support_agent,
+              label: '联系客服',
+              onTap: () => launchUrl(
+                Uri.parse('https://t.me/easysvpn'),
+                mode: LaunchMode.externalApplication,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickActionCard extends StatelessWidget {
+  const _QuickActionCard({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colorScheme;
+    return Material(
+      color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
+      borderRadius: BorderRadius.circular(14),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            children: [
+              Icon(icon, color: cs.primary, size: 26),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: context.textTheme.bodyMedium
+                    ?.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -526,25 +586,6 @@ class _FeedbackBodyState extends ConsumerState<_FeedbackBody> {
   }
 }
 
-/// 一级「购买 / 续费套餐」入口 —— 随时可入官网套餐页(登入状态下直接买/续)。
-/// 用现役 panel 域名 cp.samseah.qzz.io(唔用弃用嘅 voguesly.com)。
-class _BuyPlanItem extends StatelessWidget {
-  const _BuyPlanItem();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListItem(
-      leading: const Icon(Icons.shopping_bag_outlined),
-      title: const Text('购买 / 续费套餐'),
-      // 面板套餐页路由係 /#/shop(ez-voguesly 主题),唔係 /#/plan。直接开,唔弹确认框。
-      onTap: () => launchUrl(
-        Uri.parse('https://cp.samseah.qzz.io/#/shop'),
-        mode: LaunchMode.externalApplication,
-      ),
-    );
-  }
-}
-
 class _DeveloperItem extends StatelessWidget {
   const _DeveloperItem();
 
@@ -636,34 +677,61 @@ class _AccountHeader extends ConsumerWidget {
   }
 }
 
-/// 突出嘅「我的订阅」入口(用户常用,唔折叠)。开 ProfilesView。
-class _SubscriptionEntry extends StatelessWidget {
+/// 一级「我的订阅」大卡(一层化):内联「更新订阅」按钮直接拉最新节点,
+/// 唔使再入子页先撳 sync;次级「管理订阅」链接先入 ProfilesView 做进阶管理。
+class _SubscriptionEntry extends ConsumerWidget {
   const _SubscriptionEntry();
 
+  // 上次更新时间:今日显「今天 HH:mm」,否则「MM-dd HH:mm」;从未更新显占位。
+  String _lastUpdate(BuildContext context, DateTime? d) {
+    if (d == null) return '点下方按钮拉取最新节点';
+    final now = DateTime.now();
+    final sameDay = d.year == now.year && d.month == now.month && d.day == now.day;
+    final t = DateFormat('HH:mm').format(d);
+    return sameDay ? '上次更新 · 今天 $t' : '上次更新 · ${DateFormat('MM-dd').format(d)} $t';
+  }
+
+  Future<void> _refresh(BuildContext context, WidgetRef ref, Profile profile) async {
+    final ok = await ref
+        .read(profilesActionProvider.notifier)
+        .refreshVogueslyProfile(profile, showLoading: true);
+    if (!context.mounted) return;
+    globalState.showNotifier(ok ? '订阅已更新' : '更新失败,请稍后重试');
+  }
+
+  void _openManage(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (ctx) => CommonScaffoldBackActionProvider(
+          backAction: () => Navigator.of(ctx).pop(),
+          child: const ProfilesView(),
+        ),
+      ),
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final cs = context.colorScheme;
+    // 当前账号订阅 profile(揾唔到就用 null → 引导先入管理页导入)。
+    final profiles = ref.watch(profilesProvider);
+    final vog = profiles.where(isVogueslyProfile);
+    final profile = vog.isEmpty ? null : vog.first;
+    final updating = profile == null
+        ? false
+        : ref.watch(isUpdatingProvider(profile.updatingKey));
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-      child: Material(
-        color: cs.primaryContainer.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(16),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (ctx) => CommonScaffoldBackActionProvider(
-                  backAction: () => Navigator.of(ctx).pop(),
-                  child: const ProfilesView(),
-                ),
-              ),
-            );
-          },
-          // 一级大卡(消费者向):订阅係核心动作,做大做明显,唔好同下面设置行混埋。
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
-            child: Row(
+      child: Container(
+        decoration: BoxDecoration(
+          color: cs.primaryContainer.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
                 Container(
                   width: 44,
@@ -688,17 +756,43 @@ class _SubscriptionEntry extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        '更新节点 · 管理订阅',
+                        profile == null
+                            ? '未导入订阅 · 进入管理页导入'
+                            : _lastUpdate(context, profile.lastUpdateDate),
                         style: context.textTheme.bodySmall
                             ?.copyWith(color: cs.onSurfaceVariant),
                       ),
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
               ],
             ),
-          ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: (profile == null || updating)
+                        ? null
+                        : () => _refresh(context, ref, profile),
+                    icon: updating
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.refresh_rounded, size: 20),
+                    label: Text(updating ? '更新中…' : '更新订阅'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                OutlinedButton(
+                  onPressed: () => _openManage(context),
+                  child: const Text('管理订阅'),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
