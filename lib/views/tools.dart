@@ -34,30 +34,6 @@ class ToolsView extends ConsumerStatefulWidget {
 }
 
 class _ToolViewState extends ConsumerState<ToolsView> {
-  Widget _buildNavigationMenuItem(NavigationItem navigationItem) {
-    return ListItem.open(
-      leading: navigationItem.icon,
-      title: Text(Intl.message(navigationItem.label.name)),
-      subtitle: navigationItem.description != null
-          ? Text(Intl.message(navigationItem.description!))
-          : null,
-      delegate: OpenDelegate(widget: navigationItem.builder(context)),
-    );
-  }
-
-  Widget _buildNavigationMenu(List<NavigationItem> navigationItems) {
-    return Column(
-      children: [
-        for (final navigationItem in navigationItems) ...[
-          _buildNavigationMenuItem(navigationItem),
-          navigationItems.last != navigationItem
-              ? const Divider(height: 0)
-              : Container(),
-        ],
-      ],
-    );
-  }
-
   List<Widget> _getOtherList(bool enableDeveloperMode) {
     return generateSection(
       title: context.appLocalizations.other,
@@ -96,21 +72,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
       const _BuyPlanItem(),
       const _SupportItem(),
       ..._getSettingList(),
-      // 诊断项(请求/连接/资源)摆设置之后,唔抢普通用户视线
-      Consumer(
-        builder: (_, ref, _) {
-          final state = ref.watch(moreToolsSelectorStateProvider);
-          if (state.navigationItems.isEmpty) {
-            return Container();
-          }
-          return Column(
-            children: [
-              ListHeader(title: context.appLocalizations.more),
-              _buildNavigationMenu(state.navigationItems),
-            ],
-          );
-        },
-      ),
+      // 诊断项(请求/连接/资源)收入「进阶工具」子页,「我的」一级唔再露工程化菜单。
       ..._getOtherList(vm2.b),
     ];
     return CommonScaffold(
@@ -282,11 +244,14 @@ class _AdvancedItem extends StatelessWidget {
   }
 }
 
-class _AdvancedToolsView extends StatelessWidget {
+class _AdvancedToolsView extends ConsumerWidget {
   const _AdvancedToolsView();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 诊断项(请求/连接/资源)由「我的」一级收落嚟呢度,普通用户唔会见到工程化菜单。
+    final diagnostics =
+        ref.watch(moreToolsSelectorStateProvider).navigationItems;
     final items = <Widget>[
       const _ConfigItem(),
       const _BackupItem(),
@@ -294,6 +259,15 @@ class _AdvancedToolsView extends StatelessWidget {
       if (system.isWindows) const _LoopbackItem(),
       if (system.isAndroid) const _AccessItem(),
       const _AdvancedConfigItem(),
+      for (final item in diagnostics)
+        ListItem.open(
+          leading: item.icon,
+          title: Text(Intl.message(item.label.name)),
+          subtitle: item.description != null
+              ? Text(Intl.message(item.description!))
+              : null,
+          delegate: OpenDelegate(widget: item.builder(context)),
+        ),
     ];
     return BaseScaffold(
       title: context.appLocalizations.advancedTools,
@@ -375,7 +349,8 @@ class _BuyPlanItem extends StatelessWidget {
     return ListItem(
       leading: const Icon(Icons.shopping_bag_outlined),
       title: const Text('购买 / 续费套餐'),
-      onTap: () => globalState.openUrl('https://cp.samseah.qzz.io/#/plan'),
+      // 面板套餐页路由係 /#/shop(ez-voguesly 主题),唔係 /#/plan。
+      onTap: () => globalState.openUrl('https://cp.samseah.qzz.io/#/shop'),
     );
   }
 }
@@ -495,23 +470,35 @@ class _SubscriptionEntry extends StatelessWidget {
               ),
             );
           },
+          // 一级大卡(消费者向):订阅係核心动作,做大做明显,唔好同下面设置行混埋。
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
             child: Row(
               children: [
-                Icon(Icons.cloud_sync_outlined, color: cs.primary),
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: cs.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child:
+                      Icon(Icons.cloud_sync_outlined, color: cs.primary, size: 26),
+                ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        context.appLocalizations.profiles,
-                        style: context.textTheme.titleSmall,
+                        '我的订阅',
+                        style: context.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 3),
                       Text(
-                        '更新 / 管理订阅',
+                        '更新节点 · 管理订阅',
                         style: context.textTheme.bodySmall
                             ?.copyWith(color: cs.onSurfaceVariant),
                       ),

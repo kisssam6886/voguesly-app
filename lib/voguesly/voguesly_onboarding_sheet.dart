@@ -11,7 +11,7 @@ import 'voguesly_subscription.dart';
 
 /// 网页套餐页(免费测试 + ¥3.9 验证包均在此购买/查看)。
 // 现役 panel 域名(voguesly.com 已被 GFW 污染,见 kVogueslyHosts)。
-const String _kPlanUrl = 'https://cp.samseah.qzz.io/#/plan';
+const String _kPlanUrl = 'https://cp.samseah.qzz.io/#/shop';
 
 /// 全新用户引导:登入但未有套餐时弹出。
 /// 可领免费测试 → app 内一键开通(call /user/trial/apply)+自动导入订阅;
