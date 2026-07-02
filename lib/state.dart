@@ -21,6 +21,28 @@ import 'l10n/l10n.dart';
 import 'models/models.dart';
 import 'providers/providers.dart';
 
+/// 把原始异常(SocketException/DioException 英文堆栈)翻译成消费者友好文案。
+String _friendlyError(Object e) {
+  final s = e.toString().toLowerCase();
+  if (s.contains('socket') ||
+      s.contains('failed host lookup') ||
+      s.contains('connection') ||
+      s.contains('handshake') ||
+      s.contains('network is unreachable')) {
+    return '网络不稳定，请检查网络后重试';
+  }
+  if (s.contains('timeout') || s.contains('timed out')) {
+    return '连接超时，请稍后重试';
+  }
+  if (s.contains('format') ||
+      s.contains('validate') ||
+      s.contains('yaml') ||
+      s.contains('parse')) {
+    return '配置解析失败，请更新订阅或联系客服';
+  }
+  return '操作失败，请稍后重试';
+}
+
 class GlobalState {
   static GlobalState? _instance;
   final navigatorKey = GlobalKey<NavigatorState>();
@@ -150,12 +172,14 @@ class GlobalState {
       return await futureFunction();
     } catch (e, s) {
       commonPrint.log('$title ===> $e, $s', logLevel: LogLevel.warning);
+      // 原始异常(SocketException/DioException 英文堆栈)入 log 就够;弹俾用户嘅要翻译成友好文案。
+      final friendly = _friendlyError(e);
       if (silence) {
-        showNotifier(e.toString());
+        showNotifier(friendly);
       } else {
         showMessage(
           title: title ?? currentAppLocalizations.tip,
-          message: TextSpan(text: e.toString()),
+          message: TextSpan(text: friendly),
         );
       }
       return null;

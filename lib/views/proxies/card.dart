@@ -30,6 +30,36 @@ class ProxyCard extends StatelessWidget {
     proxyDelayTest(proxy, testUrl);
   }
 
+  /// 「套餐信息」组嗰啲 ━━━ / 剩余流量 / 套餐到期 / 官网 等係信息横幅,唔係真节点。
+  /// 唔应该当真节点(可点选 + 测速显 Timeout + 标 Vless)。
+  static bool _isInfoBanner(String name) {
+    return name.contains('━') ||
+        name.contains('剩余流量') ||
+        name.contains('套餐') ||
+        name.contains('到期') ||
+        name.contains('官网') ||
+        name.contains('客服') ||
+        name.contains('邀请码') ||
+        name.contains('打不开');
+  }
+
+  /// 信息横幅:纯文字,唔可点、无测速、无协议标签。
+  Widget _buildInfoBanner(BuildContext context) {
+    return Container(
+      alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      child: Text(
+        proxy.name.replaceAll('━', '').trim(),
+        maxLines: 2,
+        textAlign: TextAlign.center,
+        style: context.textTheme.labelSmall?.copyWith(
+          color: context.colorScheme.onSurfaceVariant.opacity80,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    );
+  }
+
   Widget _buildDelayText() {
     return SizedBox(
       height: measure.labelSmallHeight,
@@ -58,7 +88,7 @@ class ProxyCard extends StatelessWidget {
                 : GestureDetector(
                     onTap: _handleTestCurrentDelay,
                     child: Text(
-                      delay > 0 ? '$delay ms' : 'Timeout',
+                      delay > 0 ? '$delay ms' : '超时',
                       style: context.textTheme.labelSmall?.copyWith(
                         overflow: TextOverflow.ellipsis,
                         color: utils.getDelayColor(delay),
@@ -139,6 +169,10 @@ class ProxyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 信息横幅(套餐/剩余流量/官网…)渲染成纯文字,唔当真节点。
+    if (_isInfoBanner(proxy.name)) {
+      return _buildInfoBanner(context);
+    }
     final measure = globalState.measure;
     final delayText = _buildDelayText();
     final proxyNameText = _buildProxyNameText(context);
@@ -185,7 +219,10 @@ class ProxyCard extends StatelessWidget {
                           flex: 1,
                           child: TooltipText(
                             text: Text(
-                              proxy.type,
+                              _ProxyDesc._protocols.contains(
+                                      proxy.type.toLowerCase())
+                                  ? ''
+                                  : proxy.type,
                               style: context.textTheme.bodySmall?.copyWith(
                                 overflow: TextOverflow.ellipsis,
                                 color: context
@@ -221,11 +258,18 @@ class _ProxyDesc extends ConsumerWidget {
 
   const _ProxyDesc({required this.proxy});
 
+  // 裸协议名对消费者係黑话,隐藏;组类型(如「URLTest(美国)」含括号)保留选中节点显示。
+  static const _protocols = {
+    'vless', 'trojan', 'vmess', 'ss', 'ssr', 'hysteria', 'hysteria2',
+    'tuic', 'wireguard', 'http', 'socks5', 'snell', 'anytls', 'mieru',
+  };
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final desc = ref.watch(proxyDescProvider(proxy));
+    final shown = _protocols.contains(desc.toLowerCase()) ? '' : desc;
     return EmojiText(
-      desc,
+      shown,
       overflow: TextOverflow.ellipsis,
       style: context.textTheme.bodySmall?.copyWith(
         color: context.textTheme.bodySmall?.color?.opacity80,

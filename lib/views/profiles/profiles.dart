@@ -84,30 +84,21 @@ class _ProfilesViewState extends State<ProfilesView> {
   }
 
   List<Widget> _buildActions(List<Profile> profiles) {
+    // 消费者版:只留「更新全部订阅」;移除「排序 profile」(单订阅用户无意义嘅工程功能)。
     return profiles.isNotEmpty
         ? [
             IconButton(
+              tooltip: '更新订阅',
               onPressed: () {
                 _updateProfiles(profiles);
               },
               icon: const Icon(Icons.sync),
             ),
-            IconButton(
-              onPressed: () {
-                showSheet(
-                  context: context,
-                  builder: (_) {
-                    return ReorderableProfilesSheet(profiles: profiles);
-                  },
-                );
-              },
-              icon: const Icon(Icons.sort),
-              iconSize: 26,
-            ),
           ]
         : [];
   }
 
+  // ignore: unused_element
   Widget _buildFAB() {
     return CommonFloatingActionButton(
       onPressed: _handleShowAddExtendPage,
@@ -139,8 +130,9 @@ class _ProfilesViewState extends State<ProfilesView> {
         final spacing = 14.mAp;
         return CommonScaffold(
           isLoading: isLoading,
-          title: appLocalizations.profiles,
-          floatingActionButton: _buildFAB(),
+          title: '我的订阅',
+          // 消费者版:唔畀手动「添加配置」(订阅登录后自动导入),隐藏 FAB。
+          floatingActionButton: null,
           actions: [
             ..._buildActions(state.profiles),
             IconButton(
@@ -327,7 +319,10 @@ class ProfileItem extends StatelessWidget {
                   );
                 },
               ),
-            SizedBox(
+            // 消费者版:voguesly 订阅隐藏 kebab(编辑/预览YAML/覆写/复制订阅链接/导出/删除
+            // 都係工程+危险操作,订阅系自动导入嘅);只留上面「更新订阅」sync 掣。
+            if (!isVogueslyProfile(profile))
+              SizedBox(
               height: 40,
               width: 40,
               child: Consumer(
