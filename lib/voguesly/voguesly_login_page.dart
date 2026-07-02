@@ -118,8 +118,10 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
     // 后端 callback 跳 voguesly://auth?auth_data= → 由 flutter_web_auth_2 直接捕获返 app。
     try {
       final result = await FlutterWebAuth2.authenticate(
+        // 迁现役 qzz.io(后端已支持动态 redirect_uri,GCP 已加 qzz.io callback):
+        // 唔再经污染嘅 voguesly.com,China 用户 Google 登录唔会再卡超时。
         url:
-            'https://cp.voguesly.com/api/v2/passport/auth/google?redirect=voguesly://auth',
+            'https://cp.samseah.qzz.io/api/v2/passport/auth/google?redirect=voguesly://auth',
         callbackUrlScheme: 'voguesly',
       );
       final authData = Uri.parse(result).queryParameters['auth_data'];

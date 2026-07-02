@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
@@ -51,6 +52,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
     return generateSection(
       title: context.appLocalizations.settings,
       items: [
+        const _AccelModeItem(),
         const _LocaleItem(),
         const _ThemeItem(),
         const _SettingItem(),
@@ -340,6 +342,64 @@ class _SupportItem extends StatelessWidget {
       onTap: () => launchUrl(
         Uri.parse('https://t.me/easysvpn'),
         mode: LaunchMode.externalApplication,
+      ),
+    );
+  }
+}
+
+/// 「加速模式」消费者向二选一:智能分流(推荐) / 全局加速。
+/// 刻意唔暴露 FlClash 原版「直连」(= 唔加速嘅地雷:会显绿但流量裸奔)。
+class _AccelModeItem extends ConsumerWidget {
+  const _AccelModeItem();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mode = ref.watch(patchClashConfigProvider.select((s) => s.mode));
+    final isGlobal = mode == Mode.global;
+    return ListItem(
+      leading: const Icon(Icons.tune),
+      title: const Text('加速模式'),
+      subtitle: Text(
+        isGlobal ? '全局加速 · 所有流量走节点' : '智能分流 · 国内直连，境外走节点（推荐）',
+      ),
+      onTap: () => _choose(context, ref, isGlobal),
+    );
+  }
+
+  void _choose(BuildContext context, WidgetRef ref, bool isGlobal) {
+    final cs = context.colorScheme;
+    showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(Icons.alt_route, color: cs.primary),
+              title: const Text('智能分流（推荐）'),
+              subtitle:
+                  const Text('国内网站直连更快，境外自动走节点，省流量'),
+              trailing: !isGlobal ? Icon(Icons.check, color: cs.primary) : null,
+              onTap: () {
+                ref.read(setupActionProvider.notifier).changeMode(Mode.rule);
+                Navigator.of(ctx).pop();
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.public, color: cs.primary),
+              title: const Text('全局加速'),
+              subtitle:
+                  const Text('所有流量都走节点（更耗流量，国内网站可能变慢）'),
+              trailing: isGlobal ? Icon(Icons.check, color: cs.primary) : null,
+              onTap: () {
+                ref.read(setupActionProvider.notifier).changeMode(Mode.global);
+                Navigator.of(ctx).pop();
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
