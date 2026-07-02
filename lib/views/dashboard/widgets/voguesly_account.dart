@@ -167,37 +167,6 @@ class VogueslyAccount extends StatelessWidget {
                             ],
                           ),
                         ),
-                        if (user != null)
-                          Material(
-                            color: warn
-                                ? warnColor.withValues(alpha: 0.12)
-                                : context.colorScheme.primary
-                                    .withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(20),
-                            clipBehavior: Clip.antiAlias,
-                            child: InkWell(
-                              onTap: () => launchUrl(
-                                Uri.parse('https://cp.samseah.qzz.io/#/shop'),
-                                mode: LaunchMode.externalApplication,
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 7,
-                                ),
-                                child: Text(
-                                  '购买/续费',
-                                  style: context.textTheme.labelMedium
-                                      ?.copyWith(
-                                        color: warn
-                                            ? warnColor
-                                            : context.colorScheme.primary,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                ),
-                              ),
-                            ),
-                          ),
                       ],
                     ),
                     if (user != null) ...[
@@ -227,6 +196,38 @@ class VogueslyAccount extends StatelessWidget {
                                       : '${l.vogRemainTotal} ${_gb(user.transferEnable)}',
                               style: context.textTheme.bodySmall?.copyWith(
                                 color: warn ? warnColor : subColor,
+                              ),
+                            ),
+                          ),
+                          const Spacer(),
+                          // 移落呢行(唔再喺账号名嗰行同「当前套餐:xxx·到期:xxx」争横向空间——
+                          // 之前挤埋一行会令长套餐名+到期日被 ellipsis 切晒,睇唔到完整到期日)。
+                          Material(
+                            color: warn
+                                ? warnColor.withValues(alpha: 0.12)
+                                : context.colorScheme.primary
+                                    .withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(20),
+                            clipBehavior: Clip.antiAlias,
+                            child: InkWell(
+                              onTap: () => launchUrl(
+                                Uri.parse('https://cp.samseah.qzz.io/#/shop'),
+                                mode: LaunchMode.externalApplication,
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                child: Text(
+                                  '购买/续费',
+                                  style: context.textTheme.labelSmall?.copyWith(
+                                    color: warn
+                                        ? warnColor
+                                        : context.colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
