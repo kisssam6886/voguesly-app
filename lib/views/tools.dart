@@ -16,7 +16,9 @@ import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:intl/intl.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' show dirname, join;
 import 'package:url_launcher/url_launcher.dart';
 
@@ -74,6 +76,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
       const _SubscriptionEntry(),
       const _BuyPlanItem(),
       const _SupportItem(),
+      const _FeedbackItem(),
       ..._getSettingList(),
       // 诊断项(请求/连接/资源)收入「进阶工具」子页,「我的」一级唔再露工程化菜单。
       ..._getOtherList(vm2.b),
@@ -400,6 +403,124 @@ class _AccelModeItem extends ConsumerWidget {
             const SizedBox(height: 8),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// 「反馈问题 / 上传日志」—— 一键把描述 + 设备/版本 + 近期日志发俾客服(建工单)。
+/// 客服喺面板见到工单 + Telegram 通知,凭用户 ID 快速定位问题。
+class _FeedbackItem extends StatelessWidget {
+  const _FeedbackItem();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListItem(
+      leading: const Icon(Icons.feedback_outlined),
+      title: const Text('反馈问题 / 上传日志'),
+      subtitle: const Text('一键把日志发给客服，帮你快速定位'),
+      onTap: () => showSheet(
+        context: context,
+        builder: (_) => const AdaptiveSheetScaffold(
+          body: _FeedbackBody(),
+          title: '反馈问题',
+        ),
+      ),
+    );
+  }
+}
+
+class _FeedbackBody extends ConsumerStatefulWidget {
+  const _FeedbackBody();
+
+  @override
+  ConsumerState<_FeedbackBody> createState() => _FeedbackBodyState();
+}
+
+class _FeedbackBodyState extends ConsumerState<_FeedbackBody> {
+  final _desc = TextEditingController();
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _desc.dispose();
+    super.dispose();
+  }
+
+  Future<String> _collectDiagnostics() async {
+    final b = StringBuffer();
+    try {
+      final pkg = await PackageInfo.fromPlatform();
+      b.writeln('版本: ${pkg.version}+${pkg.buildNumber}');
+    } catch (_) {}
+    try {
+      final d = await DeviceInfoPlugin().androidInfo;
+      b.writeln('设备: ${d.manufacturer} ${d.model} · Android ${d.version.release}');
+    } catch (_) {}
+    // 近期 app 日志(尾 120 条)
+    final logs = globalState.container.read(logsProvider).list;
+    final tail = logs.length > 120 ? logs.sublist(logs.length - 120) : logs;
+    b.writeln('--- 近期日志 ---');
+    for (final l in tail) {
+      b.writeln('${l.dateTime} [${l.logLevel.name}] ${l.payload}');
+    }
+    return b.toString();
+  }
+
+  Future<void> _submit() async {
+    final token = ref.read(vogueslyAuthProvider).token;
+    if (token == null) {
+      globalState.showNotifier('请先登录再反馈');
+      return;
+    }
+    setState(() => _busy = true);
+    final diag = await _collectDiagnostics();
+    final msg = '${_desc.text.trim()}\n\n=== 诊断信息(自动附带) ===\n$diag';
+    final res = await ref.read(vogueslyApiProvider).submitFeedback(token, message: msg);
+    if (!mounted) return;
+    setState(() => _busy = false);
+    globalState.showNotifier(res.message);
+    if (res.ok) Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = context.colorScheme;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            '描述你遇到嘅问题，我哋会自动附上设备信息同近期日志帮你定位。',
+            style: context.textTheme.bodyMedium
+                ?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _desc,
+            minLines: 3,
+            maxLines: 6,
+            decoration: InputDecoration(
+              hintText: '例如：连接后打唔开网页 / 某个节点连唔到…',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          FilledButton.icon(
+            onPressed: _busy ? null : _submit,
+            icon: _busy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.send_rounded),
+            label: Text(_busy ? '提交中…' : '提交给客服'),
+          ),
+        ],
       ),
     );
   }

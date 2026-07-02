@@ -311,6 +311,36 @@ class VogueslyApi {
       return (ok: false, message: '开通失败: $e');
     }
   }
+
+  /// 提交反馈 / 上传日志 —— 用 XBoard 工单系统(POST /user/ticket/save)。
+  /// 客服喺面板见到工单 + Telegram 收到通知,凭用户 ID 查后端定位问题。
+  Future<({bool ok, String message})> submitFeedback(
+    String token, {
+    required String message,
+    String subject = 'App 反馈 / 日志',
+  }) async {
+    try {
+      final resp = await _try(
+        '/user/ticket/save',
+        method: 'POST',
+        data: {'subject': subject, 'level': 1, 'message': message},
+        headers: {'Authorization': token},
+        idempotent: false,
+      );
+      final json = resp.data as Map<String, dynamic>?;
+      if (resp.statusCode == 200 && json?['data'] != null) {
+        return (ok: true, message: '已提交，客服会尽快跟进');
+      }
+      return (
+        ok: false,
+        message: json?['message']?.toString() ?? '提交失败，请稍后再试',
+      );
+    } on DioException catch (e) {
+      return (ok: false, message: '网络异常: ${e.message ?? e.type.name}');
+    } catch (e) {
+      return (ok: false, message: '提交失败: $e');
+    }
+  }
 }
 
 /// 免费测试资格(后端 /user/trial/status)。
@@ -359,6 +389,7 @@ class VogueslyUser {
     required this.transferEnable,
     required this.expiredAt,
     required this.planId,
+    this.planName,
     this.email,
   });
 
@@ -367,6 +398,7 @@ class VogueslyUser {
   final int transferEnable;
   final int? expiredAt;
   final int? planId;
+  final String? planName; // 套餐名(getSubscribe 返 data.plan.name)
   final String? email;
 
   int get used => upload + download;
@@ -385,6 +417,10 @@ class VogueslyUser {
         transferEnable: _toInt(j['transfer_enable']),
         expiredAt: j['expired_at'] == null ? null : _toInt(j['expired_at']),
         planId: j['plan_id'] == null ? null : _toInt(j['plan_id']),
+        // getSubscribe 已 join `data.plan`(Plan 对象),取其 name 做套餐名。
+        planName: (j['plan'] is Map)
+            ? (j['plan'] as Map)['name']?.toString()
+            : null,
         email: j['email']?.toString(),
       );
 }

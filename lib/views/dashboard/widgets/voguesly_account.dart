@@ -21,6 +21,10 @@ class VogueslyAccount extends StatelessWidget {
     return '${(bytes / 1073741824).toStringAsFixed(1)} GB';
   }
 
+  // 套餐名前缀:「Plus · 到期: …」;无套餐名则唔加。
+  String _planPrefix(String? name) =>
+      (name == null || name.isEmpty) ? '' : '$name · ';
+
   String _expiry(int? expiredAt, String permanent) {
     if (expiredAt == null || expiredAt == 0) return permanent;
     final d = DateTime.fromMillisecondsSinceEpoch(expiredAt * 1000);
@@ -148,12 +152,13 @@ class VogueslyAccount extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                                 style: context.textTheme.titleSmall,
                               ),
-                              Text(
+              Text(
                                 user == null
                                     ? '${l.vogExpiry}: ${loggedIn ? '载入中…' : '—'}'
                                     : expired
-                                        ? '${l.vogExpiry}: 已过期'
-                                        : '${l.vogExpiry}: ${_expiry(user.expiredAt, l.vogPermanent)}',
+                                        ? '${_planPrefix(user.planName)}已过期'
+                                        : '${_planPrefix(user.planName)}${l.vogExpiry}: ${_expiry(user.expiredAt, l.vogPermanent)}',
+                                overflow: TextOverflow.ellipsis,
                                 style: context.textTheme.bodySmall?.copyWith(
                                   color: expired ? warnColor : subColor,
                                 ),
