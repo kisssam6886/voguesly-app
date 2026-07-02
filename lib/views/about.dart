@@ -7,6 +7,7 @@ import 'package:fl_clash/widgets/list.dart';
 import 'package:fl_clash/widgets/scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AboutView extends StatelessWidget {
   const AboutView({super.key});
@@ -19,16 +20,20 @@ class AboutView extends StatelessWidget {
       items: [
         ListItem(
           title: const Text('Telegram 客服'),
-          onTap: () {
-            globalState.openUrl('https://t.me/easysvpn');
-          },
+          // 自家可信链接直接开,唔弹「外部链接+裸URL」确认框(消费者会觉得似钓鱼)。
+          onTap: () => launchUrl(
+            Uri.parse('https://t.me/easysvpn'),
+            mode: LaunchMode.externalApplication,
+          ),
           trailing: const Icon(Icons.launch),
         ),
         ListItem(
           title: const Text('官网'),
-          onTap: () {
-            globalState.openUrl('https://voguesly.com');
-          },
+          // 弃用被污染嘅 voguesly.com → 现役面板域名 cp.samseah.qzz.io。
+          onTap: () => launchUrl(
+            Uri.parse('https://cp.samseah.qzz.io'),
+            mode: LaunchMode.externalApplication,
+          ),
           trailing: const Icon(Icons.launch),
         ),
       ],

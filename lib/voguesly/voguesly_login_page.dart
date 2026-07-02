@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'voguesly_auth.dart';
 
@@ -312,7 +313,11 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
                           TextButton(
                             onPressed: loading
                                 ? null
-                                : () => _toast('请在网页 cp.voguesly.com 重置密码'),
+                                // 开现役面板(cp.samseah.qzz.io),唔好再叫用户去弃用+被污染嘅 voguesly.com。
+                                : () => launchUrl(
+                                      Uri.parse('https://cp.samseah.qzz.io'),
+                                      mode: LaunchMode.externalApplication,
+                                    ),
                             child: const Text('忘记密码?'),
                           ),
                         ],

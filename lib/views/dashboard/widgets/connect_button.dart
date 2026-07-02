@@ -108,7 +108,7 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
       if (mounted && _attempting && !isStart) {
         _attempting = false;
         if (_connecting) setState(() => _connecting = false);
-        globalState.showNotifier('连接超时,请检查网络,或喺「当前线路」换一条线路再试');
+        globalState.showNotifier('连接超时，请检查网络，或在「当前线路」换一条线路再试');
       }
     });
   }
@@ -163,7 +163,7 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
                 ? '载入失败·点我重试'
                 : '点我开通')
         : bypassed
-            ? context.appLocalizations.suspended
+            ? '已跳过加速' // 唔用 l10n「挂起中...」(OS黑话),同副标题「已跳过加速」口径一致
             : isStart
                 ? '已连接'
                 : connecting

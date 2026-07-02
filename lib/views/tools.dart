@@ -17,6 +17,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' show dirname, join;
+import 'package:url_launcher/url_launcher.dart';
 
 import '../voguesly/voguesly_auth.dart';
 import '../voguesly/voguesly_avatar.dart';
@@ -38,7 +39,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
     return generateSection(
       title: context.appLocalizations.other,
       items: [
-        const _DisclaimerItem(),
+        // 移除 FlClash 免责声明项(「仅供学习交流·严禁商业」同付费产品自打脸,且点退出会强杀App)。
         if (enableDeveloperMode) const _DeveloperItem(),
         const _InfoItem(),
         const _LogoutItem(),
@@ -294,6 +295,7 @@ class _SettingItem extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _DisclaimerItem extends ConsumerWidget {
   const _DisclaimerItem();
 
@@ -334,7 +336,11 @@ class _SupportItem extends StatelessWidget {
     return ListItem(
       leading: const Icon(Icons.support_agent),
       title: const Text('联系客服'),
-      onTap: () => globalState.openUrl('https://t.me/easysvpn'),
+      // 自家可信链接直接开,唔弹「外部链接+裸URL」确认框。
+      onTap: () => launchUrl(
+        Uri.parse('https://t.me/easysvpn'),
+        mode: LaunchMode.externalApplication,
+      ),
     );
   }
 }
@@ -349,8 +355,11 @@ class _BuyPlanItem extends StatelessWidget {
     return ListItem(
       leading: const Icon(Icons.shopping_bag_outlined),
       title: const Text('购买 / 续费套餐'),
-      // 面板套餐页路由係 /#/shop(ez-voguesly 主题),唔係 /#/plan。
-      onTap: () => globalState.openUrl('https://cp.samseah.qzz.io/#/shop'),
+      // 面板套餐页路由係 /#/shop(ez-voguesly 主题),唔係 /#/plan。直接开,唔弹确认框。
+      onTap: () => launchUrl(
+        Uri.parse('https://cp.samseah.qzz.io/#/shop'),
+        mode: LaunchMode.externalApplication,
+      ),
     );
   }
 }

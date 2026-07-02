@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:defer_pointer/defer_pointer.dart';
-import 'package:dynamic_color/dynamic_color.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/providers/providers.dart';
@@ -41,6 +40,7 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
     );
   }
 
+  // ignore: unused_element
   Future<void> _handleConnection() async {
     final coreStatus = ref.read(coreStatusProvider);
     if (coreStatus == CoreStatus.connecting) {
@@ -57,115 +57,13 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
   }
 
   List<Widget> _buildActions(bool isEdit) {
-    final appLocalizations = context.appLocalizations;
-    return [
-      if (!isEdit)
-        Consumer(
-          builder: (_, ref, _) {
-            final coreStatus = ref.watch(coreStatusProvider);
-            return Tooltip(
-              message: appLocalizations.coreStatus,
-              child: FadeScaleBox(
-                alignment: Alignment.centerRight,
-                child: coreStatus == CoreStatus.connected
-                    ? IconButton.filled(
-                        visualDensity: VisualDensity.compact,
-                        iconSize: 20,
-                        padding: EdgeInsets.zero,
-                        style: IconButton.styleFrom(
-                          backgroundColor: Colors.green.harmonizeWith(
-                            context.colorScheme.primary,
-                          ),
-                          foregroundColor: switch (Theme.brightnessOf(
-                            context,
-                          )) {
-                            Brightness.light =>
-                              context.colorScheme.onSurfaceVariant,
-                            Brightness.dark =>
-                              context.colorScheme.onPrimaryFixedVariant,
-                          },
-                        ),
-                        onPressed: _handleConnection,
-                        icon: const Icon(Icons.check, fontWeight: FontWeight.w900),
-                      )
-                    : FilledButton.icon(
-                        key: ValueKey(coreStatus),
-                        onPressed: _handleConnection,
-                        style: FilledButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          backgroundColor: switch (coreStatus) {
-                            CoreStatus.connecting => null,
-                            CoreStatus.connected => Colors.greenAccent,
-                            CoreStatus.disconnected =>
-                              context.colorScheme.error,
-                          },
-                          foregroundColor: switch (coreStatus) {
-                            CoreStatus.connecting => null,
-                            CoreStatus.connected => switch (Theme.brightnessOf(
-                              context,
-                            )) {
-                              Brightness.light =>
-                                context.colorScheme.onSurfaceVariant,
-                              Brightness.dark => null,
-                            },
-                            CoreStatus.disconnected =>
-                              context.colorScheme.onError,
-                          },
-                        ),
-                        icon: SizedBox(
-                          height: globalState.measure.bodyMediumHeight,
-                          width: globalState.measure.bodyMediumHeight,
-                          child: switch (coreStatus) {
-                            CoreStatus.connecting => Padding(
-                              padding: const EdgeInsets.all(2),
-                              child: CircularProgressIndicator(
-                                strokeWidth: 3,
-                                color: context.colorScheme.onPrimary,
-                                backgroundColor: Colors.transparent,
-                              ),
-                            ),
-                            CoreStatus.connected => const Icon(
-                              Icons.check_sharp,
-                              fontWeight: FontWeight.w900,
-                            ),
-                            CoreStatus.disconnected => const Icon(
-                              Icons.restart_alt_sharp,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          },
-                        ),
-                        label: Text(switch (coreStatus) {
-                          CoreStatus.connecting => appLocalizations.connecting,
-                          CoreStatus.connected => appLocalizations.connected,
-                          CoreStatus.disconnected =>
-                            appLocalizations.disconnected,
-                        }),
-                      ),
-              ),
-            );
-          },
-        ),
-      if (isEdit)
-        ValueListenableBuilder(
-          valueListenable: _addedWidgetsNotifier,
-          builder: (_, addedChildren, child) {
-            if (addedChildren.isEmpty) {
-              return Container();
-            }
-            return child!;
-          },
-          child: IconButton(
-            onPressed: () {
-              _showAddWidgetsModal();
-            },
-            icon: const Icon(Icons.add_circle),
-          ),
-        ),
-      // 简洁主页:移除「编辑布局」笔(固定布局,唔畀用户拖拽)。
-    ];
+    // 简洁主页:AppBar 唔放任何工程化按钮。
+    // 移除「核心状态·重启核心」按钮(消费者唔识「核心」,且同大圆圈「已连接」双状态打架;
+    // 核心异常后台自动重启即可)。固定布局,亦无「编辑/添加卡」。
+    return const [];
   }
 
+  // ignore: unused_element
   void _showAddWidgetsModal() {
     showSheet(
       builder: (_) {
@@ -228,7 +126,9 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
       // DashboardWidget.networkDetection,
       DashboardWidget.currentRoute,
       DashboardWidget.networkSpeed,
-      DashboardWidget.outboundMode,
+      // 「出站模式」卡收起:规则/全局/直连 对消费者係黑话又危险(手滑点直连=裸奔仍显绿;
+      // 全局=国内流量都烧计费GB)。默认规则模式已啱,模式切换留返进阶。
+      // DashboardWidget.outboundMode,
     ];
     final children = [
       ...orderedWidgets

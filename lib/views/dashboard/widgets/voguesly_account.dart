@@ -13,7 +13,13 @@ import '../../../voguesly/voguesly_avatar.dart';
 class VogueslyAccount extends StatelessWidget {
   const VogueslyAccount({super.key});
 
-  String _gb(int bytes) => '${(bytes / 1073741824).toStringAsFixed(2)} GB';
+  // <1GB 显 MB(免费测试 500MB 用户唔会见到「0.49 GB」咁掉价);≥1GB 显 1 位小数 GB。
+  String _gb(int bytes) {
+    if (bytes < 1073741824) {
+      return '${(bytes / 1048576).toStringAsFixed(0)} MB';
+    }
+    return '${(bytes / 1073741824).toStringAsFixed(1)} GB';
+  }
 
   String _expiry(int? expiredAt, String permanent) {
     if (expiredAt == null || expiredAt == 0) return permanent;
