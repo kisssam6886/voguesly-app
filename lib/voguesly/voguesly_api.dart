@@ -240,21 +240,36 @@ class VogueslyApi {
     final uri = Uri.parse(subscribeUrl);
     for (final base in _hosts) {
       final host = Uri.parse(base).host;
-      final tryUrl = uri.replace(scheme: 'https', host: host).toString();
+      final cleanUrl = uri.replace(scheme: 'https', host: host).toString();
+      // ⚠️ cache-bust:加时间戳 query 令每次 URL 唯一,绕过 CF 边缘/HTTP client 任何缓存,
+      // 保证「更新订阅」实时攞最新(之前用户点更新攞到旧节点=中间层缓存)。后端 ignore _t。
+      final fetchUrl = uri.replace(
+        scheme: 'https',
+        host: host,
+        queryParameters: {
+          ...uri.queryParameters,
+          '_t': DateTime.now().millisecondsSinceEpoch.toString(),
+        },
+      ).toString();
       try {
         final resp = await _dio.get<List<int>>(
-          tryUrl,
+          fetchUrl,
           options: Options(
             responseType: ResponseType.bytes,
             validateStatus: (c) => c == 200,
             // ⚠️ 必须用 clash UA, 否则面板返 base64 通用格式而非 Clash YAML,
             // 会令 saveFile 的 validateConfig 失败(表现=无错但无加载)。
-            headers: {'User-Agent': 'clash-verge/2.0.0 FlClash'},
+            headers: {
+              'User-Agent': 'clash-verge/2.0.0 FlClash',
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache',
+            },
           ),
         );
         final data = resp.data;
         if (data != null && data.isNotEmpty) {
-          return (bytes: Uint8List.fromList(data), url: tryUrl);
+          // 返 cleanUrl(唔含 _t)做 profile.url,下次刷新再加新时间戳。
+          return (bytes: Uint8List.fromList(data), url: cleanUrl);
         }
       } catch (_) {}
     }
