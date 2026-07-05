@@ -36,10 +36,20 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - platform: android
             os: ubuntu-latest
+          - platform: windows
+            os: windows-latest
+            arch: amd64
+          - platform: macos
+            os: macos-latest
+            arch: arm64
+          - platform: macos
+            os: macos-13
+            arch: amd64
 
     steps:
       - name: Setup rust
