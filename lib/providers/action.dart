@@ -122,10 +122,10 @@ class CommonAction extends _$CommonAction {
               );
             }
           } else {
-            // ⚠️ 桌面(mac/win):version.json 的 download_url 系 Android APK,装唔到。
-            // 桌面统一导去下载站(有 Mac/Win 对应安装包),而非直开 APK。
+            // 桌面(mac/win):download_url 已是本平台+架构对应安装包(dmg/exe),
+            // 直接开浏览器下载正确安装包(唔再导去通用下载站)。
             launchUrl(
-              Uri.parse('https://dl.ylink.im/'),
+              Uri.parse(downloadUrl),
               mode: LaunchMode.externalApplication,
             );
           }

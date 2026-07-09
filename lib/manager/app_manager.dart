@@ -267,15 +267,7 @@ class AppSidebarContainer extends ConsumerWidget {
                           const Divider(height: 1, indent: 12, endIndent: 12),
                           const SizedBox(height: 8),
                           // 底部快捷:全部**半框**(只覆盖右边内容区,左侧栏保留可点)。
-                          _SidebarLink(
-                            icon: Icons.storefront_outlined,
-                            label: '购买套餐',
-                            showLabel: showLabel,
-                            selected: overlay == ContentOverlay.shop,
-                            onTap: () => ref
-                                .read(contentOverlayProvider.notifier)
-                                .set(ContentOverlay.shop),
-                          ),
+                          // 「购买套餐」已升为顶层 nav tab(上方),此处不再重复。
                           _SidebarLink(
                             icon: Icons.card_giftcard_outlined,
                             label: '邀请返利',

@@ -336,6 +336,7 @@ enum GeodataLoader { standard, memconservative }
 
 enum PageLabel {
   dashboard,
+  shop,
   detection,
   proxies,
   profiles,

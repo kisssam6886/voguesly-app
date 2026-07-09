@@ -214,17 +214,10 @@ class VogueslyPayment {
         if (onPaid != null) await onPaid();
         break;
       case VogueslyCheckoutKind.qrcode:
-        final isMobile = Platform.isAndroid || Platform.isIOS;
-        if (isMobile) {
-          final uri = Uri.tryParse(res.payload);
-          if (uri != null && uri.hasScheme) {
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
-          }
-          _wait(navCtx, ref, tradeNo, res.payload, qrData: null, onPaid: onPaid);
-        } else {
-          _wait(navCtx, ref, tradeNo, res.payload,
-              qrData: res.payload, onPaid: onPaid);
-        }
+        // 手机端同桌面一样内嵌二维码(免弹外部浏览器);手机额外有「打开支付」按钮
+        // 可直接开钱包(同宝贝云)。唔再自动跳浏览器,交畀用户选。
+        _wait(navCtx, ref, tradeNo, res.payload,
+            qrData: res.payload, onPaid: onPaid);
         break;
       case VogueslyCheckoutKind.url:
         final uri = Uri.tryParse(res.payload);
@@ -281,7 +274,10 @@ class VogueslyPayment {
                       data: qrData, size: 200, backgroundColor: Colors.white),
                 ),
                 const SizedBox(height: 16),
-                const Text('请用手机 支付宝 / 微信 扫码支付。\n完成后本页会自动到账。',
+                Text(
+                    (Platform.isAndroid || Platform.isIOS)
+                        ? '本机点下方「打开支付」直接付款,\n或用其它设备扫码。完成后自动到账。'
+                        : '请用手机 支付宝 / 微信 扫码支付。\n完成后本页会自动到账。',
                     textAlign: TextAlign.center),
                 const SizedBox(height: 12),
                 const SizedBox(
@@ -298,6 +294,18 @@ class VogueslyPayment {
             ],
           ),
           actions: [
+            // 手机端:内嵌 QR 之外提供「打开支付」直接开钱包(同一机付款);桌面 QR 只扫码。
+            if ((Platform.isAndroid || Platform.isIOS) &&
+                Uri.tryParse(payload)?.hasScheme == true)
+              TextButton(
+                onPressed: () async {
+                  final uri = Uri.tryParse(payload);
+                  if (uri != null) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                },
+                child: const Text('打开支付'),
+              ),
             if (qrData == null)
               TextButton(
                 onPressed: () async {

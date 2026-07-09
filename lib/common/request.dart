@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ffi' show Abi;
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -73,6 +74,17 @@ class Request {
   // 用自己域名嘅 version.json(唔再打 api.github.com/chen08209 上游 repo——
   // 嗰个会引导用户装返原版 FlClash,而且国内冇 VPN 好大机会连唔到)。
   // 返回形状保持同旧代码一致(tag_name/body/download_url),方便 checkUpdateResultHandle 唔使大改。
+  /// 本机对应嘅 manifest 平台键(Mac 分 arm64/intel,各平台各自安装包)。
+  String? _updatePlatformKey() {
+    if (Platform.isAndroid) return 'android';
+    if (Platform.isMacOS) {
+      return Abi.current() == Abi.macosArm64 ? 'macos_arm64' : 'macos_x64';
+    }
+    if (Platform.isWindows) return 'windows';
+    if (Platform.isLinux) return 'linux';
+    return null;
+  }
+
   Future<Map<String, dynamic>?> checkForUpdate() async {
     try {
       final response = await dio.get(
@@ -81,15 +93,29 @@ class Request {
       );
       if (response.statusCode != 200) return null;
       final data = response.data as Map<String, dynamic>;
-      final remoteVersion = data['latest_version'] as String?;
+      // ⚠️ 按平台+架构选对应条目。旧代码只读扁平 latest_version/download_url(=Android),
+      // 令 Mac/Win 显示咗 Android 版本号 + 下错 APK。改成认返自己平台先。
+      final key = _updatePlatformKey();
+      final platforms = data['platforms'];
+      Map<String, dynamic>? entry;
+      if (key != null && platforms is Map && platforms[key] is Map) {
+        entry = (platforms[key] as Map).cast<String, dynamic>();
+      } else if (key == 'android') {
+        // 向后兼容:旧 manifest 只有扁平键(即 Android)。
+        entry = data;
+      } else {
+        // 桌面/其它平台喺 manifest 冇对应安装包 → 唔提示(唔好显示别平台版本+下错包)。
+        return null;
+      }
+      final remoteVersion = entry['latest_version'] as String?;
       if (remoteVersion == null || remoteVersion.isEmpty) return null;
       final version = globalState.packageInfo.version;
       final hasUpdate = utils.compareVersions(remoteVersion, version) > 0;
       if (!hasUpdate) return null;
       return {
         'tag_name': 'v$remoteVersion',
-        'body': data['changelog'],
-        'download_url': data['download_url'],
+        'body': entry['changelog'],
+        'download_url': entry['download_url'],
       };
     } catch (e) {
       commonPrint.log('checkForUpdate failed', logLevel: LogLevel.warning);

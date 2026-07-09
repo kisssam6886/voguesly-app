@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - 'v*'
+  # 手动触发(Actions 页 Run workflow):唔使每次 cut tag 就可以出 Windows/Mac Intel build。
+  workflow_dispatch:
 env:
   IS_STABLE: ${{ !contains(github.ref, '-') }}
 

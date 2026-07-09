@@ -191,6 +191,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "cut": MessageLookupByLibrary.simpleMessage("剪切"),
     "dark": MessageLookupByLibrary.simpleMessage("深色"),
     "dashboard": MessageLookupByLibrary.simpleMessage("儀表盤"),
+    "shop": MessageLookupByLibrary.simpleMessage("購買套餐"),
     "detection": MessageLookupByLibrary.simpleMessage("檢測"),
     "dataChangedSave": MessageLookupByLibrary.simpleMessage("檢測到數據有更改，是否保存"),
     "dataCollectionContent": MessageLookupByLibrary.simpleMessage(

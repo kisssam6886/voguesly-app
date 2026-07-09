@@ -2,6 +2,7 @@ import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/views/views.dart';
 import 'package:fl_clash/voguesly/voguesly_detection.dart';
+import 'package:fl_clash/voguesly/voguesly_shop.dart';
 import 'package:flutter/material.dart';
 
 class Navigation {
@@ -18,6 +19,15 @@ class Navigation {
         label: PageLabel.dashboard,
         builder: (_) =>
             const DashboardView(key: GlobalObjectKey(PageLabel.dashboard)),
+      ),
+      // 购买套餐 = 商业化核心入口,做顶层 tab(手机底栏+桌面侧栏都露),同宝贝云一致。
+      NavigationItem(
+        keep: false,
+        icon: const Icon(Icons.storefront),
+        label: PageLabel.shop,
+        builder: (_) =>
+            const VogueslyShopPage(key: GlobalObjectKey(PageLabel.shop)),
+        modes: [NavigationItemMode.desktop, NavigationItemMode.mobile],
       ),
       NavigationItem(
         icon: const Icon(Icons.travel_explore),
