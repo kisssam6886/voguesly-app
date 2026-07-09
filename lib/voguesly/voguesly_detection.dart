@@ -110,23 +110,6 @@ class DetectionService {
     }
   }
 
-  /// 带自定 headers/timeout 的探测(如 YouTube 绕同意墙要 Cookie,且页面 800KB 要长 timeout)。
-  Future<({int? status, String body})> _probeWith(
-    String url, {
-    Map<String, String>? headers,
-    Duration? receiveTimeout,
-  }) async {
-    try {
-      final r = await _dio.get<String>(
-        url,
-        options: Options(headers: headers, receiveTimeout: receiveTimeout),
-      );
-      return (status: r.statusCode, body: r.data ?? '');
-    } catch (_) {
-      return (status: null, body: '');
-    }
-  }
-
   /// 测某目标延迟(ms)。经当前路由(核心按 Model A 分流:国内直连、国际经节点)。
   /// ⚠️ 旧法只打一次冷连接,量到 TCP+TLS 握手主导 + China→relay→node 长链路,
   /// 国际虚高 5-8 倍(误导)。改预热取 min:先打一次暖连接(丢弃),再打 2 次取最小,
@@ -197,39 +180,58 @@ class DetectionService {
   }
 
   Future<UnlockResult> youtubePremium() async {
-    // ⚠️ 旧 bug:/premium 页 787-824KB,经慢代理易撞 8s timeout → status null → 强制 No(误报)。
-    // 主修:呢个请求单独提 timeout 到 20s 畀佢下完。现代 SOCS 同意 cookie 绕欧盟同意墙。
-    final r = await _probeWith(
-      'https://www.youtube.com/premium?hl=en',
-      headers: {
-        'Cookie': 'SOCS=CAI; PREF=hl=en; CONSENT=YES+',
-        'Accept-Language': 'en-US,en;q=0.9',
-      },
-      receiveTimeout: const Duration(seconds: 20),
-    );
-    if (r.status == null) {
-      // 超时/连唔到 → 检测失败(唔当地区不支持)。
-      return const UnlockResult('YouTube Premium', status: UnlockStatus.error, note: '检测失败');
+    // ⚠️ /premium 页 813KB,经慢代理下唔完易超时 → 误报。用 stream 边读边匹配,
+    // 命中地区信号即中止,唔下成个 813KB(快、稳、慳流量)。
+    try {
+      final resp = await _dio.get<ResponseBody>(
+        'https://www.youtube.com/premium?hl=en',
+        options: Options(
+          headers: {
+            'Cookie': 'SOCS=CAI; PREF=hl=en',
+            'Accept-Language': 'en-US,en;q=0.9',
+          },
+          responseType: ResponseType.stream,
+          receiveTimeout: const Duration(seconds: 15),
+        ),
+      );
+      final buf = StringBuffer();
+      String region = '';
+      await for (final chunk in resp.data!.stream) {
+        buf.write(String.fromCharCodes(chunk));
+        final s = buf.toString();
+        // 命中任一信号即可判定,中止下载。
+        if (s.contains('www.google.cn')) {
+          return const UnlockResult('YouTube Premium',
+              status: UnlockStatus.no, region: 'CN', note: '地区不支持');
+        }
+        if (s.contains('Premium is not available') ||
+            s.contains('not available in your country')) {
+          return const UnlockResult('YouTube Premium',
+              status: UnlockStatus.no, note: '地区不支持');
+        }
+        region = RegExp(r'"INNERTUBE_CONTEXT_GL"\s*:\s*"([A-Z]{2})"')
+                .firstMatch(s)?.group(1) ??
+            RegExp(r'"GL":"([A-Z]{2})"').firstMatch(s)?.group(1) ??
+            region;
+        // 拎到地区码 + 见到 Premium 信号 → 可用,即刻返(唔使下完)。
+        if (region.isNotEmpty && s.contains('ad-free')) {
+          return UnlockResult('YouTube Premium',
+              status: UnlockStatus.yes, region: region);
+        }
+        // body 太大,读够 300KB 都未命中否定信号 → 当可用(有地区码用地区码)。
+        if (buf.length > 300000) break;
+      }
+      // 读完/中断:有地区码=可用,否则检测失败。
+      if (region.isNotEmpty) {
+        return UnlockResult('YouTube Premium',
+            status: UnlockStatus.yes, region: region);
+      }
+      return const UnlockResult('YouTube Premium',
+          status: UnlockStatus.error, note: '检测失败');
+    } catch (_) {
+      return const UnlockResult('YouTube Premium',
+          status: UnlockStatus.error, note: '检测失败');
     }
-    // 中国大陆识别(www.google.cn 出现=被导去中国版=CN)。
-    if (r.body.contains('www.google.cn')) {
-      return const UnlockResult('YouTube Premium', status: UnlockStatus.no, region: 'CN', note: '地区不支持');
-    }
-    if (r.body.contains('Premium is not available in your country') ||
-        r.body.contains('not available in your country') ||
-        r.body.contains('not available in your region')) {
-      return const UnlockResult('YouTube Premium', status: UnlockStatus.no, note: '地区不支持');
-    }
-    final cc = RegExp(r'"INNERTUBE_CONTEXT_GL"\s*:\s*"([A-Z]{2})"').firstMatch(r.body)?.group(1) ??
-        RegExp(r'"countryCode"\s*:\s*"([A-Z]{2})"').firstMatch(r.body)?.group(1) ??
-        RegExp(r'"GL":"([A-Z]{2})"').firstMatch(r.body)?.group(1) ??
-        '';
-    // 正向确认:body 含 ad-free/Premium 可用信号 或 拎到国家码 才判 Yes。
-    if (r.body.contains('ad-free') || r.body.contains('YouTube Premium') || cc.isNotEmpty) {
-      return UnlockResult('YouTube Premium', status: UnlockStatus.yes, region: cc);
-    }
-    // body 200 但截断/无信号 → 检测失败(唔误报 Yes/No)。
-    return const UnlockResult('YouTube Premium', status: UnlockStatus.error, note: '检测失败');
   }
 
   Future<UnlockResult> netflix() async {
@@ -316,11 +318,12 @@ class DetectionService {
     return UnlockResult(name, status: UnlockStatus.error, note: '检测失败');
   }
 
-  // ⚠️ep_id 会随授权到期失效,需定期对照 lmc999 刷新。已用 D Band(国内) vs 9929(美国)铁证:
-  // 大陆专属 ep_id=307247:国内 code:0(能睇)、美国 -10403(睇唔到)→ 三区版权解锁语义正确。
-  // 港澳台/台湾专属 ep_id=268176:国内 -10403、美国 -10403(要港澳台/台湾 IP 先睇)。
+  // ⚠️ep_id 会随授权到期失效,需定期对照 lmc999 刷新。已用 D Band(国内)/9929(美国)/HK relay(香港)三地铁证:
+  // 大陆专属 ep_id=307247:国内 code:0(能睇)、美国/香港 -10403 → 大陆区解锁。
+  // 港澳台专属 ep_id=183799:香港 code:0(能睇!)、大陆/美国 -10403 → 真·港澳台区解锁。
+  //   (⚠️268176 系台湾专属,香港都 -10403,唔啱做港澳台检测)。
   Future<UnlockResult> biliMainland() => _bili('哔哩哔哩大陆', '307247');
-  Future<UnlockResult> biliHkMoTw() => _bili('哔哩哔哩港澳台', '268176');
+  Future<UnlockResult> biliHkMoTw() => _bili('哔哩哔哩港澳台', '183799');
 
   List<Future<UnlockResult> Function()> get all => [
     youtubePremium,
@@ -403,18 +406,20 @@ class DetectionService {
     return SplitRouteResult(name: name, domestic: false);
   }
 
-  /// 国内分流验证:走当前路由(应直连)睇拎到咩 IP。myip.ipip.net 返「当前 IP + 归属」纯文本,
-  /// 国内直连 → 拎到 CN IP = 分流正确(国内服务走本地)。
+  /// 国内分流验证:测国内站(哔哩哔哩 API)经当前路由能否快速连通。
+  /// ⚠️唔用 myip.ipip.net 判 IP(会被分流规则误导:该域名若走代理会返美国IP → 误判)。
+  /// 国内站直连(Model A: bilibili→DIRECT)→ 快速返 200 = 分流正确走本地(绿 🇨🇳)。
   Future<SplitRouteResult> _splitDomestic() async {
-    final r = await _probe('https://myip.ipip.net/');
-    if (r.status == 200 && r.body.isNotEmpty) {
-      final ip = RegExp(r'(\d+\.\d+\.\d+\.\d+)').firstMatch(r.body)?.group(1) ?? '';
-      final isCn = r.body.contains('中国') || r.body.contains('China');
-      return SplitRouteResult(
-          name: '国内直连', domestic: true, ip: ip,
-          countryCode: isCn ? 'CN' : '', ok: isCn);
-    }
-    return const SplitRouteResult(name: '国内直连', domestic: true);
+    final sw = Stopwatch()..start();
+    final r = await _probe('https://api.bilibili.com/x/web-interface/zone');
+    sw.stop();
+    // 能连通(bilibili API 200)= 国内路由通=直连 work。哔哩哔哩喺国内直连先快返。
+    final ok = r.status == 200;
+    return SplitRouteResult(
+        name: '哔哩哔哩', domestic: true,
+        ip: ok ? '${sw.elapsedMilliseconds}ms' : '',
+        countryCode: ok ? 'CN' : '',
+        ok: ok);
   }
 
   Future<List<SplitRouteResult>> splitTest() async {
