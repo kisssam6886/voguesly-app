@@ -24,9 +24,13 @@ class _VogueslyGateState extends ConsumerState<VogueslyGate> {
 
   // 现役域名订阅(kVogueslyHosts.first 嘅 host)。旧域名(cp.voguesly.com 等已弃用)嘅 profile
   // 唔算,令旧安装升级后强制重导迁到新域名,唔会 restore-skip 继续用旧坏订阅。
+  // 现役 voguesly 订阅域名:ylink.im(新品牌) + samseah.qzz.io(过渡兼容——后端
+  // subscribe_url 可能仲系 samseah,唔可以净认 ylink.im 否则旧订阅当「未导入」)。
+  static const _validSubHosts = ['ylink.im', 'samseah.qzz.io'];
   bool get _hasCurrentDomainProfile {
-    final host = Uri.parse(kVogueslyHosts.first).host; // cp.samseah.qzz.io
-    return ref.read(profilesProvider).any((p) => p.url.contains(host));
+    return ref
+        .read(profilesProvider)
+        .any((p) => _validSubHosts.any((h) => p.url.contains(h)));
   }
 
   /// 登录后确保订阅就绪。

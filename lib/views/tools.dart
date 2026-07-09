@@ -20,10 +20,11 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' show dirname, join;
-import 'package:url_launcher/url_launcher.dart';
 
 import '../voguesly/voguesly_auth.dart';
 import '../voguesly/voguesly_avatar.dart';
+import '../voguesly/voguesly_cs.dart';
+import '../voguesly/voguesly_shop.dart';
 import '../voguesly/voguesly_subscription.dart';
 import 'profiles/profiles.dart';
 import 'config/advanced.dart';
@@ -371,14 +372,13 @@ class _VersionItemState extends ConsumerState<_VersionItem> {
   }
 }
 
-/// 一级「联系客服」入口(原本只埋喺关于页底,求助无门)。直接开 Telegram 即时支援。
-/// 顶部「购买/续费 + 联系客服」并排大按钮(显眼,唔再埋喺设置 list 度)。
-/// 两个都係自家可信链接,直接开外部 app,唔弹「外部链接」确认框。
-class _QuickActions extends StatelessWidget {
+/// 顶部「购买/续费 + 联系客服」并排大按钮(显眼)。
+/// ⚠️ 全部原生:购买续费开原生商城(webview 唔共享登录会弹登录页);联系客服开自建 AI 客服浮窗。
+class _QuickActions extends ConsumerWidget {
   const _QuickActions();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
       child: Row(
@@ -387,11 +387,7 @@ class _QuickActions extends StatelessWidget {
             child: _QuickActionCard(
               icon: Icons.shopping_bag_outlined,
               label: '购买 / 续费',
-              // 面板套餐页路由係 /#/shop(ez-voguesly 主题)。
-              onTap: () => launchUrl(
-                Uri.parse('https://cp.samseah.qzz.io/#/shop'),
-                mode: LaunchMode.externalApplication,
-              ),
+              onTap: () => VogueslyShopPage.open(context),
             ),
           ),
           const SizedBox(width: 12),
@@ -399,10 +395,7 @@ class _QuickActions extends StatelessWidget {
             child: _QuickActionCard(
               icon: Icons.support_agent,
               label: '联系客服',
-              onTap: () => launchUrl(
-                Uri.parse('https://t.me/easysvpn'),
-                mode: LaunchMode.externalApplication,
-              ),
+              onTap: () => VogueslyCsPanel.open(context),
             ),
           ),
         ],
@@ -459,11 +452,20 @@ class _AccelModeItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final mode = ref.watch(patchClashConfigProvider.select((s) => s.mode));
     final isGlobal = mode == Mode.global;
+    // ⚠️ 三态判:direct=裸奔(会显绿但流量唔走节点),唔可以当「智能分流(推荐)」谎报。
+    final (subtitle, warn) = switch (mode) {
+      Mode.global => ('全局加速 · 所有流量走节点', false),
+      Mode.direct => ('⚠️ 直连模式 · 未加速,流量未走节点(不安全)', true),
+      _ => ('智能分流 · 国内直连，境外走节点（推荐）', false),
+    };
     return ListItem(
-      leading: const Icon(Icons.tune),
+      leading: Icon(Icons.tune, color: warn ? const Color(0xFFEF4444) : null),
       title: const Text('加速模式'),
       subtitle: Text(
-        isGlobal ? '全局加速 · 所有流量走节点' : '智能分流 · 国内直连，境外走节点（推荐）',
+        subtitle,
+        style: warn
+            ? const TextStyle(color: Color(0xFFEF4444))
+            : null,
       ),
       onTap: () => _choose(context, ref, isGlobal),
     );
@@ -508,6 +510,17 @@ class _AccelModeItem extends ConsumerWidget {
   }
 }
 
+/// 全局可调:打开「反馈问题 / 上传日志」表单(设置页 + 在线客服「上传诊断日志」共用)。
+void showVogueslyFeedbackSheet(BuildContext context) {
+  showSheet(
+    context: context,
+    builder: (_) => const AdaptiveSheetScaffold(
+      body: _FeedbackBody(),
+      title: '反馈问题 / 上传日志',
+    ),
+  );
+}
+
 /// 「反馈问题 / 上传日志」—— 一键把描述 + 设备/版本 + 近期日志发俾客服(建工单)。
 /// 客服喺面板见到工单 + Telegram 通知,凭用户 ID 快速定位问题。
 class _FeedbackItem extends StatelessWidget {
@@ -519,13 +532,7 @@ class _FeedbackItem extends StatelessWidget {
       leading: const Icon(Icons.feedback_outlined),
       title: const Text('反馈问题 / 上传日志'),
       subtitle: const Text('一键把日志发给客服，帮你快速定位'),
-      onTap: () => showSheet(
-        context: context,
-        builder: (_) => const AdaptiveSheetScaffold(
-          body: _FeedbackBody(),
-          title: '反馈问题',
-        ),
-      ),
+      onTap: () => showVogueslyFeedbackSheet(context),
     );
   }
 }
@@ -643,11 +650,19 @@ class _DeveloperItem extends StatelessWidget {
 class _AccountHeader extends ConsumerWidget {
   const _AccountHeader();
 
-  String _gb(int b) => '${(b / 1073741824).toStringAsFixed(0)} GB';
+  // <1GB 显 MB(免得剩余 400MB 被 toStringAsFixed(0) 显成「0 GB」误导用户以为耗尽)。
+  String _gb(int b) {
+    if (b < 1073741824) return '${(b / 1048576).toStringAsFixed(0)} MB';
+    return '${(b / 1073741824).toStringAsFixed(1)} GB';
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(vogueslyAuthProvider.select((s) => s.user));
+    // ⚠️ 已登录但套餐未回填(China→HK 瞬断 → refreshUser 吞异常 user=null)时,
+    // 唔可以显示「未登录」误导付费用户。用真登录态区分。
+    final loggedIn =
+        ref.watch(vogueslyAuthProvider.select((s) => s.isLoggedIn));
     final avatar = ref.watch(vogueslyAvatarProvider);
     final cs = context.colorScheme;
     return Container(
@@ -673,7 +688,8 @@ class _AccountHeader extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  user?.email ?? context.appLocalizations.vogNotLoggedIn,
+                  user?.email ??
+                      (loggedIn ? '账号已登录 · 套餐加载中…' : context.appLocalizations.vogNotLoggedIn),
                   style: context.textTheme.titleSmall,
                   overflow: TextOverflow.ellipsis,
                 ),

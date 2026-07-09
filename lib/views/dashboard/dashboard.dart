@@ -121,14 +121,13 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
     const orderedWidgets = [
       DashboardWidget.vogueslyAccount,
       DashboardWidget.connectButton,
-      // 网络检测卡暂时收起:佢打外部 IP 服务(中国常不稳)→ 经常永久转圈,令用户混乱。
-      // 出口 IP 信任信号日后用更稳做法(直连线路健康探测)再上,唔用会转死圈嘅外部服务。
-      // DashboardWidget.networkDetection,
       DashboardWidget.currentRoute,
+      // 半宽卡两两并排(紧凑)。⚠️ 移除「系统代理」开关:它只是模式偏好(默认开,连接后自动生效),
+      // 核心未连时开住只会令用户误以为同「开启易联」重复(Sam 反馈)。保留「虚拟网卡 TUN」做进阶模式。
+      DashboardWidget.outboundMode,
+      DashboardWidget.tunButton,
+      DashboardWidget.trafficUsage,
       DashboardWidget.networkSpeed,
-      // 「出站模式」卡收起:规则/全局/直连 对消费者係黑话又危险(手滑点直连=裸奔仍显绿;
-      // 全局=国内流量都烧计费GB)。默认规则模式已啱,模式切换留返进阶。
-      // DashboardWidget.outboundMode,
     ];
     final children = [
       ...orderedWidgets

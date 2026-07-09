@@ -9,6 +9,7 @@ import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/input.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart' show TextSpan;
 import 'package:path/path.dart';
 
 class System {
@@ -20,6 +21,11 @@ class System {
     _instance ??= System._internal();
     return _instance!;
   }
+
+  // macOS TUN 提权 helper(SMAppService LaunchDaemon)的 platform channel。
+  // 原生侧实现在 macos/Runner/TunHelperManager.swift,只在 macOS 且 helper target 已接入时可用;
+  // 未接入前 invoke 会抛 MissingPluginException,authorizeCore 会自动回退旧 osascript 逻辑。
+  static const _tunHelperChannel = MethodChannel('voguesly/tunhelper');
 
   bool get isDesktop => isWindows || isMacOS || isLinux;
 
@@ -49,6 +55,18 @@ class System {
     } else if (system.isMacOS) {
       final result = await Process.run('stat', ['-f', '%Su:%Sg %Sp', corePath]);
       final output = result.stdout.trim();
+      // [TUN-DIAG] 只加诊断,不改判定逻辑。若授权后 corePath 仍在只读的 AppTranslocation/
+      // /private/var/folders 路径 => chmod +sx 无效 => 核心非 root => utun 创不成 => 假连接。
+      final rawCorePath = appPath.corePath;
+      final translocated = rawCorePath.contains('AppTranslocation') ||
+          rawCorePath.contains('/private/var/folders');
+      final isAdminDiag =
+          output.startsWith('root:admin') && output.contains('rws');
+      commonPrint.log(
+        '[TUN-DIAG] checkIsAdmin macOS corePath=$rawCorePath '
+        'translocated=$translocated statOutput="$output" isAdmin=$isAdminDiag',
+        logLevel: LogLevel.info,
+      );
       if (output.startsWith('root:admin') && output.contains('rws')) {
         return true;
       }
@@ -86,6 +104,17 @@ class System {
     }
 
     if (system.isMacOS) {
+      // [TUN-DIAG] 进入 macOS 授权分支时的状态快照(不改逻辑)。
+      commonPrint.log(
+        '[TUN-DIAG] authorizeCore macOS enter isAdmin=$isAdmin '
+        'corePath=${appPath.corePath}',
+        logLevel: LogLevel.info,
+      );
+      // 加法:优先走 root helper(免重复密码)。返回 null = helper 不可用/未接入,回退旧 osascript。
+      final helperResult = await _authorizeCoreViaMacHelper();
+      if (helperResult != null) {
+        return helperResult;
+      }
       final escapedPath = _shellEscape(appPath.corePath);
       final shell = 'chown root:admin $escapedPath && chmod +sx $escapedPath';
       final arguments = [
@@ -93,6 +122,21 @@ class System {
         'do shell script "$shell" with administrator privileges',
       ];
       final result = await Process.run('osascript', arguments);
+      // [TUN-DIAG] osascript 执行结果(exitCode + 截断 stderr)。
+      final stderrStr = result.stderr.toString();
+      commonPrint.log(
+        '[TUN-DIAG] authorizeCore osascript exitCode=${result.exitCode} '
+        'stderr="${stderrStr.substring(0, stderrStr.length > 300 ? 300 : stderrStr.length)}"',
+        logLevel: LogLevel.info,
+      );
+      // [TUN-DIAG] 关键:授权后再核实一次 setuid 是否真的生效。
+      // 若仍 false => translocation/只读路径 chmod 无效(实锤理论)。
+      final postAuthIsAdmin = await checkIsAdmin();
+      commonPrint.log(
+        '[TUN-DIAG] authorizeCore post-auth checkIsAdmin=$postAuthIsAdmin '
+        '(若授权后仍 false => 只读/translocation 路径 chmod 无效)',
+        logLevel: LogLevel.info,
+      );
       if (result.exitCode != 0) {
         return AuthorizeCode.error;
       }
@@ -122,6 +166,64 @@ class System {
       return AuthorizeCode.success;
     }
     return AuthorizeCode.error;
+  }
+
+  // macOS:经 root helper 给核心打 setuid。
+  // 返回值:
+  //   AuthorizeCode.success —— helper 已把核心提权好。
+  //   AuthorizeCode.error   —— 需用户在系统设置批准 helper(已弹引导),别再回退弹密码。
+  //   null                  —— helper 未接入 / 不可用 / 提权失败,调用方回退旧 osascript 逻辑。
+  Future<AuthorizeCode?> _authorizeCoreViaMacHelper() async {
+    final corePath = appPath.corePath;
+    try {
+      // 先确保 daemon 已注册。首次会是 requiresApproval,引导用户去系统设置放行。
+      final status = await _tunHelperChannel.invokeMethod<String>('register');
+      if (status == 'requiresApproval') {
+        await globalState.showMessage(
+          title: currentAppLocalizations.tip,
+          message: const TextSpan(
+            text: '需要在「系统设置 → 通用 → 登录项与扩展」允许「易联」的后台项目,'
+                '开启后重试即可开启 TUN,之后免密码。',
+          ),
+        );
+        return AuthorizeCode.error;
+      }
+      if (status != 'enabled') {
+        // notFound / notRegistered / error / unknown:helper 不可用,回退旧路径保底可用。
+        commonPrint.log(
+          'tunhelper register status: $status, fallback to osascript',
+          logLevel: LogLevel.warning,
+        );
+        return null;
+      }
+      final result = await _tunHelperChannel.invokeMethod<Map<Object?, Object?>>(
+        'ensureSetuid',
+        {'corePath': corePath},
+      );
+      if (result != null && result['ok'] == true) {
+        return AuthorizeCode.success;
+      }
+      commonPrint.log(
+        'tunhelper ensureSetuid failed: ${result?['msg']}, fallback to osascript',
+        logLevel: LogLevel.warning,
+      );
+      return null;
+    } on MissingPluginException {
+      // helper target 未接入(Xcode GUI 步骤未做)——回退,保证接入前 app 照常可用。
+      return null;
+    } on PlatformException catch (e) {
+      commonPrint.log(
+        'tunhelper channel error: ${e.message}, fallback to osascript',
+        logLevel: LogLevel.warning,
+      );
+      return null;
+    } catch (e) {
+      commonPrint.log(
+        'tunhelper unexpected error: $e, fallback to osascript',
+        logLevel: LogLevel.warning,
+      );
+      return null;
+    }
   }
 
   Future<void> back() async {

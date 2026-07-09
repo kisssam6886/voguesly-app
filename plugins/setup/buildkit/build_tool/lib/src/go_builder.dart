@@ -76,6 +76,11 @@ class GoBuilder {
         'Building Go core: $target ${target.isLib ? "(CGO, c-shared)" : "(standalone)"}');
     _log.info(kSeparator);
 
+    // 先删旧输出:go build 若见输出已存在且非 go-object(例如上次 build 出嘅
+    // executable / lipo universal)会报「already exists and is not an object file」
+    // 令 flutter build 反复失败。先删就永远 fresh 建。
+    _deleteIfExists(outFile);
+
     await runCommandStream('go', args,
         workingDirectory: _corePath, environment: env);
 

@@ -106,9 +106,9 @@ const proxiesListStoreKey = PageStorageKey<String>('proxies_list');
 const toolsStoreKey = PageStorageKey<String>('tools');
 const profilesStoreKey = PageStorageKey<String>('profiles');
 
-// 易联品牌主色:靛蓝(原 FlClash 默认 0xD8C0C3 玫瑰灰=橄榄灰深色,太工程化)。
+// 易联品牌主色:voguesly D-v 霓虹紫(#7C5CF6,对齐 D-v icon 同 Ninja 参考风格)。
 // Material ColorScheme.fromSeed 会据此铺全局色调。
-const defaultPrimaryColor = 0XFF4F46E5;
+const defaultPrimaryColor = 0XFF7C5CF6;
 
 double getWidgetHeight(num lines) {
   final space = 14.mAp;

@@ -3,11 +3,21 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'voguesly_auth.dart';
+
+// Google 官方四色 G(彩色,比单色 g_mobiledata 明显)。
+const String _kGoogleG =
+    '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">'
+    '<path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/>'
+    '<path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/>'
+    '<path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24s.85 6.91 2.34 9.88l7.35-5.7z"/>'
+    '<path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/>'
+    '</svg>';
 
 const _kRememberEmailKey = 'voguesly_remember_email';
 
@@ -121,7 +131,7 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
         // 迁现役 qzz.io(后端已支持动态 redirect_uri,GCP 已加 qzz.io callback):
         // 唔再经污染嘅 voguesly.com,China 用户 Google 登录唔会再卡超时。
         url:
-            'https://cp.samseah.qzz.io/api/v2/passport/auth/google?redirect=voguesly://auth',
+            'https://ylink.im/api/v2/passport/auth/google?redirect=voguesly://auth',
         callbackUrlScheme: 'voguesly',
       );
       final authData = Uri.parse(result).queryParameters['auth_data'];
@@ -175,15 +185,14 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Center(
-                      child: Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: cs.primaryContainer,
-                          borderRadius: BorderRadius.circular(14),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.asset(
+                          'assets/images/icon.png',
+                          width: 64,
+                          height: 64,
+                          fit: BoxFit.cover,
                         ),
-                        child: Icon(Icons.shield_outlined,
-                            size: 30, color: cs.primary),
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -315,9 +324,9 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
                           TextButton(
                             onPressed: loading
                                 ? null
-                                // 开现役面板(cp.samseah.qzz.io),唔好再叫用户去弃用+被污染嘅 voguesly.com。
+                                // 开现役面板(ylink.im),唔好再叫用户去弃用+被污染嘅 voguesly.com。
                                 : () => launchUrl(
-                                      Uri.parse('https://cp.samseah.qzz.io'),
+                                      Uri.parse('https://ylink.im'),
                                       mode: LaunchMode.externalApplication,
                                     ),
                             child: const Text('忘记密码?'),
@@ -350,34 +359,32 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
                               ],
                             ),
                     ),
-                    if (!_registerMode) ...[
-                      const SizedBox(height: 18),
-                      Row(
-                        children: [
-                          const Expanded(child: Divider()),
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text('或',
-                                style: theme.textTheme.bodySmall
-                                    ?.copyWith(color: cs.onSurfaceVariant)),
-                          ),
-                          const Expanded(child: Divider()),
-                        ],
-                      ),
-                      const SizedBox(height: 18),
-                      OutlinedButton.icon(
-                        onPressed: loading ? null : _googleLogin,
-                        icon: const Icon(Icons.g_mobiledata, size: 26),
-                        label: const Text('使用 Google 登录'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 13),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                    // Google 登录/注册(登录同注册都提供)。
+                    const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        const Expanded(child: Divider()),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text('或',
+                              style: theme.textTheme.bodySmall
+                                  ?.copyWith(color: cs.onSurfaceVariant)),
+                        ),
+                        const Expanded(child: Divider()),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    OutlinedButton.icon(
+                      onPressed: loading ? null : _googleLogin,
+                      icon: SvgPicture.string(_kGoogleG, width: 20, height: 20),
+                      label: Text(_registerMode ? '使用 Google 注册' : '使用 Google 登录'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 13),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                    ],
+                    ),
                     const SizedBox(height: 18),
                     Text(
                       _registerMode ? '已有账户?' : '还没有账户?',

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- helper 是 root LaunchDaemon,**不要** app-sandbox(sandbox 会挡 chown/chmod 提权)。
+	     这里刻意留空:
+	       - 不加 com.apple.security.app-sandbox
+	       - hardened runtime 由签名时 `--options runtime` 施加,不是 entitlement
+	       - chown/chmod 靠 root 身份即可,无需额外 entitlement
+	     若日后要收窄,可在此加 key;当前空 dict 即最小权限。 -->
+</dict>
+</plist>

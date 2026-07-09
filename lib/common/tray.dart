@@ -50,6 +50,7 @@ class Tray {
     }
     await trayManager.setIcon(
       getTryIcon(isStart: isStart, tunEnable: tunEnable),
+      // 粗实心 V(去 glow)+ macOS template:自动黑/白高对比剪影,菜单栏清晰(彩色渐变会糊到似冇图标)。
       isTemplate: system.isMacOS,
     );
     if (!Platform.isLinux) {

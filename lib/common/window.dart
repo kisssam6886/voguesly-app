@@ -30,7 +30,9 @@ class Window {
     // kDebugMode ? Size(680, 580) :
     final WindowOptions windowOptions = WindowOptions(
       size: props.size,
-      minimumSize: const Size(380, 400),
+      // 最小尺寸升到 900×660:令内容(主页 8 卡 + 检测结果)喺任何窗口都够位,
+      // 亦令现有用户之前持久化嘅过细窗口启动时被顶返到可用尺寸(Sam:框要适配所有菜单)。
+      minimumSize: const Size(900, 660),
     );
     if (!system.isMacOS || version > 10) {
       await windowManager.setTitleBarStyle(TitleBarStyle.hidden);

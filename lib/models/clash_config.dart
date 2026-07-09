@@ -5,7 +5,8 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'generated/clash_config.freezed.dart';
 part 'generated/clash_config.g.dart';
 
-const defaultClashConfig = PatchClashConfig();
+// 默认日志等级 info(原 freezed @Default 为 error;显式传入避免改 @Default 触发 codegen)。
+const defaultClashConfig = PatchClashConfig(logLevel: LogLevel.info);
 
 const defaultTun = Tun();
 const defaultDns = Dns();

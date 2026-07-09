@@ -144,7 +144,15 @@ abstract class WindowProps with _$WindowProps {
 extension WindowPropsExt on WindowProps {
   Size get _size => Size(width, height);
 
-  Size get size => _size.isEmpty ? const Size(680, 580) : _size;
+  // 默认窗口加大(原 680×580 太细,主页 8 卡 + 检测结果会溢出要下拉;Sam 要求内容适配窗口)。
+  // 首次启动用默认 1040×760;之后由 window_manager 持久化用户实际尺寸。
+  // ⚠️ clamp 落地:持久化尺寸细过可用下限(900×660)就顶返上去 —— 令现有用户(如之前
+  //    持久化咗过细窗口)下次启动自动够位,唔使手动拉大(min-size 光设 windowOptions 唔够,
+  //    因为 size=持久化值优先应用)。
+  Size get size {
+    if (_size.isEmpty) return const Size(1040, 760);
+    return Size(width < 900 ? 900 : width, height < 660 ? 660 : height);
+  }
 }
 
 @freezed

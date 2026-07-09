@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   app_links
   connectivity_plus
+  desktop_webview_window
   dynamic_color
   file_selector_windows
   flutter_js
@@ -17,6 +18,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   wifi_ssid
   window_ext
   window_manager
+  window_to_front
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

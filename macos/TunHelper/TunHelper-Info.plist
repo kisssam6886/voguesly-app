@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- 命令行工具的 Info.plist:靠 CREATE_INFOPLIST_SECTION_IN_BINARY=YES 嵌进二进制 __TEXT。
+	     CFBundleIdentifier 就是 helper 的代码签名 identifier,App 侧 remote requirement 会校验它。 -->
+	<key>CFBundleIdentifier</key>
+	<string>com.follow.clash.tunhelper</string>
+	<key>CFBundleName</key>
+	<string>com.follow.clash.tunhelper</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<!-- SMAppService 要求 daemon 声明它服务于哪个 App(与 launchd plist 保持一致)。 -->
+	<key>SMAuthorizedClients</key>
+	<array>
+		<string>identifier "com.voguesly.app" and anchor apple generic and certificate leaf[subject.OU] = "236T6T3629"</string>
+	</array>
+</dict>
+</plist>

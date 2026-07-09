@@ -41,6 +41,7 @@ final vogueslyImportFailedProvider =
 /// ⚠️ 现役域名 samseah.qzz.io(见 kVogueslyHosts);旧域名 voguesly/corelane/octolink 保留,
 /// 令旧安装升级后仍识别到旧订阅并清理(防串号)。加新干净域名到呢度。
 bool isVogueslyProfile(Profile p) =>
+    p.url.contains('ylink') || // 新品牌域名 ylink.im(2026-07 迁,必须认否则订阅当「未导入」)
     p.url.contains('samseah') ||
     p.url.contains('qzz.io') ||
     p.url.contains('ccwu') ||

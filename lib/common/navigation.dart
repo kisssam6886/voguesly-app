@@ -1,6 +1,7 @@
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/views/views.dart';
+import 'package:fl_clash/voguesly/voguesly_detection.dart';
 import 'package:flutter/material.dart';
 
 class Navigation {
@@ -19,6 +20,14 @@ class Navigation {
             const DashboardView(key: GlobalObjectKey(PageLabel.dashboard)),
       ),
       NavigationItem(
+        icon: const Icon(Icons.travel_explore),
+        label: PageLabel.detection,
+        builder: (_) => const VogueslyDetectionView(
+          key: GlobalObjectKey(PageLabel.detection),
+        ),
+        modes: [NavigationItemMode.desktop, NavigationItemMode.mobile],
+      ),
+      NavigationItem(
         icon: const Icon(Icons.article),
         label: PageLabel.proxies,
         builder: (_) =>
@@ -32,16 +41,18 @@ class Navigation {
         label: PageLabel.profiles,
         builder: (_) =>
             const ProfilesView(key: GlobalObjectKey(PageLabel.profiles)),
-        // 手机端唔入底栏、唔入「更多」;改由「我的」页顶嘅突出「我的订阅」入口入。桌面照旧。
-        modes: [NavigationItemMode.desktop],
+        // 消费者唔应见到裸订阅 profile 卡(两张卡好困惑)。侧栏隐藏;更新订阅入口喺「我的」页顶
+        // 同账号卡自动处理;管理订阅仍可由「我的」→ 管理订阅 入。
+        modes: [],
       ),
+      // 请求/连接 = FlClash 工程化调试页,消费者用唔着(Ninja 都冇)。隐藏(modes 清空)。
       NavigationItem(
         icon: const Icon(Icons.view_timeline),
         label: PageLabel.requests,
         builder: (_) =>
             const RequestsView(key: GlobalObjectKey(PageLabel.requests)),
         description: 'requestsDesc',
-        modes: [NavigationItemMode.desktop, NavigationItemMode.more],
+        modes: [],
       ),
       NavigationItem(
         icon: const Icon(Icons.ballot),
@@ -49,7 +60,7 @@ class Navigation {
         builder: (_) =>
             const ConnectionsView(key: GlobalObjectKey(PageLabel.connections)),
         description: 'connectionsDesc',
-        modes: [NavigationItemMode.desktop, NavigationItemMode.more],
+        modes: [],
       ),
       NavigationItem(
         icon: const Icon(Icons.storage),
@@ -57,16 +68,16 @@ class Navigation {
         description: 'resourcesDesc',
         builder: (_) =>
             const ResourcesView(key: GlobalObjectKey(PageLabel.resources)),
-        modes: [NavigationItemMode.more],
+        // 外部 provider/geodata 工程页,消费者用唔着。隐藏(连「高级工具」都唔露)。
+        modes: [],
       ),
       NavigationItem(
         icon: const Icon(Icons.adb),
         label: PageLabel.logs,
         builder: (_) => const LogsView(key: GlobalObjectKey(PageLabel.logs)),
         description: 'logsDesc',
-        modes: openLogs
-            ? [NavigationItemMode.desktop, NavigationItemMode.more]
-            : [],
+        // 调试日志页,消费者唔应喺侧栏见到(即使 openLogs 开)。彻底隐藏。
+        modes: [],
       ),
       NavigationItem(
         icon: const Icon(Icons.person),

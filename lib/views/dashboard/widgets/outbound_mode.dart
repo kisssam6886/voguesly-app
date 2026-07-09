@@ -57,7 +57,9 @@ class OutboundMode extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          for (final item in Mode.values)
+                          // 隐藏「直连」= 裸奔模式(会显绿但流量唔走节点),消费者唔应该点到。
+                          for (final item
+                              in Mode.values.where((m) => m != Mode.direct))
                             ListItem.radio(
                               horizontalTitleGap: 8,
                               tileTitleAlignment: ListTileTitleAlignment.center,
@@ -139,7 +141,8 @@ class OutboundModeV2 extends StatelessWidget {
                         constraints: const BoxConstraints.expand(),
                         child: CommonTabBar<Mode>(
                           children: Map.fromEntries(
-                            Mode.values.map(
+                            // 隐藏「直连」裸奔模式(同上)。
+                            Mode.values.where((m) => m != Mode.direct).map(
                               (item) => MapEntry(
                                 item,
                                 Container(

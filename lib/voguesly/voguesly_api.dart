@@ -3,14 +3,14 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 
 /// 易联 API + 订阅入口。
-/// ⚠️ 2026-07-01 由 cp.voguesly.com 迁到 cp.samseah.qzz.io:
+/// ⚠️ 2026-07-01 由 cp.voguesly.com 迁到 ylink.im:
 ///   voguesly.com 已被 GFW SNI 污染(裸IP 100% RST + 套CF间歇被打),且旧域名嘅 /s/ 订阅
 ///   畀 Cloudflare 缓存(max-age=14400 = 4小时)serve 旧配置 → app 攞唔到 Sam 新加嘅节点。
-///   cp.samseah.qzz.io 系后端 app_url/subscribe_url 设定嘅现役 panel(CF DYNAMIC 唔缓存,干净)。
+///   ylink.im 系后端 app_url/subscribe_url 设定嘅现役 panel(CF DYNAMIC 唔缓存,干净)。
 ///   corelane/octolink 旧镜像已死(HTTP 000),移除。待 Sam 开多个干净备用子域再加返 fallback。
 /// 后续如换品牌门面(如 ylink.im)只需改呢度。
 const List<String> kVogueslyHosts = [
-  'https://cp.samseah.qzz.io',
+  'https://ylink.im',
 ];
 
 /// 易联(voguesly) 后端 XBoard API 服务。
@@ -327,6 +327,397 @@ class VogueslyApi {
     }
   }
 
+  // ========================= 原生商城(套餐 / 下单 / 支付) =========================
+  // ⚠️ 商城照 NinjaDesktop 做法 = 全原生页面直调 XBoard API(用 app 已登录 token),
+  //    唔用 webview(webview 唔共享 app 会话 → 会弹面板登录页 + 404)。
+  //    流程:plan/fetch → order/save(下单攞 trade_no)→ getPaymentMethod(选支付)
+  //         → order/checkout(余额直扣 or 返支付 URL/二维码)→ order/check(轮询到账)。
+  //    只有最后真支付(支付宝/微信)先跳外部浏览器/出二维码。
+
+  /// 拉套餐列表(GET /user/plan/fetch)。返 [] = 失败/无套餐。
+  Future<List<VogueslyPlan>> fetchPlans(String token) async {
+    try {
+      final resp = await _try('/user/plan/fetch',
+          headers: {'Authorization': token}, retryOn401: true);
+      final data = (resp.data as Map<String, dynamic>?)?['data'];
+      if (data is List) {
+        return data
+            .whereType<Map<String, dynamic>>()
+            .map(VogueslyPlan.fromJson)
+            .where((p) => p.periods.isNotEmpty) // 隐藏无可售周期嘅套餐
+            .toList();
+      }
+    } catch (_) {}
+    return const [];
+  }
+
+  /// 拉账户余额(分)+ 基本信息(GET /user/info)。返 null=失败。
+  Future<int?> fetchBalanceCents(String token) async {
+    try {
+      final resp = await _try('/user/info',
+          headers: {'Authorization': token}, retryOn401: true);
+      final data = (resp.data as Map<String, dynamic>?)?['data'];
+      if (data is Map<String, dynamic>) {
+        return _intOf(data['balance']);
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// 拉可用支付方式(GET /user/order/getPaymentMethod)。返 [] = 失败。
+  Future<List<VogueslyPayMethod>> fetchPaymentMethods(String token) async {
+    try {
+      final resp = await _try('/user/order/getPaymentMethod',
+          headers: {'Authorization': token}, retryOn401: true);
+      final data = (resp.data as Map<String, dynamic>?)?['data'];
+      if (data is List) {
+        return data
+            .whereType<Map<String, dynamic>>()
+            .map(VogueslyPayMethod.fromJson)
+            .toList();
+      }
+    } catch (_) {}
+    return const [];
+  }
+
+  /// 下单(POST /user/order/save)。body{plan_id, period}。
+  /// 成功返 trade_no(字符串);失败返 (null, 错误文案)。
+  /// idempotent=false:已发出唔轮镜像重发,免重复下单。
+  Future<({String? tradeNo, String? error})> createOrder(
+    String token, {
+    required int planId,
+    required String period,
+  }) async {
+    try {
+      final resp = await _try(
+        '/user/order/save',
+        method: 'POST',
+        data: {'plan_id': planId, 'period': period},
+        headers: {'Authorization': token},
+        idempotent: false,
+      );
+      final json = resp.data as Map<String, dynamic>?;
+      final data = json?['data'];
+      if (resp.statusCode == 200 && data != null) {
+        // data 通常直接系 trade_no 字符串;个别版本包一层 {trade_no}
+        final tradeNo = data is String
+            ? data
+            : (data is Map ? data['trade_no']?.toString() : null);
+        if (tradeNo != null && tradeNo.isNotEmpty) {
+          return (tradeNo: tradeNo, error: null);
+        }
+      }
+      return (
+        tradeNo: null,
+        error: json?['message']?.toString() ?? '下单失败,请稍后再试',
+      );
+    } on DioException catch (e) {
+      return (tradeNo: null, error: '网络异常: ${e.message ?? e.type.name}');
+    } catch (e) {
+      return (tradeNo: null, error: '下单失败: $e');
+    }
+  }
+
+  /// 结算支付(POST /user/order/checkout)。body{trade_no, method}。
+  /// 返回:
+  ///   kind=balance  → 余额已直接扣款开通(data==true)
+  ///   kind=url      → 需跳外部浏览器嘅支付链接(payload=URL)
+  ///   kind=qrcode   → 需展示二维码(payload=二维码内容,通常系 URL)
+  ///   kind=error    → 失败(payload=错误文案)
+  Future<VogueslyCheckoutResult> checkout(
+    String token, {
+    required String tradeNo,
+    required int method,
+  }) async {
+    try {
+      final resp = await _try(
+        '/user/order/checkout',
+        method: 'POST',
+        data: {'trade_no': tradeNo, 'method': method},
+        headers: {'Authorization': token},
+        idempotent: false,
+      );
+      final json = resp.data as Map<String, dynamic>?;
+      if (resp.statusCode != 200) {
+        return VogueslyCheckoutResult.error(
+            json?['message']?.toString() ?? '支付发起失败');
+      }
+      final data = json?['data'];
+      if (data == true) return VogueslyCheckoutResult.balance();
+      if (data is String && data.isNotEmpty) {
+        // XBoard checkout 返嘅 data:type=1 系跳转 URL,type=0 系二维码内容(多数仍系 URL)。
+        // 冇 type 时统一当外部链接跳(支付宝/微信 h5 都可喺浏览器完成)。
+        final type = json?['type'];
+        if (type == 0) return VogueslyCheckoutResult.qrcode(data);
+        return VogueslyCheckoutResult.url(data);
+      }
+      if (data is Map) {
+        final type = _intOf(data['type']);
+        final payload =
+            (data['data'] ?? data['url'] ?? data['qr_code'])?.toString();
+        if (payload != null && payload.isNotEmpty) {
+          return type == 0
+              ? VogueslyCheckoutResult.qrcode(payload)
+              : VogueslyCheckoutResult.url(payload);
+        }
+      }
+      return VogueslyCheckoutResult.error(
+          json?['message']?.toString() ?? '支付发起失败');
+    } on DioException catch (e) {
+      return VogueslyCheckoutResult.error(
+          '网络异常: ${e.message ?? e.type.name}');
+    } catch (e) {
+      return VogueslyCheckoutResult.error('支付发起失败: $e');
+    }
+  }
+
+  /// 轮询订单状态(GET /user/order/check?trade_no=)。
+  /// 返回 status:0=待支付 1=开通中 2=已取消 3=已完成;null=拉取失败。
+  Future<int?> checkOrder(String token, String tradeNo) async {
+    try {
+      final resp = await _try(
+        '/user/order/check?trade_no=$tradeNo',
+        headers: {'Authorization': token},
+        retryOn401: true,
+      );
+      final data = (resp.data as Map<String, dynamic>?)?['data'];
+      return _intOf(data);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // ========================= 邀请返利 =========================
+  /// 拉邀请数据(GET /user/invite/fetch)。codes[](邀请码)+ stat[](统计)。返 null=失败。
+  Future<VogueslyInviteData?> fetchInviteData(String token) async {
+    try {
+      final resp = await _try('/user/invite/fetch',
+          headers: {'Authorization': token}, retryOn401: true);
+      final data = (resp.data as Map<String, dynamic>?)?['data'];
+      if (data is Map<String, dynamic>) {
+        return VogueslyInviteData.fromJson(data);
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// 生成一个新邀请码(POST /user/invite/save)。返回是否成功。
+  Future<bool> generateInviteCode(String token) async {
+    try {
+      final resp = await _try('/user/invite/save',
+          method: 'POST',
+          headers: {'Authorization': token},
+          idempotent: false); // 生成码:已发出唔轮镜像重发,免重复生成
+      final json = resp.data as Map<String, dynamic>?;
+      return resp.statusCode == 200 && json?['data'] != null;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// 拉知识库/教程列表(GET /user/knowledge/fetch)。客服首页「常见问题/教程」用。
+  /// data 可能係 {category:[...]} 或扁平 [...],两者都处理。
+  Future<List<VogueslyKnowledge>> fetchKnowledge(String token) async {
+    try {
+      final resp = await _try('/user/knowledge/fetch?language=zh-CN',
+          headers: {'Authorization': token}, retryOn401: true);
+      final data = (resp.data as Map<String, dynamic>?)?['data'];
+      final out = <VogueslyKnowledge>[];
+      if (data is List) {
+        for (final e in data) {
+          if (e is Map<String, dynamic>) out.add(VogueslyKnowledge.fromJson(e));
+        }
+      } else if (data is Map) {
+        // 分类分组:{ "教程": [ {...} ], ... }
+        data.forEach((cat, list) {
+          if (list is List) {
+            for (final e in list) {
+              if (e is Map<String, dynamic>) {
+                out.add(VogueslyKnowledge.fromJson({...e, 'category': cat}));
+              }
+            }
+          }
+        });
+      }
+      return out;
+    } catch (_) {}
+    return const [];
+  }
+
+  /// 拉单篇知识库文章正文(GET /user/knowledge/fetch?id=)。返 body(HTML)。
+  Future<({String title, String body})?> fetchKnowledgeBody(
+      String token, int id) async {
+    try {
+      final resp = await _try('/user/knowledge/fetch?id=$id&language=zh-CN',
+          headers: {'Authorization': token}, retryOn401: true);
+      final data = (resp.data as Map<String, dynamic>?)?['data'];
+      if (data is Map<String, dynamic>) {
+        return (
+          title: data['title']?.toString() ?? '',
+          body: data['body']?.toString() ?? '',
+        );
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  // ========================= 公告 / 流量明细 =========================
+  /// 拉公告列表(GET /user/notice/fetch)。响应直接 data+total,非 success 包装。返 []=失败。
+  Future<List<VogueslyNotice>> fetchNotices(String token) async {
+    try {
+      final resp = await _try('/user/notice/fetch',
+          headers: {'Authorization': token}, retryOn401: true);
+      final data = (resp.data as Map<String, dynamic>?)?['data'];
+      if (data is List) {
+        return data
+            .whereType<Map<String, dynamic>>()
+            .map(VogueslyNotice.fromJson)
+            .toList();
+      }
+    } catch (_) {}
+    return const [];
+  }
+
+  /// 拉流量明细(GET /user/stat/getTrafficLog)。仅当月每日记录,record_at 倒序。返 []=失败。
+  Future<List<VogueslyTrafficLog>> fetchTrafficLog(String token) async {
+    try {
+      final resp = await _try('/user/stat/getTrafficLog',
+          headers: {'Authorization': token}, retryOn401: true);
+      final data = (resp.data as Map<String, dynamic>?)?['data'];
+      if (data is List) {
+        return data
+            .whereType<Map<String, dynamic>>()
+            .map(VogueslyTrafficLog.fromJson)
+            .toList();
+      }
+    } catch (_) {}
+    return const [];
+  }
+
+  /// 重置订阅(GET /user/resetSecurity)。后端换新订阅 token,旧链接失效。
+  /// 返回新 subscribe_url;null=失败。用户中心「重置订阅」用(防订阅泄漏/被盗用)。
+  Future<({bool ok, String message})> resetSecurity(String token) async {
+    try {
+      final resp = await _try('/user/resetSecurity',
+          headers: {'Authorization': token});
+      final json = resp.data as Map<String, dynamic>?;
+      if (resp.statusCode == 200 && json?['data'] != null) {
+        return (ok: true, message: '订阅已重置,正在拉取新节点…');
+      }
+      return (ok: false, message: json?['message']?.toString() ?? '重置失败');
+    } catch (e) {
+      return (ok: false, message: '网络异常: $e');
+    }
+  }
+
+  /// 修改密码(POST /user/changePassword {old_password,new_password})。new min 8。
+  Future<({bool ok, String message})> changePassword(
+    String token, {
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final resp = await _try(
+        '/user/changePassword',
+        method: 'POST',
+        data: {'old_password': oldPassword, 'new_password': newPassword},
+        headers: {'Authorization': token},
+        idempotent: false,
+      );
+      final json = resp.data as Map<String, dynamic>?;
+      if (resp.statusCode == 200 && json?['data'] == true) {
+        return (ok: true, message: '密码已修改');
+      }
+      return (
+        ok: false,
+        message: json?['message']?.toString() ?? '修改失败(检查旧密码)'
+      );
+    } catch (e) {
+      return (ok: false, message: '网络异常: $e');
+    }
+  }
+
+  /// 佣金划转到余额(POST /user/transfer {transfer_amount 分})。
+  Future<({bool ok, String message})> transferCommission(
+      String token, int amountCents) async {
+    try {
+      final resp = await _try(
+        '/user/transfer',
+        method: 'POST',
+        data: {'transfer_amount': amountCents},
+        headers: {'Authorization': token},
+        idempotent: false,
+      );
+      final json = resp.data as Map<String, dynamic>?;
+      if (resp.statusCode == 200 && json?['data'] == true) {
+        return (ok: true, message: '已划转到余额');
+      }
+      return (ok: false, message: json?['message']?.toString() ?? '划转失败');
+    } catch (e) {
+      return (ok: false, message: '网络异常: $e');
+    }
+  }
+
+  /// 提现申请(POST /user/ticket/withdraw {withdraw_method,withdraw_account})。
+  Future<({bool ok, String message})> withdraw(
+    String token, {
+    required String method,
+    required String account,
+  }) async {
+    try {
+      final resp = await _try(
+        '/user/ticket/withdraw',
+        method: 'POST',
+        data: {'withdraw_method': method, 'withdraw_account': account},
+        headers: {'Authorization': token},
+        idempotent: false,
+      );
+      final json = resp.data as Map<String, dynamic>?;
+      if (resp.statusCode == 200 && json?['data'] == true) {
+        return (ok: true, message: '提现申请已提交,客服会尽快处理');
+      }
+      return (ok: false, message: json?['message']?.toString() ?? '提现失败');
+    } catch (e) {
+      return (ok: false, message: '网络异常: $e');
+    }
+  }
+
+  /// 取消订单(POST /user/order/cancel {trade_no})。返回是否成功。
+  Future<bool> cancelOrder(String token, String tradeNo) async {
+    try {
+      final resp = await _try(
+        '/user/order/cancel',
+        method: 'POST',
+        data: {'trade_no': tradeNo},
+        headers: {'Authorization': token},
+        idempotent: false,
+      );
+      final json = resp.data as Map<String, dynamic>?;
+      return resp.statusCode == 200 && json?['data'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// 拉订单记录(GET /user/order/fetch)。用户中心「我的订单」用(Sam:之前有订单查唔到)。
+  Future<List<VogueslyOrder>> fetchOrders(String token) async {
+    try {
+      final resp = await _try('/user/order/fetch',
+          headers: {'Authorization': token}, retryOn401: true);
+      final data = (resp.data as Map<String, dynamic>?)?['data'];
+      if (data is List) {
+        return data
+            .whereType<Map<String, dynamic>>()
+            .map(VogueslyOrder.fromJson)
+            .toList();
+      }
+    } catch (_) {}
+    return const [];
+  }
+
+  static int _intOf(Object? v) =>
+      v is int ? v : (v is num ? v.toInt() : int.tryParse('$v') ?? 0);
+
   /// 提交反馈 / 上传日志 —— 用 XBoard 工单系统(POST /user/ticket/save)。
   /// 客服喺面板见到工单 + Telegram 收到通知,凭用户 ID 查后端定位问题。
   Future<({bool ok, String message})> submitFeedback(
@@ -438,6 +829,314 @@ class VogueslyUser {
             : null,
         email: j['email']?.toString(),
       );
+}
+
+/// 一个套餐嘅可售周期(月/季/年/一次性…)。price 单位=分。
+class VogueslyPlanPeriod {
+  const VogueslyPlanPeriod({
+    required this.key,
+    required this.label,
+    required this.days,
+    required this.priceCents,
+  });
+
+  final String key; // order/save 用嘅 period 值(如 month_price)
+  final String label; // 月付 / 季付 / 一次性…
+  final int days; // 时长(天);0=一次性/不固定
+  final int priceCents;
+
+  double get price => priceCents / 100.0;
+  String get priceText => (priceCents % 100 == 0)
+      ? '¥${(priceCents ~/ 100)}'
+      : '¥${price.toStringAsFixed(2)}';
+  // 时长文案:0 天当「一次性」,否则「N 天」(30/90/180… 亦顺带标月数)。
+  String get durationText {
+    if (days <= 0) return '一次性';
+    if (days % 30 == 0 && days <= 1095) {
+      final m = days ~/ 30;
+      return m == 12 ? '1 年' : (m % 12 == 0 ? '${m ~/ 12} 年' : '$m 个月');
+    }
+    return '$days 天';
+  }
+}
+
+/// 商城套餐(含多个可售周期)。
+class VogueslyPlan {
+  const VogueslyPlan({
+    required this.id,
+    required this.name,
+    required this.transferEnableGb,
+    required this.speedLimit,
+    required this.content,
+    required this.periods,
+  });
+
+  final int id;
+  final String name;
+  final int transferEnableGb; // 流量(GB)
+  final int? speedLimit; // 限速(Mbps);null=不限
+  final String? content; // 套餐描述(HTML/纯文,可能为空)
+  final List<VogueslyPlanPeriod> periods;
+
+  int get minPriceCents =>
+      periods.map((e) => e.priceCents).reduce((a, b) => a < b ? a : b);
+  int get maxPriceCents =>
+      periods.map((e) => e.priceCents).reduce((a, b) => a > b ? a : b);
+  // 卡片价格:单周期显一个价,多周期显「最低价 起」(Sam:唔好 69~700 咁写,写 69起 好睇啲)。
+  String get priceRangeText {
+    final lo = periods.reduce((a, b) => a.priceCents < b.priceCents ? a : b);
+    if (periods.length == 1 || minPriceCents == maxPriceCents) {
+      return lo.priceText;
+    }
+    return '${lo.priceText} 起';
+  }
+
+  // 周期键 → (中文标签, 天数)。onetime 时长唔固定(按套餐)故 days=0 交由 UI 处理。
+  static const _periodMeta = <String, (String, int)>{
+    'month_price': ('月付', 30),
+    'quarter_price': ('季付', 90),
+    'half_year_price': ('半年付', 180),
+    'year_price': ('年付', 365),
+    'two_year_price': ('两年付', 730),
+    'three_year_price': ('三年付', 1095),
+    'onetime_price': ('一次性', 0),
+  };
+
+  factory VogueslyPlan.fromJson(Map<String, dynamic> j) {
+    // 价格字段可能喺顶层,亦可能包一层 prices:{...};两处都揾。
+    final prices = j['prices'];
+    int? priceAt(String key) {
+      final v = j[key] ?? (prices is Map ? prices[key] : null);
+      if (v == null) return null;
+      final n = v is num ? v.toInt() : int.tryParse('$v');
+      return (n == null || n <= 0) ? null : n; // 0/null = 该周期不售
+    }
+
+    final periods = <VogueslyPlanPeriod>[];
+    for (final e in _periodMeta.entries) {
+      final cents = priceAt(e.key);
+      if (cents != null) {
+        periods.add(VogueslyPlanPeriod(
+          key: e.key,
+          label: e.value.$1,
+          days: e.value.$2,
+          priceCents: cents,
+        ));
+      }
+    }
+    final transfer = j['transfer_enable'];
+    final speed = j['speed_limit'];
+    return VogueslyPlan(
+      id: VogueslyApi._intOf(j['id']),
+      name: j['name']?.toString() ?? '套餐',
+      transferEnableGb:
+          transfer is num ? transfer.toInt() : int.tryParse('$transfer') ?? 0,
+      speedLimit: speed == null
+          ? null
+          : (speed is num ? speed.toInt() : int.tryParse('$speed')),
+      content: j['content']?.toString(),
+      periods: periods,
+    );
+  }
+}
+
+/// 邀请返利数据(/user/invite/fetch)。
+/// ⚠️ stat[] 索引位/佣金单位(分vs元)各 XBoard 版本可能有差,真机拉一次核对再微调。
+/// 现按 XBoard 常见:stat[0]=已邀请人数,stat[2]=可用佣金余额(分),stat[3]=累计佣金(分)。
+class VogueslyInviteData {
+  const VogueslyInviteData({
+    required this.codes,
+    required this.inviteCount,
+    required this.commissionCents,
+    required this.totalCommissionCents,
+  });
+
+  final List<String> codes; // 邀请码(可能多个,取 first 展示)
+  final int inviteCount; // 已邀请注册人数
+  final int commissionCents; // 可用佣金余额(分)
+  final int totalCommissionCents; // 累计佣金(分)
+
+  String? get firstCode => codes.isEmpty ? null : codes.first;
+
+  factory VogueslyInviteData.fromJson(Map<String, dynamic> j) {
+    final codesRaw = j['codes'];
+    final codes = <String>[];
+    if (codesRaw is List) {
+      for (final c in codesRaw) {
+        if (c is Map && c['code'] != null) {
+          codes.add(c['code'].toString());
+        } else if (c is String) {
+          codes.add(c);
+        }
+      }
+    }
+    final stat = j['stat'];
+    int statAt(int i) =>
+        (stat is List && i < stat.length) ? VogueslyApi._intOf(stat[i]) : 0;
+    return VogueslyInviteData(
+      codes: codes,
+      inviteCount: statAt(0),
+      commissionCents: statAt(2),
+      totalCommissionCents: statAt(3),
+    );
+  }
+}
+
+/// 知识库/教程条目(/user/knowledge/fetch)。
+class VogueslyKnowledge {
+  const VogueslyKnowledge({
+    required this.id,
+    required this.title,
+    required this.category,
+  });
+
+  final int id;
+  final String title;
+  final String category;
+
+  factory VogueslyKnowledge.fromJson(Map<String, dynamic> j) =>
+      VogueslyKnowledge(
+        id: VogueslyApi._intOf(j['id']),
+        title: j['title']?.toString() ?? '',
+        category: j['category']?.toString() ?? '',
+      );
+}
+
+/// 订单记录(/user/order/fetch)。
+class VogueslyOrder {
+  const VogueslyOrder({
+    required this.tradeNo,
+    required this.planName,
+    required this.totalCents,
+    required this.status,
+    required this.createdAt,
+  });
+
+  final String tradeNo;
+  final String planName;
+  final int totalCents; // 分
+  final int status; // 0待支付 1开通中 2已取消 3已完成 4已退款
+  final int createdAt; // 秒级时间戳
+
+  String get statusText => switch (status) {
+        0 => '待支付',
+        1 => '开通中',
+        2 => '已取消',
+        3 => '已完成',
+        4 => '已退款',
+        _ => '未知',
+      };
+
+  String get amountText => '¥${(totalCents / 100).toStringAsFixed(2)}';
+
+  factory VogueslyOrder.fromJson(Map<String, dynamic> j) => VogueslyOrder(
+        tradeNo: j['trade_no']?.toString() ?? '',
+        planName: (j['plan'] is Map)
+            ? ((j['plan'] as Map)['name']?.toString() ?? '套餐')
+            : (j['plan_name']?.toString() ?? '套餐'),
+        totalCents: VogueslyApi._intOf(j['total_amount']),
+        status: VogueslyApi._intOf(j['status']),
+        createdAt: VogueslyApi._intOf(j['created_at']),
+      );
+}
+
+/// 公告(/user/notice/fetch)。content 系 HTML 串;created_at 秒级时间戳。
+class VogueslyNotice {
+  const VogueslyNotice({
+    required this.id,
+    required this.title,
+    required this.content,
+    this.imgUrl,
+    this.createdAt,
+    this.tags = const [],
+  });
+
+  final int id;
+  final String title;
+  final String content;
+  final String? imgUrl;
+  final int? createdAt; // 秒级时间戳
+  final List<String> tags;
+
+  factory VogueslyNotice.fromJson(Map<String, dynamic> j) {
+    final tagsRaw = j['tags'];
+    final tags = <String>[];
+    if (tagsRaw is List) {
+      for (final t in tagsRaw) {
+        if (t != null) tags.add(t.toString());
+      }
+    }
+    return VogueslyNotice(
+      id: VogueslyApi._intOf(j['id']),
+      title: j['title']?.toString() ?? '',
+      content: j['content']?.toString() ?? '',
+      imgUrl: j['img_url']?.toString(),
+      createdAt: j['created_at'] == null
+          ? null
+          : VogueslyApi._intOf(j['created_at']),
+      tags: tags,
+    );
+  }
+}
+
+/// 单日流量记录(/user/stat/getTrafficLog)。u=上行 d=下行(字节);record_at 秒级时间戳。
+class VogueslyTrafficLog {
+  const VogueslyTrafficLog({
+    required this.recordAt,
+    required this.u,
+    required this.d,
+  });
+
+  final int recordAt; // 当天时间戳(秒)
+  final int u; // 上行字节
+  final int d; // 下行字节
+
+  int get total => u + d;
+
+  factory VogueslyTrafficLog.fromJson(Map<String, dynamic> j) =>
+      VogueslyTrafficLog(
+        recordAt: VogueslyApi._intOf(j['record_at']),
+        u: VogueslyApi._intOf(j['u']),
+        d: VogueslyApi._intOf(j['d']),
+      );
+}
+
+/// 支付方式(getPaymentMethod)。id=checkout 用嘅 method。
+class VogueslyPayMethod {
+  const VogueslyPayMethod({
+    required this.id,
+    required this.name,
+    this.icon,
+  });
+
+  final int id;
+  final String name; // 支付宝 / 微信 / 余额…
+  final String? icon;
+
+  factory VogueslyPayMethod.fromJson(Map<String, dynamic> j) =>
+      VogueslyPayMethod(
+        id: VogueslyApi._intOf(j['id']),
+        name: j['name']?.toString() ?? '在线支付',
+        icon: j['icon']?.toString(),
+      );
+}
+
+/// checkout 结果:余额直扣 / 跳外部 URL / 出二维码 / 出错。
+enum VogueslyCheckoutKind { balance, url, qrcode, error }
+
+class VogueslyCheckoutResult {
+  const VogueslyCheckoutResult._(this.kind, this.payload);
+  factory VogueslyCheckoutResult.balance() =>
+      const VogueslyCheckoutResult._(VogueslyCheckoutKind.balance, '');
+  factory VogueslyCheckoutResult.url(String url) =>
+      VogueslyCheckoutResult._(VogueslyCheckoutKind.url, url);
+  factory VogueslyCheckoutResult.qrcode(String data) =>
+      VogueslyCheckoutResult._(VogueslyCheckoutKind.qrcode, data);
+  factory VogueslyCheckoutResult.error(String msg) =>
+      VogueslyCheckoutResult._(VogueslyCheckoutKind.error, msg);
+
+  final VogueslyCheckoutKind kind;
+  final String payload;
 }
 
 /// 后台 /guest/comm/config 下发:登录/注册页据此决定显示验证码 / 邮箱码。

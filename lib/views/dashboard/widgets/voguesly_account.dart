@@ -1,13 +1,12 @@
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/views/profiles/profiles.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 import '../../../voguesly/voguesly_auth.dart';
 import '../../../voguesly/voguesly_avatar.dart';
+import '../../../voguesly/voguesly_overlay.dart';
+import '../../../voguesly/voguesly_shop.dart';
 
 /// 仪表盘「易聯 账号」大卡：可选头像 + 用户名(email) + 剩余/总流量(进度条) + 到期 + 已用。
 /// 数据来自 vogueslyAuthProvider(登录后 getUserInfo 缓存)，头像来自 vogueslyAvatarProvider。
@@ -86,19 +85,10 @@ class VogueslyAccount extends StatelessWidget {
       height: getWidgetHeight(2),
       child: RepaintBoundary(
         child: CommonCard(
-          // 轻触账号卡 → 打开「我的订阅」页。
-          // ⚠️ 唔可以用 currentPageLabelProvider.toProfiles():订阅页唔喺消费者版 3-tab
-          // 导航入面,切咗 label 都冇页面 render(之前就係咁「跳唔郁」)。直接 push 页面。
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (ctx) => CommonScaffoldBackActionProvider(
-                  backAction: () => Navigator.of(ctx).pop(),
-                  child: const ProfilesView(),
-                ),
-              ),
-            );
-          },
+          // 轻触账号卡 → 半框「用户中心」(账号中枢:余额/套餐/订单/邀请/重置订阅/改密码)。
+          onPressed: () => ProviderScope.containerOf(context, listen: false)
+              .read(contentOverlayProvider.notifier)
+              .set(ContentOverlay.userCenter),
           child: Consumer(
             builder: (_, ref, _) {
               final user = ref.watch(
@@ -174,14 +164,18 @@ class VogueslyAccount extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Flexible(
-                            child: Text(
-                              _gb(user.remain),
-                              overflow: TextOverflow.ellipsis,
-                              style: context.textTheme.headlineSmall?.copyWith(
-                                color: warn
-                                    ? warnColor
-                                    : context.colorScheme.primary,
-                                fontWeight: FontWeight.bold,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                _gb(user.remain),
+                                maxLines: 1,
+                                style: context.textTheme.headlineSmall?.copyWith(
+                                  color: warn
+                                      ? warnColor
+                                      : context.colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
@@ -210,10 +204,8 @@ class VogueslyAccount extends StatelessWidget {
                             borderRadius: BorderRadius.circular(20),
                             clipBehavior: Clip.antiAlias,
                             child: InkWell(
-                              onTap: () => launchUrl(
-                                Uri.parse('https://cp.samseah.qzz.io/#/shop'),
-                                mode: LaunchMode.externalApplication,
-                              ),
+                              // 原生商城(webview 唔共享登录会弹登录页;照 Ninja 全原生)。
+                              onTap: () => VogueslyShopPage.open(context),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 12,

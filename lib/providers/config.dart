@@ -93,7 +93,8 @@ class _PatchClashConfig extends _$PatchClashConfig
     with AutoDisposeNotifierMixin {
   @override
   PatchClashConfig build() {
-    return const PatchClashConfig();
+    // 默认日志等级 info(复用 defaultClashConfig,已含 logLevel: info)。
+    return defaultClashConfig;
   }
 }
 

@@ -191,6 +191,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "cut": MessageLookupByLibrary.simpleMessage("剪切"),
     "dark": MessageLookupByLibrary.simpleMessage("深色"),
     "dashboard": MessageLookupByLibrary.simpleMessage("儀表盤"),
+    "detection": MessageLookupByLibrary.simpleMessage("檢測"),
     "dataChangedSave": MessageLookupByLibrary.simpleMessage("檢測到數據有更改，是否保存"),
     "dataCollectionContent": MessageLookupByLibrary.simpleMessage(
       "本應用使用 Firebase Crashlytics 收集崩潰信息以改進應用穩定性。\n收集的數據包括設備信息和崩潰詳情，不包含個人敏感數據。\n您可以在設置中關閉此功能。",
@@ -681,7 +682,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "tip": MessageLookupByLibrary.simpleMessage("提示"),
     "toggle": MessageLookupByLibrary.simpleMessage("切換"),
     "tonalSpotScheme": MessageLookupByLibrary.simpleMessage("調性點綴"),
-    "tools": MessageLookupByLibrary.simpleMessage("我的"),
+    "tools": MessageLookupByLibrary.simpleMessage("設定"),
     "tproxyPort": MessageLookupByLibrary.simpleMessage("Tproxy端口"),
     "trafficUsage": MessageLookupByLibrary.simpleMessage("流量統計"),
     "tun": MessageLookupByLibrary.simpleMessage("虛擬網卡"),

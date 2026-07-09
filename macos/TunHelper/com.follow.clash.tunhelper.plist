@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Label 必须 == 本文件名(去掉 .plist)== Mach service 名。 -->
+	<key>Label</key>
+	<string>com.follow.clash.tunhelper</string>
+
+	<!-- helper 可执行文件在 App bundle 内的路径,相对 .app 根目录。
+	     runbook 的 Copy Files phase 把 helper 装到 Contents/MacOS/ 下,
+	     且 helper target 的 Product Name 设为 com.follow.clash.tunhelper。 -->
+	<key>BundleProgram</key>
+	<string>Contents/MacOS/com.follow.clash.tunhelper</string>
+
+	<!-- 按需启动:App 首次连这个 Mach service 时,launchd 才拉起 helper。 -->
+	<key>MachServices</key>
+	<dict>
+		<key>com.follow.clash.tunhelper</key>
+		<true/>
+	</dict>
+
+	<key>RunAtLoad</key>
+	<false/>
+
+	<!-- ⚠️ Sam 定夺点 #1:这里必须是 App 的**真实** bundle id(Release=com.voguesly.app),
+	     SMAppService 用它把 daemon 归到 App 名下(系统设置→登录项与扩展 显示可开关/移除)。 -->
+	<key>AssociatedBundleIdentifiers</key>
+	<array>
+		<string>com.voguesly.app</string>
+	</array>
+</dict>
+</plist>

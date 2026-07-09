@@ -122,8 +122,10 @@ class CommonAction extends _$CommonAction {
               );
             }
           } else {
+            // ⚠️ 桌面(mac/win):version.json 的 download_url 系 Android APK,装唔到。
+            // 桌面统一导去下载站(有 Mac/Win 对应安装包),而非直开 APK。
             launchUrl(
-              Uri.parse(downloadUrl),
+              Uri.parse('https://dl.ylink.im/'),
               mode: LaunchMode.externalApplication,
             );
           }
@@ -197,6 +199,10 @@ class SetupAction extends _$SetupAction {
   /// ⚠️ 关键:getRunTime 只反映核心 mixed-port running;系统有冇 VPN 接口(hasVpnTransport)
   /// 先係 TUN 真建立嘅信号 —— 「已连接但概览 VPN 无 + 走直连」= 核心起咗但 TUN 未建立。
   Future<void> _verifyNativeConnected() async {
+    // ⚠️桌面(macOS/Win/Linux)冇 android VpnService,service.getRunTime() 永返 null,
+    // 会令呢个本为 android 设计嘅 guard 误判「核心未 running」→ 自动断开 + 误报。
+    // 桌面核心状态由 CoreService(Process + transport connectionCompleter)管,唔用呢个核实。
+    if (!Platform.isAndroid) return;
     if (startTime == null) return; // 已经断咗(或已被纠正),唔使核实
     final nativeRunTime = await service?.getRunTime();
     List<ConnectivityResult> conn = const [];
@@ -428,8 +434,18 @@ class SetupAction extends _$SetupAction {
 
   Future<Result<bool>> _requestAdmin(bool enableTun) async {
     final realTunEnable = ref.read(realTunEnableProvider);
+    // [TUN-DIAG] 每次调用(含双弹时的两次)入口状态,便于对齐 checkIsAdmin 日志。
+    commonPrint.log(
+      '[TUN-DIAG] _requestAdmin enableTun=$enableTun realTunEnable=$realTunEnable',
+      logLevel: LogLevel.info,
+    );
     if (enableTun != realTunEnable && realTunEnable == false) {
       final code = await system.authorizeCore();
+      // [TUN-DIAG] authorizeCore 返回的枚举名(success/none/error)。
+      commonPrint.log(
+        '[TUN-DIAG] _requestAdmin authorizeCore code=${code.name}',
+        logLevel: LogLevel.info,
+      );
       switch (code) {
         case AuthorizeCode.success:
           await ref.read(coreActionProvider.notifier).restartCore();
@@ -462,6 +478,13 @@ class SetupAction extends _$SetupAction {
     final res = await _requestAdmin(patchConfig.tun.enable);
     if (res.isError) return;
     final realTunEnable = ref.read(realTunEnableProvider);
+    // [TUN-DIAG] 核心配置下发前:期望 TUN vs 实际 realTunEnable。
+    // 两者不一致(期望 true / 实际 false)= 授权失败被降级,系统流量入不了 TUN。
+    commonPrint.log(
+      '[TUN-DIAG] _setupConfig 期望TUN=${patchConfig.tun.enable} '
+      '实际realTunEnable=$realTunEnable',
+      logLevel: LogLevel.info,
+    );
     final realPatchConfig = patchConfig.copyWith.tun(enable: realTunEnable);
     final setupState = await ref.read(setupStateProvider(profile?.id).future);
     if (system.isAndroid) {
@@ -948,7 +971,8 @@ class ProfilesAction extends _$ProfilesAction {
       try {
         // voguesly 订阅走我哋自家 dio(cp 被封时核心 _clashDio 直连必失败,后台静默更新唔到节点);
         // 判定同 voguesly_subscription.isVogueslyProfile 一致(此处 inline 避免 providers→voguesly 反向依赖)。
-        final isVoguesly = profile.url.contains('samseah') ||
+        final isVoguesly = profile.url.contains('ylink') ||
+            profile.url.contains('samseah') ||
             profile.url.contains('qzz.io') ||
             profile.url.contains('ccwu') ||
             profile.url.contains('voguesly') ||

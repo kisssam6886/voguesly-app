@@ -27,6 +27,10 @@ class MainFlutterWindow: NSWindow {
             }
         }
         
+        // TUN 提权 helper channel(voguesly/tunhelper)—— 待 ② helper target 接入 Xcode(pbxproj)后再启用。
+        // 暂缓:TunHelperManager.swift 未加入 Runner target,现在启用会 break build;system.dart 已回退 osascript。
+        // TunHelperManager.register(with: flutterViewController.engine.binaryMessenger)
+
         RegisterGeneratedPlugins(registry: flutterViewController)
         super.awakeFromNib()
     }

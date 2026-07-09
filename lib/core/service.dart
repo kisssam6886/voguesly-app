@@ -96,6 +96,21 @@ class CoreService extends CoreHandlerInterface {
         return;
       }
     }
+    // [TUN-DIAG] 核心启动前:打印核心路径 + 属主/权限位(看 setuid rws 有冇)。
+    // 仅 macOS —— `stat -f` 是 BSD 格式,Linux 的 `stat -f` 语义不同、Windows 无 stat。
+    if (system.isMacOS) {
+      final corePathForStart = appPath.corePath;
+      final statResult = await Process.run('stat', [
+        '-f',
+        '%Su:%Sg %Sp',
+        corePathForStart,
+      ]);
+      commonPrint.log(
+        '[TUN-DIAG] core start corePath=$corePathForStart '
+        'stat="${statResult.stdout.toString().trim()}"',
+        logLevel: LogLevel.info,
+      );
+    }
     try {
       _process = await Process.start(appPath.corePath, [_transport.address]);
     } catch (e) {
