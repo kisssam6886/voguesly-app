@@ -523,24 +523,28 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
         ),
       );
     });
+    // exitIp 轻(单请求),即刻跑。
     svc.exitIp().then((v) {
       if (mounted) setState(() { _ip = v; _ipLoading = false; });
     });
-    svc.splitTest().then((v) {
-      if (mounted) setState(() => _split = v);
-    });
-    // 并发检测:所有解锁项同时跑,边个完成边个刷新(唔再逐个等,快好多)。
-    await Future.wait([
-      for (var i = 0; i < checks.length; i++)
-        checks[i]().then((res) {
-          if (!mounted) return;
-          setState(() {
-            final next = [..._results];
-            if (i < next.length) next[i] = res;
-            _results = next;
-          });
-        }),
-    ]);
+    // ⚠️限并发检测:一次最多 3 个(唔好全 9 个同时挤爆一条代理连接→大量超时/误报 No)。
+    // 边个完成边个刷新。既比逐个快,又唔会挤爆慢链路(经港住宅节点尤其敏感)。
+    const maxConcurrent = 3;
+    var idx = 0;
+    Future<void> worker() async {
+      while (true) {
+        final i = idx++;
+        if (i >= checks.length) return;
+        final res = await checks[i]();
+        if (!mounted) return;
+        setState(() {
+          final next = [..._results];
+          if (i < next.length) next[i] = res;
+          _results = next;
+        });
+      }
+    }
+    await Future.wait([for (var w = 0; w < maxConcurrent; w++) worker()]);
     await _runLatency(svc);
     if (mounted) setState(() => _running = false);
   }
