@@ -194,12 +194,14 @@ class DetectionService {
           receiveTimeout: const Duration(seconds: 15),
         ),
       );
+      // ⚠️实测:GL 地区码喺 body ~49KB、否定信号('not available')喺页头,但 'ad-free'
+      // 喺 ~637KB(太后,经慢代理下唔到)。所以:GL 地区码就係判定依据,拎到即返,唔等 ad-free。
       final buf = StringBuffer();
       String region = '';
       await for (final chunk in resp.data!.stream) {
         buf.write(String.fromCharCodes(chunk));
         final s = buf.toString();
-        // 命中任一信号即可判定,中止下载。
+        // 否定信号(喺页头就有):中国版 / 地区不支持。
         if (s.contains('www.google.cn')) {
           return const UnlockResult('YouTube Premium',
               status: UnlockStatus.no, region: 'CN', note: '地区不支持');
@@ -209,23 +211,19 @@ class DetectionService {
           return const UnlockResult('YouTube Premium',
               status: UnlockStatus.no, note: '地区不支持');
         }
+        // 地区码(~49KB 就有):拎到即判 Yes 中止(唔使下 637KB 嘅 ad-free)。
         region = RegExp(r'"INNERTUBE_CONTEXT_GL"\s*:\s*"([A-Z]{2})"')
                 .firstMatch(s)?.group(1) ??
             RegExp(r'"GL":"([A-Z]{2})"').firstMatch(s)?.group(1) ??
             region;
-        // 拎到地区码 + 见到 Premium 信号 → 可用,即刻返(唔使下完)。
-        if (region.isNotEmpty && s.contains('ad-free')) {
+        if (region.isNotEmpty) {
           return UnlockResult('YouTube Premium',
               status: UnlockStatus.yes, region: region);
         }
-        // body 太大,读够 300KB 都未命中否定信号 → 当可用(有地区码用地区码)。
-        if (buf.length > 300000) break;
+        // 读够 120KB 仍无地区码(远超 GL 位置)→ 应该已命中,防呆中止。
+        if (buf.length > 120000) break;
       }
-      // 读完/中断:有地区码=可用,否则检测失败。
-      if (region.isNotEmpty) {
-        return UnlockResult('YouTube Premium',
-            status: UnlockStatus.yes, region: region);
-      }
+      // 读完/中断仍无地区码 → 检测失败。
       return const UnlockResult('YouTube Premium',
           status: UnlockStatus.error, note: '检测失败');
     } catch (_) {
@@ -406,20 +404,21 @@ class DetectionService {
     return SplitRouteResult(name: name, domestic: false);
   }
 
-  /// 国内分流验证:测国内站(哔哩哔哩 API)经当前路由能否快速连通。
-  /// ⚠️唔用 myip.ipip.net 判 IP(会被分流规则误导:该域名若走代理会返美国IP → 误判)。
-  /// 国内站直连(Model A: bilibili→DIRECT)→ 快速返 200 = 分流正确走本地(绿 🇨🇳)。
+  /// 国内分流验证:bilibili zone API 直接返「当前访问 B站 嘅出口国家/IP」。
+  /// 分流正确(Model A: bilibili→DIRECT)→ 出口=中国=绿🇨🇳;若返美国=B站误走咗代理=橙(分流异常)。
+  /// ⚠️呢个 API 本身就係「B站睇你喺边」,比 myip 更准反映 B站 实际走边条线。
   Future<SplitRouteResult> _splitDomestic() async {
-    final sw = Stopwatch()..start();
     final r = await _probe('https://api.bilibili.com/x/web-interface/zone');
-    sw.stop();
-    // 能连通(bilibili API 200)= 国内路由通=直连 work。哔哩哔哩喺国内直连先快返。
-    final ok = r.status == 200;
-    return SplitRouteResult(
-        name: '哔哩哔哩', domestic: true,
-        ip: ok ? '${sw.elapsedMilliseconds}ms' : '',
-        countryCode: ok ? 'CN' : '',
-        ok: ok);
+    if (r.status == 200) {
+      final country = RegExp(r'"country"\s*:\s*"([^"]*)"').firstMatch(r.body)?.group(1) ?? '';
+      final ip = RegExp(r'"addr"\s*:\s*"([0-9.]+)"').firstMatch(r.body)?.group(1) ?? '';
+      final isCn = country.contains('中国') || country.contains('China');
+      return SplitRouteResult(
+          name: '哔哩哔哩', domestic: true, ip: ip,
+          countryCode: isCn ? 'CN' : (country.isEmpty ? '' : 'XX'),
+          ok: isCn); // 中国=分流正确(绿);美国=走咗代理(红,提示分流问题)
+    }
+    return const SplitRouteResult(name: '哔哩哔哩', domestic: true);
   }
 
   Future<List<SplitRouteResult>> splitTest() async {
