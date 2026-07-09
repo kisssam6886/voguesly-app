@@ -90,22 +90,34 @@ class DetectionService {
   }
 
   /// 测某目标延迟(ms)。经当前路由(核心按 Model A 分流:国内直连、国际经节点)。
-  /// 用轻量资源(favicon/204)量往返;失败/超时返 null。
+  /// ⚠️ 旧法只打一次冷连接,量到 TCP+TLS 握手主导 + China→relay→node 长链路,
+  /// 国际虚高 5-8 倍(误导)。改预热取 min:先打一次暖连接(丢弃),再打 2 次取最小,
+  /// dio keep-alive 复用同 host 连接省握手 → 接近真实稳态 RTT。
   Future<int?> ping(String url) async {
-    final sw = Stopwatch()..start();
-    try {
-      await _dio.get<String>(
-        url,
-        options: Options(
-          receiveTimeout: const Duration(seconds: 6),
-          sendTimeout: const Duration(seconds: 6),
-        ),
-      );
-      sw.stop();
-      return sw.elapsedMilliseconds;
-    } catch (_) {
-      return null;
+    Future<int?> once() async {
+      final sw = Stopwatch()..start();
+      try {
+        await _dio.get<String>(
+          url,
+          options: Options(
+            receiveTimeout: const Duration(seconds: 6),
+            sendTimeout: const Duration(seconds: 6),
+          ),
+        );
+        sw.stop();
+        return sw.elapsedMilliseconds;
+      } catch (_) {
+        return null;
+      }
     }
+
+    await once(); // 预热:建连+握手,唔计
+    int? best;
+    for (var i = 0; i < 2; i++) {
+      final t = await once();
+      if (t != null && (best == null || t < best)) best = t;
+    }
+    return best;
   }
 
   static const _blockedForOpenAI = {'CN', 'RU', 'KP', 'IR', 'SY', 'CU', 'HK'};
@@ -160,12 +172,34 @@ class DetectionService {
   }
 
   Future<UnlockResult> disney() async {
-    final r = await _probe('https://www.disneyplus.com/');
-    if ((r.status == 200 || r.status == 301 || r.status == 302) &&
-        !r.body.contains('unavailable')) {
-      return const UnlockResult('Disney+', status: UnlockStatus.yes);
+    // ⚠️ 旧 bug:disneyplus.com 首页恒含 "/welcome/unavailable" 路由常量,
+    // 用 body.contains('unavailable') 会令所有节点恒判「地区限制」(误报,与真实解锁无关)。
+    // 正解:关跟随重定向,睇被封地区 Disney 会否 302 到 /welcome/unavailable;
+    // 200=可访问=解锁,3xx→/(welcome/)?unavailable=真地区限制。
+    try {
+      final r = await _dio.get<String>(
+        'https://www.disneyplus.com/',
+        options: Options(
+          followRedirects: false,
+          validateStatus: (s) => s != null && s < 500,
+        ),
+      );
+      final code = r.statusCode ?? 0;
+      final loc = (r.headers.value('location') ?? '').toLowerCase();
+      if (code == 200) {
+        return const UnlockResult('Disney+', status: UnlockStatus.yes);
+      }
+      if (code >= 300 && code < 400 && loc.contains('unavailable')) {
+        return const UnlockResult('Disney+',
+            status: UnlockStatus.no, note: '地区限制');
+      }
+      // 3xx 到别处(如登录/地区选择) / 403(Akamai 机器人拦) → 唔当地区限制,标检测失败。
+      return const UnlockResult('Disney+',
+          status: UnlockStatus.error, note: '检测失败');
+    } catch (_) {
+      return const UnlockResult('Disney+',
+          status: UnlockStatus.error, note: '检测失败');
     }
-    return const UnlockResult('Disney+', status: UnlockStatus.no, note: '地区限制');
   }
 
   Future<UnlockResult> spotify() async {
@@ -523,9 +557,12 @@ class _UnlockCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final loading = result.status == UnlockStatus.loading;
     final ok = result.status == UnlockStatus.yes;
+    final errored = result.status == UnlockStatus.error;
     final color = loading
         ? cs.outline
-        : (ok ? const Color(0xFF16A34A) : const Color(0xFFDC2626));
+        : errored
+            ? cs.outline // 检测失败=中性灰,唔当解锁失败(红)
+            : (ok ? const Color(0xFF16A34A) : const Color(0xFFDC2626));
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -556,10 +593,13 @@ class _UnlockCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(ok ? Icons.check_circle : Icons.cancel,
+                    Icon(
+                        errored
+                            ? Icons.help_outline
+                            : (ok ? Icons.check_circle : Icons.cancel),
                         size: 14, color: color),
                     const SizedBox(width: 4),
-                    Text(ok ? 'Yes' : 'No',
+                    Text(errored ? '检测失败' : (ok ? 'Yes' : 'No'),
                         style: TextStyle(
                             color: color, fontWeight: FontWeight.w700, fontSize: 12)),
                   ]),

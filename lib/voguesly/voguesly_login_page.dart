@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -145,12 +146,18 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
         // loginWithToken 喺 401/403 会置 state.error='登录已失效…' 并返 false。
         _toast(ref.read(vogueslyAuthProvider).error ?? 'Google 登录失败,请重试');
       }
+    } on PlatformException catch (e) {
+      if (!mounted) return;
+      // flutter_web_auth_2:用户取消回 CANCELED;浏览器空返回/异常回 FAILED。
+      // 两者都系用户放弃,静默唔弹 toast(同 Google/Apple 登录面板取消一致,唔误导)。
+      // 只有 NO_BROWSER 及其它真错误(网络/配置)先弹失败提示。
+      if (e.code == 'CANCELED' || e.code == 'FAILED') return;
+      _toast('Google 登录失败,请检查网络后重试');
     } catch (e) {
       if (!mounted) return;
-      // flutter_web_auth_2 用户取消会抛 cancel 类异常;其余系网络/配置错误,
-      // 唔好一律当「已取消」误导用户(令佢以为系自己取消咗)。
-      final canceled = e.toString().toLowerCase().contains('cancel');
-      _toast(canceled ? '已取消 Google 登录' : 'Google 登录失败,请检查网络后重试');
+      // 非 PlatformException 兜底:含 cancel 静默,否则弹通用失败。
+      if (e.toString().toLowerCase().contains('cancel')) return;
+      _toast('Google 登录失败,请检查网络后重试');
     }
   }
 
