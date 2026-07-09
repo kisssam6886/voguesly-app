@@ -63,6 +63,8 @@ class DetectionService {
       responseType: ResponseType.plain,
       validateStatus: (_) => true,
       followRedirects: true,
+      // 持久连接:令延迟预热(第2/3次)复用同 host 连接、省 CONNECT 隧道+TLS 握手。
+      persistentConnection: true,
       connectTimeout: const Duration(seconds: 8),
       receiveTimeout: const Duration(seconds: 8),
       sendTimeout: const Duration(seconds: 8),
@@ -74,6 +76,9 @@ class DetectionService {
             port > 0 ? 'PROXY 127.0.0.1:$port' : 'DIRECT';
         c.badCertificateCallback = (_, _, _) => true;
         c.connectionTimeout = const Duration(seconds: 8);
+        // keep-alive:保持连接池,idle 15s 内复用同 host,预热后第2/3次省握手。
+        c.idleTimeout = const Duration(seconds: 15);
+        c.maxConnectionsPerHost = 4;
         return c;
       },
     );
@@ -83,6 +88,22 @@ class DetectionService {
   Future<({int? status, String body})> _probe(String url) async {
     try {
       final r = await _dio.get<String>(url);
+      return (status: r.statusCode, body: r.data ?? '');
+    } catch (_) {
+      return (status: null, body: '');
+    }
+  }
+
+  /// 带自定 headers 的探测(如 YouTube 绕同意墙要 Cookie/Accept-Language)。
+  Future<({int? status, String body})> _probeWith(
+    String url, {
+    Map<String, String>? headers,
+  }) async {
+    try {
+      final r = await _dio.get<String>(
+        url,
+        options: Options(headers: headers),
+      );
       return (status: r.statusCode, body: r.data ?? '');
     } catch (_) {
       return (status: null, body: '');
@@ -124,22 +145,33 @@ class DetectionService {
 
   Future<UnlockResult> chatgpt() async {
     final r = await _probe('https://chat.openai.com/cdn-cgi/trace');
-    if (r.status == 200) {
-      final loc = RegExp(r'loc=([A-Z]{2})').firstMatch(r.body)?.group(1) ?? '';
-      if (loc.isNotEmpty && _blockedForOpenAI.contains(loc)) {
-        return UnlockResult('ChatGPT', status: UnlockStatus.no, region: loc, note: '地区不支持');
-      }
-      return UnlockResult('ChatGPT', status: UnlockStatus.yes, region: loc);
+    if (r.status != 200) {
+      return const UnlockResult('ChatGPT', status: UnlockStatus.no);
     }
-    return const UnlockResult('ChatGPT', status: UnlockStatus.no);
+    final loc = RegExp(r'loc=([A-Z]{2})').firstMatch(r.body)?.group(1) ?? '';
+    // 真端点:OpenAI 合规端点直接讲某地区支唔支持(比硬编码黑名单准)。
+    final c = await _probe(
+        'https://api.openai.com/compliance/cookie_requirements');
+    if (c.status != null && c.body.toLowerCase().contains('unsupported_country')) {
+      return UnlockResult('ChatGPT', status: UnlockStatus.no, region: loc, note: '地区不支持');
+    }
+    // 端点拿唔到就退回黑名单兜底。
+    if (loc.isNotEmpty && _blockedForOpenAI.contains(loc)) {
+      return UnlockResult('ChatGPT', status: UnlockStatus.no, region: loc, note: '地区不支持');
+    }
+    return UnlockResult('ChatGPT', status: UnlockStatus.yes, region: loc);
   }
+
+  // Anthropic/Claude 不支持地区(补齐至竞品 10 国黑名单)。
+  static const _blockedForClaude = {
+    'AF', 'BY', 'CN', 'CU', 'HK', 'IR', 'KP', 'MO', 'RU', 'SY'
+  };
 
   Future<UnlockResult> claude() async {
     final r = await _probe('https://claude.ai/cdn-cgi/trace');
     if (r.status == 200) {
       final loc = RegExp(r'loc=([A-Z]{2})').firstMatch(r.body)?.group(1) ?? '';
-      const blocked = {'CN', 'RU', 'KP', 'IR', 'HK'};
-      if (loc.isNotEmpty && blocked.contains(loc)) {
+      if (loc.isNotEmpty && _blockedForClaude.contains(loc)) {
         return UnlockResult('Claude', status: UnlockStatus.no, region: loc, note: '地区限制');
       }
       return UnlockResult('Claude', status: UnlockStatus.yes, region: loc);
@@ -148,12 +180,23 @@ class DetectionService {
   }
 
   Future<UnlockResult> youtubePremium() async {
-    final r = await _probe('https://www.youtube.com/premium');
+    // 带 hl=en + CONSENT cookie 绕欧盟同意墙(否则拿到脏 body 误判)。
+    final r = await _probeWith(
+      'https://www.youtube.com/premium?hl=en',
+      headers: {
+        'Cookie': 'CONSENT=YES+cb; YSC=abc; GPS=1',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+    );
     if (r.status == null) return const UnlockResult('YouTube Premium', status: UnlockStatus.no);
-    if (r.body.contains('Premium is not available')) {
+    if (r.body.contains('Premium is not available') ||
+        r.body.contains('not available in your country') ||
+        r.body.contains('not available in your region')) {
       return const UnlockResult('YouTube Premium', status: UnlockStatus.no, note: '地区不支持');
     }
-    final cc = RegExp(r'"countryCode"\s*:\s*"([A-Z]{2})"').firstMatch(r.body)?.group(1) ?? '';
+    final cc = RegExp(r'"countryCode"\s*:\s*"([A-Z]{2})"').firstMatch(r.body)?.group(1) ??
+        RegExp(r'"GL":"([A-Z]{2})"').firstMatch(r.body)?.group(1) ??
+        '';
     if (cc.isEmpty && r.status != 200) {
       return const UnlockResult('YouTube Premium', status: UnlockStatus.no);
     }
@@ -203,11 +246,17 @@ class DetectionService {
   }
 
   Future<UnlockResult> spotify() async {
-    final r = await _probe('https://www.spotify.com/');
-    final ok = r.status != null && r.status! >= 200 && r.status! < 400;
-    return ok
-        ? const UnlockResult('Spotify', status: UnlockStatus.yes)
-        : const UnlockResult('Spotify', status: UnlockStatus.no);
+    // country-selector API 直接出地区码;403/451=地区封禁。
+    final r = await _probe(
+        'https://www.spotify.com/api/content/v1/country-selector?platform=web&format=json');
+    if (r.status == 403 || r.status == 451) {
+      return const UnlockResult('Spotify', status: UnlockStatus.no, note: '地区限制');
+    }
+    if (r.status != null && r.status! >= 200 && r.status! < 400) {
+      final cc = RegExp(r'"countryCode"\s*:\s*"([A-Z]{2})"').firstMatch(r.body)?.group(1) ?? '';
+      return UnlockResult('Spotify', status: UnlockStatus.yes, region: cc);
+    }
+    return const UnlockResult('Spotify', status: UnlockStatus.no);
   }
 
   Future<UnlockResult> tiktok() async {
@@ -245,22 +294,47 @@ class DetectionService {
     biliHkMoTw,
   ];
 
+  /// 出口 IP:多源 HTTPS 洗牌容错(去旧 HTTP 明文 ip-api.com,防泄漏+防单源失败)。
+  /// 每源字段格式唔同,各自 parser;首个成功即返。
   Future<ExitIpInfo?> exitIp() async {
-    final r = await _probe(
-      'http://ip-api.com/json/?fields=status,country,countryCode,city,isp,query',
-    );
-    if (r.status == 200) {
-      try {
-        final j = jsonDecode(r.body) as Map<String, dynamic>;
-        if (j['status'] == 'success') {
-          return ExitIpInfo(
-            ip: (j['query'] ?? '').toString(),
-            countryCode: (j['countryCode'] ?? '').toString(),
+    final sources = <Future<ExitIpInfo?> Function()>[
+      () => _ipFrom('https://api.ip.sb/geoip', (j) => ExitIpInfo(
+            ip: (j['ip'] ?? '').toString(),
+            countryCode: (j['country_code'] ?? '').toString(),
             country: (j['country'] ?? '').toString(),
             city: (j['city'] ?? '').toString(),
-            isp: (j['isp'] ?? '').toString(),
-          );
-        }
+            isp: (j['isp'] ?? j['organization'] ?? '').toString(),
+          )),
+      () => _ipFrom('https://ipapi.co/json/', (j) => ExitIpInfo(
+            ip: (j['ip'] ?? '').toString(),
+            countryCode: (j['country_code'] ?? '').toString(),
+            country: (j['country_name'] ?? '').toString(),
+            city: (j['city'] ?? '').toString(),
+            isp: (j['org'] ?? '').toString(),
+          )),
+      () => _ipFrom('https://ipwho.is/', (j) => ExitIpInfo(
+            ip: (j['ip'] ?? '').toString(),
+            countryCode: (j['country_code'] ?? '').toString(),
+            country: (j['country'] ?? '').toString(),
+            city: (j['city'] ?? '').toString(),
+            isp: ((j['connection'] as Map?)?['isp'] ?? '').toString(),
+          )),
+    ]..shuffle();
+    for (final s in sources) {
+      final info = await s();
+      if (info != null && info.ip.isNotEmpty) return info;
+    }
+    return null;
+  }
+
+  Future<ExitIpInfo?> _ipFrom(
+    String url,
+    ExitIpInfo Function(Map<String, dynamic>) parse,
+  ) async {
+    final r = await _probe(url);
+    if (r.status == 200) {
+      try {
+        return parse(jsonDecode(r.body) as Map<String, dynamic>);
       } catch (_) {}
     }
     return null;
@@ -307,11 +381,13 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
     '微信': 'https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico',
     '抖音': 'https://www.douyin.com/favicon.ico',
   };
+  // ⚠️ 用就近 CDN 边缘轻端点(几十字节、边缘命中),量到接近真实 RTT;
+  // 唔好用主站根域(google.com/github.com 要完整 TLS 到源站数据中心 → 虚高)。
   static const _intlTargets = {
-    'Google': 'https://www.google.com/generate_204',
-    'YouTube': 'https://www.youtube.com/favicon.ico',
-    'GitHub': 'https://github.com/favicon.ico',
-    'Cloudflare': 'https://www.cloudflare.com/favicon.ico',
+    'Cloudflare': 'https://cloudflare.com/cdn-cgi/trace', // CF anycast 边缘,最能反映到节点距离
+    'Google': 'https://www.gstatic.com/generate_204', // gstatic CDN 204 空 body
+    'YouTube': 'https://i.ytimg.com/generate_204', // YouTube 图片 CDN 边缘
+    'jsDelivr': 'https://cdn.jsdelivr.net/npm/latency-test@1.0.0/generate_200', // 专为测延迟造
   };
 
   @override
@@ -405,12 +481,15 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
                     ?.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 12),
             LayoutBuilder(builder: (_, c) {
-              final cols = c.maxWidth > 900 ? 3 : (c.maxWidth > 560 ? 2 : 1);
+              // 手机 2 列起步(600 上 3、900 上 4),卡片紧凑,唔再单列占满版面(Sam 反馈)。
+              final cols = c.maxWidth > 900 ? 4 : (c.maxWidth > 600 ? 3 : 2);
+              // 2 列窄卡:名 + 徽章约需 aspectRatio 1.7(卡高≈卡宽/1.7);列越多卡越窄要更高。
+              final ratio = cols >= 4 ? 2.1 : (cols == 3 ? 1.9 : 1.7);
               return GridView.count(
                 crossAxisCount: cols,
-                childAspectRatio: 2.6,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
+                childAspectRatio: ratio,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 children: _results
