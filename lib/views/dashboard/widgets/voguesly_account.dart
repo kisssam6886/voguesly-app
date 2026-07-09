@@ -7,6 +7,7 @@ import '../../../voguesly/voguesly_auth.dart';
 import '../../../voguesly/voguesly_avatar.dart';
 import '../../../voguesly/voguesly_overlay.dart';
 import '../../../voguesly/voguesly_shop.dart';
+import '../../../voguesly/voguesly_user_center.dart';
 
 /// 仪表盘「易聯 账号」大卡：可选头像 + 用户名(email) + 剩余/总流量(进度条) + 到期 + 已用。
 /// 数据来自 vogueslyAuthProvider(登录后 getUserInfo 缓存)，头像来自 vogueslyAvatarProvider。
@@ -85,10 +86,18 @@ class VogueslyAccount extends StatelessWidget {
       height: getWidgetHeight(2),
       child: RepaintBoundary(
         child: CommonCard(
-          // 轻触账号卡 → 半框「用户中心」(账号中枢:余额/套餐/订单/邀请/重置订阅/改密码)。
-          onPressed: () => ProviderScope.containerOf(context, listen: false)
-              .read(contentOverlayProvider.notifier)
-              .set(ContentOverlay.userCenter),
+          // 轻触账号卡 → 「用户中心」(账号中枢:余额/套餐/订单/邀请/重置订阅/改密码)。
+          // 桌面用半框 overlay;手机无 overlay 宿主,改用全页 push。
+          onPressed: () {
+            final w = MediaQuery.maybeOf(context)?.size.width ?? 0;
+            if (w > 0 && w < 640) {
+              VogueslyUserCenterPage.open(context);
+            } else {
+              ProviderScope.containerOf(context, listen: false)
+                  .read(contentOverlayProvider.notifier)
+                  .set(ContentOverlay.userCenter);
+            }
+          },
           child: Consumer(
             builder: (_, ref, _) {
               final user = ref.watch(

@@ -15,8 +15,17 @@ import 'voguesly_overlay.dart';
 class VogueslyCsPanel extends ConsumerStatefulWidget {
   const VogueslyCsPanel({super.key});
 
-  /// 兼容旧调用点(如「我的」联系客服):直接开半框客服。
+  /// 兼容旧调用点(如「我的」联系客服):开客服。
+  /// 桌面用半框 overlay(左侧栏保留可点);手机端无 overlay 宿主,改用全页 push。
   static void open(BuildContext context) {
+    final w = MediaQuery.maybeOf(context)?.size.width ?? 0;
+    final isMobile = w > 0 && w < 640;
+    if (isMobile) {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const VogueslyCsPanel()),
+      );
+      return;
+    }
     ProviderScope.containerOf(context, listen: false)
         .read(contentOverlayProvider.notifier)
         .set(ContentOverlay.cs);
@@ -40,7 +49,12 @@ class _VogueslyCsPanelState extends ConsumerState<VogueslyCsPanel> {
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..addJavaScriptChannel('VogueslyCS', onMessageReceived: (m) {
         if (m.message == 'close') {
-          ref.read(contentOverlayProvider.notifier).close();
+          // 桌面 overlay 走 provider close;手机全页 push 走 Navigator.pop。
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          } else {
+            ref.read(contentOverlayProvider.notifier).close();
+          }
         } else if (m.message == 'feedback') {
           // 客服页「上传诊断日志」→ 开 app 的反馈/上传日志表单(带设备+近期日志)。
           if (mounted) showVogueslyFeedbackSheet(context);

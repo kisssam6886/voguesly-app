@@ -24,8 +24,12 @@ import 'package:path/path.dart' show dirname, join;
 import '../voguesly/voguesly_auth.dart';
 import '../voguesly/voguesly_avatar.dart';
 import '../voguesly/voguesly_cs.dart';
+import '../voguesly/voguesly_invite.dart';
+import '../voguesly/voguesly_notice.dart';
 import '../voguesly/voguesly_shop.dart';
+import '../voguesly/voguesly_stat.dart';
 import '../voguesly/voguesly_subscription.dart';
+import '../voguesly/voguesly_user_center.dart';
 import 'profiles/profiles.dart';
 import 'config/advanced.dart';
 import 'developer.dart';
@@ -77,6 +81,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
       const _AccountHeader(),
       const _SubscriptionEntry(),
       const _QuickActions(),
+      const _AccountServices(),
       const _FeedbackItem(),
       ..._getSettingList(),
       // 诊断项(请求/连接/资源)收入「进阶工具」子页,「我的」一级唔再露工程化菜单。
@@ -523,6 +528,44 @@ void showVogueslyFeedbackSheet(BuildContext context) {
 
 /// 「反馈问题 / 上传日志」—— 一键把描述 + 设备/版本 + 近期日志发俾客服(建工单)。
 /// 客服喺面板见到工单 + Telegram 通知,凭用户 ID 快速定位问题。
+/// 账号服务区(手机「我的」页):用户中心/邀请/公告/流量明细。
+/// 桌面靠侧栏 ContentOverlay 入呢啲功能,手机无侧栏,喺度用全页 push 补齐入口。
+class _AccountServices extends StatelessWidget {
+  const _AccountServices();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        ListItem(
+          leading: const Icon(Icons.account_circle_outlined),
+          title: const Text('用户中心'),
+          subtitle: const Text('余额、订单、重置订阅、修改密码'),
+          onTap: () => VogueslyUserCenterPage.open(context),
+        ),
+        ListItem(
+          leading: const Icon(Icons.card_giftcard_outlined),
+          title: const Text('邀请返利'),
+          subtitle: const Text('邀请好友、查看佣金、提现'),
+          onTap: () => VogueslyInvitePage.open(context),
+        ),
+        ListItem(
+          leading: const Icon(Icons.campaign_outlined),
+          title: const Text('公告中心'),
+          subtitle: const Text('最新公告与维护通知'),
+          onTap: () => VogueslyNoticePage.open(context),
+        ),
+        ListItem(
+          leading: const Icon(Icons.bar_chart_outlined),
+          title: const Text('流量明细'),
+          subtitle: const Text('逐日流量使用记录'),
+          onTap: () => VogueslyStatPage.open(context),
+        ),
+      ],
+    );
+  }
+}
+
 class _FeedbackItem extends StatelessWidget {
   const _FeedbackItem();
 
