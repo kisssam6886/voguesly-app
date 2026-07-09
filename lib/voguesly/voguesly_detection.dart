@@ -233,12 +233,26 @@ class DetectionService {
   }
 
   Future<UnlockResult> netflix() async {
+    // ⚠️旧 bug:200 就写死「完整解锁」冇验地区(误导)。改:先用 fast.com API 拎真实地区码,
+    // 再用双 title 判解锁程度。fast.com 系 Netflix 自家测速,直接反映 Netflix 出口国家。
+    String region = '';
+    final f = await _probe(
+        'https://api.fast.com/netflix/speedtest/v2?https=true&token=YXNkZmFzZGZhc2RmYXNkZg&urlCount=1');
+    if (f.status == 200) {
+      region = RegExp(r'"country"\s*:\s*"([A-Z]{2})"').firstMatch(f.body)?.group(1) ?? '';
+    }
+    // 非自制剧 title(81280792=绝命毒师,有地区版权)判解锁程度。
     final r = await _probe('https://www.netflix.com/title/81280792');
-    if (r.status == 200) {
-      return const UnlockResult('Netflix', status: UnlockStatus.yes, note: '完整解锁');
+    if (r.status == 200 || r.status == 301 || r.status == 302) {
+      // 能睇非自制剧 → 完整解锁,显真实地区(唔写死「完整解锁」误导)。
+      return UnlockResult('Netflix', status: UnlockStatus.yes, region: region);
     }
     if (r.status == 404) {
-      return const UnlockResult('Netflix', status: UnlockStatus.yes, note: '仅自制剧');
+      // 只自制剧(Netflix Originals)→ 部分解锁,标明。
+      return UnlockResult('Netflix', status: UnlockStatus.yes, region: region, note: '仅自制剧');
+    }
+    if (r.status == 403) {
+      return const UnlockResult('Netflix', status: UnlockStatus.no, note: '地区封禁');
     }
     return const UnlockResult('Netflix', status: UnlockStatus.no);
   }
@@ -515,15 +529,18 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
     svc.splitTest().then((v) {
       if (mounted) setState(() => _split = v);
     });
-    for (var i = 0; i < checks.length; i++) {
-      final res = await checks[i]();
-      if (!mounted) return;
-      setState(() {
-        final next = [..._results];
-        next[i] = res;
-        _results = next;
-      });
-    }
+    // 并发检测:所有解锁项同时跑,边个完成边个刷新(唔再逐个等,快好多)。
+    await Future.wait([
+      for (var i = 0; i < checks.length; i++)
+        checks[i]().then((res) {
+          if (!mounted) return;
+          setState(() {
+            final next = [..._results];
+            if (i < next.length) next[i] = res;
+            _results = next;
+          });
+        }),
+    ]);
     await _runLatency(svc);
     if (mounted) setState(() => _running = false);
   }
