@@ -235,11 +235,16 @@ class DetectionService {
   Future<UnlockResult> netflix() async {
     // ⚠️旧 bug:200 就写死「完整解锁」冇验地区(误导)。改:先用 fast.com API 拎真实地区码,
     // 再用双 title 判解锁程度。fast.com 系 Netflix 自家测速,直接反映 Netflix 出口国家。
+    // fast.com API(Netflix 自家测速)真 token 返 client.location.country = Netflix 出口国家。
+    // ⚠️旧用假 token 'YXNkZmFzZGZhc2RmYXNkZg' 返 Unknown app token → 拎唔到地区。
     String region = '';
     final f = await _probe(
-        'https://api.fast.com/netflix/speedtest/v2?https=true&token=YXNkZmFzZGZhc2RmYXNkZg&urlCount=1');
+        'https://api.fast.com/netflix/speedtest/v2?https=true&token=YXNkZmFzZGxmbnNkYWZoYXNkZmhrYWxm&urlCount=1');
     if (f.status == 200) {
-      region = RegExp(r'"country"\s*:\s*"([A-Z]{2})"').firstMatch(f.body)?.group(1) ?? '';
+      // 路径:client.location.country。取 client 段内嘅 country(唔好撞到 targets 里嘅)。
+      region = RegExp(r'"location"\s*:\s*\{[^}]*"country"\s*:\s*"([A-Z]{2})"')
+              .firstMatch(f.body)?.group(1) ??
+          '';
     }
     // 非自制剧 title(81280792=绝命毒师,有地区版权)判解锁程度。
     final r = await _probe('https://www.netflix.com/title/81280792');
@@ -545,6 +550,9 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
       }
     }
     await Future.wait([for (var w = 0; w < maxConcurrent; w++) worker()]);
+    // 分流可视化 + 延时:检测完先跑(唔同解锁检测抢代理),避免挤爆。
+    final split = await svc.splitTest();
+    if (mounted) setState(() => _split = split);
     await _runLatency(svc);
     if (mounted) setState(() => _running = false);
   }
