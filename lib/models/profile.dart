@@ -215,6 +215,10 @@ extension ProfileExtension on Profile {
     final tempFile = File(path);
     await tempFile.safeWriteAsBytes(bytes);
     final message = await coreController.validateConfig(path);
+    // 诊断(桌面「只剩 GLOBAL/FlClash」排查):bytes 太细/base64=UA错拉到通用格式;
+    // validate 非空=格式被拒 → core 落返只有 GLOBAL。真机 grep 呢行睇原因。
+    commonPrint.log(
+        'profile.saveFile bytes=${bytes.length} validate=${message.isEmpty ? "OK" : message}');
     if (message.isNotEmpty) {
       throw message;
     }

@@ -36,7 +36,16 @@ class Request {
     try {
       return await _clashDio.get<Uint8List>(
         url,
-        options: Options(responseType: ResponseType.bytes),
+        options: Options(
+          responseType: ResponseType.bytes,
+          // ⚠️ 必须 clash UA:否则 XBoard 面板返 base64 通用格式而非 Clash YAML,
+          // validateConfig 失败 → profile 刷新后无节点组,只剩 GLOBAL 兜底
+          // (桌面用户见到「只有 FlClash 一个」)。同 fetchSubscribeBytes 一致。
+          headers: {
+            'User-Agent': 'clash-verge/2.0.0 FlClash',
+            'Cache-Control': 'no-cache',
+          },
+        ),
       );
     } catch (e) {
       commonPrint.log('getFileResponseForUrl error ${e.toString()}');
@@ -91,7 +100,8 @@ class Request {
         vogueslyVersionCheckUrl,
         options: Options(responseType: ResponseType.json),
       );
-      if (response.statusCode != 200) return null;
+      // 非 200 = 服务器/网络异常,唔可以当「已最新」(会误报),返错误标记畀调用方区分。
+      if (response.statusCode != 200) return {'__net_error__': true};
       final data = response.data as Map<String, dynamic>;
       // ⚠️ 按平台+架构选对应条目。旧代码只读扁平 latest_version/download_url(=Android),
       // 令 Mac/Win 显示咗 Android 版本号 + 下错 APK。改成认返自己平台先。
@@ -118,8 +128,9 @@ class Request {
         'download_url': entry['download_url'],
       };
     } catch (e) {
+      // 网络异常(断网/超时/DNS)唔可以当「已最新」误报,返错误标记畀调用方区分。
       commonPrint.log('checkForUpdate failed', logLevel: LogLevel.warning);
-      return null;
+      return {'__net_error__': true};
     }
   }
 

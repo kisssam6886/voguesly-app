@@ -6,6 +6,7 @@ import 'voguesly_auth.dart';
 import 'voguesly_payment.dart';
 import 'voguesly_subscription.dart';
 import 'voguesly_ui.dart';
+import 'voguesly_user_center.dart'; // VogueslyOrdersPage(我的订单入口)
 
 /// 易联 · 原生商城页(照 NinjaDesktop 做法:全原生直调 XBoard API,唔用 webview)。
 ///
@@ -136,6 +137,19 @@ class _VogueslyShopPageState extends ConsumerState<VogueslyShopPage> {
                             color: cs.onSurfaceVariant.withValues(alpha: 0.7))),
                   ],
                 ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            // 我的订单入口(Sam:支付唔成功唔使去 设置→用户中心 咁远揾,商城顶直接入,继续付)。
+            Card(
+              elevation: 0,
+              color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
+              child: ListTile(
+                leading: Icon(Icons.receipt_long_outlined, color: cs.primary),
+                title: const Text('我的订单'),
+                subtitle: const Text('查看订单 · 继续未完成的支付'),
+                trailing: const Icon(Icons.chevron_right, size: 20),
+                onTap: () => VogueslyOrdersPage.open(context),
               ),
             ),
             const SizedBox(height: 18),

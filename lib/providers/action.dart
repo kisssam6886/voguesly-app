@@ -85,6 +85,16 @@ class CommonAction extends _$CommonAction {
     Map<String, dynamic>? data,
     bool isUser = false,
   }) async {
+    // 网络/服务器异常:唔可以当「已最新」。手动检查先提示网络错,自动检查静默(唔打扰)。
+    if (data != null && data['__net_error__'] == true) {
+      if (isUser) {
+        globalState.showMessage(
+          title: currentAppLocalizations.checkUpdate,
+          message: const TextSpan(text: '网络异常,暂时检查唔到更新,请检查网络后重试'),
+        );
+      }
+      return;
+    }
     if (data != null) {
       final tagName = data['tag_name'];
       final body = data['body'];
