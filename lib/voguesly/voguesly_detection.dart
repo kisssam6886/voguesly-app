@@ -49,6 +49,22 @@ class LatencyResult {
   const LatencyResult(this.name, this.ms);
 }
 
+/// 分流路由测试:某服务经当前路由睇到嘅出口 IP(护城河可视化——国际走外国IP、国内走CN)。
+class SplitRouteResult {
+  final String name;
+  final bool domestic; // true=国内服务(应走CN),false=国际(应走外国)
+  final String ip;
+  final String countryCode;
+  final bool ok; // 分流係咪符合预期(国内→CN、国际→非CN)
+  const SplitRouteResult({
+    required this.name,
+    required this.domestic,
+    this.ip = '',
+    this.countryCode = '',
+    this.ok = false,
+  });
+}
+
 const _ua =
     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 '
     '(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
@@ -339,6 +355,38 @@ class DetectionService {
     }
     return null;
   }
+
+  /// 分流路由测试目标:国际服务(应经节点走外国IP) + 国内服务(应直连走CN)。
+  /// 用各站 cdn-cgi/trace 拎出口 IP(轻、无需 API key、直接反映分流后真出口)。
+  static const _splitTargets = [
+    ('Cloudflare', false, 'https://cloudflare.com/cdn-cgi/trace'),
+    ('ChatGPT', false, 'https://chat.openai.com/cdn-cgi/trace'),
+    ('Claude', false, 'https://claude.ai/cdn-cgi/trace'),
+    ('哔哩哔哩', true, 'https://www.bilibili.com/cdn-cgi/trace'),
+    ('微博', true, 'https://weibo.com/cdn-cgi/trace'),
+  ];
+
+  Future<SplitRouteResult> splitOne(
+      String name, bool domestic, String url) async {
+    final r = await _probe(url);
+    if (r.status == 200) {
+      final ip = RegExp(r'ip=([0-9a-fA-F:.]+)').firstMatch(r.body)?.group(1) ?? '';
+      final loc = RegExp(r'loc=([A-Z]{2})').firstMatch(r.body)?.group(1) ?? '';
+      // 分流正确:国内服务出口=CN,国际服务出口≠CN(且拎到 loc)。
+      final isCn = loc == 'CN';
+      final ok = domestic ? isCn : (loc.isNotEmpty && !isCn);
+      return SplitRouteResult(
+          name: name, domestic: domestic, ip: ip, countryCode: loc, ok: ok);
+    }
+    // trace 打唔通(如国内站国际网络):国内服务当直连成功(走本地),国际当失败。
+    return SplitRouteResult(name: name, domestic: domestic);
+  }
+
+  Future<List<SplitRouteResult>> splitTest() async {
+    return Future.wait(
+      _splitTargets.map((t) => splitOne(t.$1, t.$2, t.$3)),
+    );
+  }
 }
 
 String countryCodeToEmoji(String code) {
@@ -367,6 +415,7 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
   bool _ipLoading = false;
   List<LatencyResult> _domestic = const [];
   List<LatencyResult> _intl = const [];
+  List<SplitRouteResult> _split = const [];
 
   static const _names = [
     'YouTube Premium', 'Netflix', 'Disney+', 'ChatGPT', 'Claude',
@@ -421,6 +470,9 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
     });
     svc.exitIp().then((v) {
       if (mounted) setState(() { _ip = v; _ipLoading = false; });
+    });
+    svc.splitTest().then((v) {
+      if (mounted) setState(() => _split = v);
     });
     for (var i = 0; i < checks.length; i++) {
       final res = await checks[i]();
@@ -534,10 +586,79 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
             Text('IP 分流测试',
                 style: Theme.of(context).textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.only(top: 2, bottom: 10),
+              child: Text('国际服务走外国出口、国内服务走本地 —— 智能分流实时验证',
+                  style: TextStyle(fontSize: 12.5, color: cs.onSurfaceVariant)),
+            ),
             _IpCard(ip: _ip, loading: _ipLoading, cs: cs),
+            if (_split.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              _SplitCard(items: _split, cs: cs),
+            ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// 分流路由可视化:逐服务出口 IP + 国旗,国际→外国、国内→CN,一眼见分流 work(护城河)。
+class _SplitCard extends StatelessWidget {
+  final List<SplitRouteResult> items;
+  final ColorScheme cs;
+  const _SplitCard({required this.items, required this.cs});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        children: [
+          for (final s in items) _row(s),
+        ],
+      ),
+    );
+  }
+
+  Widget _row(SplitRouteResult s) {
+    final ok = s.ok;
+    final okColor = ok ? const Color(0xFF16A34A) : const Color(0xFFDC2626);
+    final flag = s.countryCode.isEmpty
+        ? '🌐'
+        : '${countryCodeToEmoji(s.countryCode)} ${s.countryCode}';
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Icon(ok ? Icons.check_circle : Icons.error_outline,
+              size: 16, color: okColor),
+          const SizedBox(width: 8),
+          Text(s.name,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5)),
+          const SizedBox(width: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(s.domestic ? '国内' : '国际',
+                style: TextStyle(fontSize: 10.5, color: cs.onSurfaceVariant)),
+          ),
+          const Spacer(),
+          Text(flag,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontFeatures: const [],
+                  color: cs.onSurface,
+                  fontFamily: 'monospace')),
+        ],
       ),
     );
   }
