@@ -16,6 +16,7 @@ import 'package:fl_clash/voguesly/voguesly_notice.dart';
 import 'package:fl_clash/voguesly/voguesly_overlay.dart';
 import 'package:fl_clash/voguesly/voguesly_shop.dart';
 import 'package:fl_clash/voguesly/voguesly_stat.dart';
+import 'package:fl_clash/voguesly/voguesly_subscription.dart';
 import 'package:fl_clash/voguesly/voguesly_user_center.dart';
 import 'package:intl/intl.dart';
 
@@ -198,6 +199,44 @@ class AppSidebarContainer extends ConsumerWidget {
         .toPage(pageLabel);
   }
 
+  /// 侧栏「更新订阅」:拉最新节点+规则。有本账号订阅就 in-place 刷新(同「我的」页一致,
+  /// 保留选中);无订阅则走一键导入。结果弹 toast。
+  Future<void> _updateSubscription(WidgetRef ref) async {
+    final vog = ref.read(profilesProvider).where(isVogueslyProfile);
+    final ok = vog.isEmpty
+        ? await importVogueslySubscription()
+        : await ref
+            .read(profilesActionProvider.notifier)
+            .refreshVogueslyProfile(vog.first, showLoading: true);
+    globalState.showNotifier(ok ? '订阅已更新' : '更新失败,请稍后重试');
+  }
+
+  /// 侧栏「登出」:确认后关半框 overlay → 先删本账号订阅(防换账号串号)→ 清登录态。
+  /// 与 tools.dart / profiles.dart 登出共用同一清理逻辑,杜绝匹配器漂移。
+  Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('退出登录'),
+        content: const Text('确定退出当前账户?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('退出'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    ref.read(contentOverlayProvider.notifier).close();
+    await clearVogueslyProfiles();
+    ref.read(vogueslyAuthProvider.notifier).logout();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final navigationState = ref.watch(navigationStateProvider);
@@ -268,6 +307,14 @@ class AppSidebarContainer extends ConsumerWidget {
                           const SizedBox(height: 8),
                           // 底部快捷:全部**半框**(只覆盖右边内容区,左侧栏保留可点)。
                           // 「购买套餐」已升为顶层 nav tab(上方),此处不再重复。
+                          // 「更新订阅」升一级入口(Sam 要求常驻好找):复用「我的」页同一
+                          // refreshVogueslyProfile / importVogueslySubscription 逻辑,拉最新节点+规则。
+                          _SidebarLink(
+                            icon: Icons.cloud_sync_outlined,
+                            label: '更新订阅',
+                            showLabel: showLabel,
+                            onTap: () => _updateSubscription(ref),
+                          ),
                           _SidebarLink(
                             icon: Icons.card_giftcard_outlined,
                             label: '邀请返利',
@@ -309,15 +356,36 @@ class AppSidebarContainer extends ConsumerWidget {
                             label: '在线客服',
                             showLabel: showLabel,
                             selected: overlay == ContentOverlay.cs,
-                            onTap: () => ref
-                                .read(contentOverlayProvider.notifier)
-                                .set(ContentOverlay.cs),
+                            // Win/Linux 无 webview 桌面实现 → open() 改行系统浏览器(防崩);
+                            // macOS 仍走半框 overlay。
+                            onTap: () => VogueslyCsPanel.open(context),
                           ),
                           const SizedBox(height: 12),
                           ],
                         ),
                       ),
                     ),
+                  ),
+                ),
+                // 登出:钉喺侧栏最底(scroll 之外常显),红色次要样式,同功能项用分隔线分开。
+                // 多账号用户唔使深入「设置」揾退出。复用 tools/profiles 同一清理(防串号)。
+                // 宽度 196 同上方 nav 列对齐(showLabel 恒真,唔用三元免 dead_code)。
+                SizedBox(
+                  width: 196,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Divider(height: 1, indent: 12, endIndent: 12),
+                      const SizedBox(height: 4),
+                      _SidebarLink(
+                        icon: Icons.logout,
+                        label: '登出',
+                        showLabel: showLabel,
+                        danger: true,
+                        onTap: () => _confirmLogout(context, ref),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
                   ),
                 ),
               ],
@@ -367,6 +435,7 @@ class _SidebarLink extends StatelessWidget {
   final String label;
   final bool showLabel;
   final bool selected; // 半框 overlay 打开时高亮对应项
+  final bool danger; // 危险/次要样式(登出):红色文字图标,同功能项区分
   final VoidCallback onTap;
   const _SidebarLink({
     required this.icon,
@@ -374,12 +443,15 @@ class _SidebarLink extends StatelessWidget {
     required this.showLabel,
     required this.onTap,
     this.selected = false,
+    this.danger = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final cs = context.colorScheme;
-    final color = selected ? cs.onSecondaryContainer : cs.onSurfaceVariant;
+    final color = danger
+        ? cs.error
+        : (selected ? cs.onSecondaryContainer : cs.onSurfaceVariant);
     void open() => onTap();
     if (showLabel) {
       // 左对齐(对齐顶部 NavigationRail 图标 ~22px):Align(centerLeft) 撑满宽再靠左,

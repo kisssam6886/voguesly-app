@@ -199,6 +199,30 @@ class _VogueslyShopPageState extends ConsumerState<VogueslyShopPage> {
     );
   }
 
+  /// 套餐卖点副标题:取后端 plan.content(信任锚 + 一句卖点)去 HTML 标签后,
+  /// 保留前几行做简洁副标题。空则返 null(唔占位)。
+  String? _planSubtitle(VogueslyPlan p) {
+    final raw = p.content;
+    if (raw == null || raw.trim().isEmpty) return null;
+    // 块级/换行标签 → 换行,再剥其余标签,解常见实体。
+    final text = raw
+        .replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n')
+        .replaceAll(RegExp(r'</(p|div|li)>', caseSensitive: false), '\n')
+        .replaceAll(RegExp(r'<[^>]+>'), '')
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>');
+    final lines = text
+        .split('\n')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    if (lines.isEmpty) return null;
+    // 最多两行(信任锚 + 卖点),避免卡片过长。
+    return lines.take(2).join('\n');
+  }
+
   Widget _tag(String text) {
     final cs = Theme.of(context).colorScheme;
     return Container(
@@ -227,7 +251,14 @@ class _VogueslyShopPageState extends ConsumerState<VogueslyShopPage> {
                       .textTheme
                       .titleMedium
                       ?.copyWith(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 4),
+              // 卖点副标题(后端 plan.content:🏠 住宅IP · 🧠 直连 · 🔒 纯净 + 卖点)。
+              if (_planSubtitle(p) case final sub?) ...[
+                const SizedBox(height: 6),
+                Text(sub,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant, height: 1.35)),
+              ],
+              const SizedBox(height: 6),
               Text('${p.periods.length} 个周期可选',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: cs.onSurfaceVariant.withValues(alpha: 0.7))),
