@@ -1,9 +1,9 @@
 script_template: inno_setup.iss
-app_id: 728B3532-C74B-4870-9068-BE70FE12A3E6
+app_id: 796FBBD0-BA90-49E1-9F8C-2F5621FA42DF
 app_name: Voguesly
 publisher: Voguesly
 publisher_url: https://voguesly.com
-display_name: Voguesly
+display_name: 易联 Voguesly
 executable_name: Voguesly.exe
 output_base_file_name: Voguesly-Setup
 setup_icon_file: ..\windows\runner\resources\app_icon.ico
