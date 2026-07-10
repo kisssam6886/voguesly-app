@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +23,19 @@ const String _kGoogleG =
     '</svg>';
 
 const _kRememberEmailKey = 'voguesly_remember_email';
+
+/// 桌面 Google 登录回调后,浏览器落地页(提示返回 App,并尝试自动关标签)。
+const String _kDesktopLandingHtml =
+    '<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8">'
+    '<meta name="viewport" content="width=device-width, initial-scale=1">'
+    '<title>Voguesly</title></head>'
+    '<body style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;'
+    'background:#0B0B12;color:#fff;display:flex;align-items:center;'
+    'justify-content:center;height:100vh;margin:0;text-align:center">'
+    '<div><h2 style="margin:0 0 8px;font-weight:600">登录成功</h2>'
+    '<p style="opacity:.7;margin:0">请返回 Voguesly 应用继续</p></div>'
+    '<script>setTimeout(function(){window.close();},1200);</script>'
+    '</body></html>';
 
 class VogueslyLoginPage extends ConsumerStatefulWidget {
   const VogueslyLoginPage({super.key});
@@ -125,16 +140,26 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
 
   Future<void> _googleLogin() async {
     if (await _offlineGuard()) return;
-    // 内置浏览器(Custom Tab/ASWebAuthenticationSession)一气呵成:开 web OAuth →
-    // 后端 callback 跳 voguesly://auth?auth_data= → 由 flutter_web_auth_2 直接捕获返 app。
+    // ⚠️Windows/Linux 闪退根因:flutter_web_auth_2 喺桌面用内置 loopback server 实现
+    // (src/server.dart),硬性只认 http://127.0.0.1:{port} 回调,传自定义 scheme 'voguesly'
+    // 会喺入口校验抛错。故桌面改行自建 loopback server;macOS/iOS/Android 保留原生
+    // ASWebAuthenticationSession/Custom Tab(自定义 scheme 正常,唔改)。
+    final isDesktop = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.windows ||
+            defaultTargetPlatform == TargetPlatform.linux);
     try {
-      final result = await FlutterWebAuth2.authenticate(
-        // 迁现役 qzz.io(后端已支持动态 redirect_uri,GCP 已加 qzz.io callback):
-        // 唔再经污染嘅 voguesly.com,China 用户 Google 登录唔会再卡超时。
-        url:
-            'https://ylink.im/api/v2/passport/auth/google?redirect=voguesly://auth',
-        callbackUrlScheme: 'voguesly',
-      );
+      final String result;
+      if (isDesktop) {
+        result = await _desktopWebAuth();
+      } else {
+        result = await FlutterWebAuth2.authenticate(
+          // 迁现役 qzz.io(后端已支持动态 redirect_uri,GCP 已加 qzz.io callback):
+          // 唔再经污染嘅 voguesly.com,China 用户 Google 登录唔会再卡超时。
+          url:
+              'https://ylink.im/api/v2/passport/auth/google?redirect=voguesly://auth',
+          callbackUrlScheme: 'voguesly',
+        );
+      }
       final authData = Uri.parse(result).queryParameters['auth_data'];
       if (authData == null || authData.isEmpty) {
         if (mounted) _toast('Google 登录失败,请重试');
@@ -158,6 +183,37 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
       // 非 PlatformException 兜底:含 cancel 静默,否则弹通用失败。
       if (e.toString().toLowerCase().contains('cancel')) return;
       _toast('Google 登录失败,请检查网络后重试');
+    }
+  }
+
+  /// 桌面(Windows/Linux)Google 登录:自建 127.0.0.1 loopback server 收 OAuth 回调。
+  /// 系统默认浏览器打开 web OAuth(externalApplication)→ 后端认证完 302 返
+  /// http://127.0.0.1:{port}/?auth_data=… → 本地 server 捕获首个请求攞 auth_data。
+  /// 全程 try/finally 关 server,唔会崩;返完整回调 URL 畀上层解析。
+  Future<String> _desktopWebAuth() async {
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    try {
+      final redirect = 'http://127.0.0.1:${server.port}/';
+      final authUrl = 'https://ylink.im/api/v2/passport/auth/google'
+          '?redirect=${Uri.encodeComponent(redirect)}';
+      final launched = await launchUrl(
+        Uri.parse(authUrl),
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched) {
+        throw PlatformException(code: 'FAILED', message: '无法打开浏览器');
+      }
+      // 等浏览器带 auth_data 打返嚟(5 分钟够完成 Google 授权);超时抛 TimeoutException → 兜底 toast。
+      final req = await server.first.timeout(const Duration(minutes: 5));
+      final full = req.requestedUri.toString();
+      req.response
+        ..statusCode = 200
+        ..headers.contentType = ContentType.html
+        ..write(_kDesktopLandingHtml);
+      await req.response.close();
+      return full;
+    } finally {
+      await server.close(force: true);
     }
   }
 

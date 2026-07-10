@@ -727,7 +727,9 @@ class _SplitCard extends StatelessWidget {
                   fontSize: 12,
                   fontFeatures: const [],
                   color: cs.onSurface,
-                  fontFamily: 'monospace')),
+                  // Windows 的 Segoe UI Emoji 故意唔含国旗字形,'monospace' 会退化成 "US" 字母。
+                  // 用内置 Twemoji.Mozilla.ttf(彩色 COLR 字体,含国旗)→ 全平台正常出旗。
+                  fontFamily: 'Twemoji')),
         ],
       ),
     );
@@ -877,7 +879,8 @@ class _UnlockCard extends StatelessWidget {
               const SizedBox(width: 8),
               if (result.region.isNotEmpty)
                 Text('${countryCodeToEmoji(result.region)} ${result.region}',
-                    style: const TextStyle(fontSize: 12)),
+                    // 国旗走内置 Twemoji 字体,免 Windows 上退化成 "US" 字母。
+                    style: const TextStyle(fontSize: 12, fontFamily: 'Twemoji')),
               if (result.note.isNotEmpty) ...[
                 const SizedBox(width: 6),
                 Flexible(
