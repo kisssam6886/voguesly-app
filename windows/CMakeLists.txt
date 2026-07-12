@@ -87,6 +87,13 @@ install(FILES "${FLUTTER_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
 install(FILES "EnableLoopback.exe" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
   COMPONENT Runtime)
 
+# [Voguesly] webview_windows 0.4.0 把 webview_windows_bundled_libraries 设成空(见其 CMakeLists 末),
+# 故 WebView2Loader.dll 只被 nuget .targets 拷到 plugin 构建夹、NOT 进最终 bundle → 在线客服 WebView2
+# 运行时 initialize() 失败退外部浏览器。此处 vendor x64 loader(nuget Microsoft.Web.WebView2 1.0.1210.39)
+# 并显式装进 bundle,令 in-app 客服窗真正可用。
+install(FILES "WebView2Loader.dll" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+  COMPONENT Runtime)
+
 if(PLUGIN_BUNDLED_LIBRARIES)
   install(FILES "${PLUGIN_BUNDLED_LIBRARIES}"
     DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
