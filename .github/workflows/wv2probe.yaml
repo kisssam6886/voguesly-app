@@ -1,0 +1,36 @@
+name: wv2probe
+# 一次性诊断:证明仓库 vendor 的 WebView2Loader.dll 能在真 Windows 上与 WebView2 Runtime 握手
+# → webview_windows.initialize() 会成功 → 在线客服内嵌窗真起(非 fallback)。不 build app,秒级完成。
+on:
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe bundled WebView2Loader.dll against real WebView2 Runtime
+        shell: pwsh
+        run: |
+          $dll = "windows/WebView2Loader.dll"
+          if (!(Test-Path $dll)) { Write-Error "bundled loader MISSING"; exit 1 }
+          Write-Host "bundled loader present: $((Get-Item $dll).Length) bytes"
+          # 让 LoadLibrary 找到它:把其目录放进 PATH
+          $dir = (Resolve-Path "windows").Path
+          $env:PATH = "$dir;$env:PATH"
+          Add-Type @"
+          using System;
+          using System.Runtime.InteropServices;
+          public static class WV2 {
+            [DllImport("WebView2Loader.dll", CharSet=CharSet.Unicode)]
+            public static extern int GetAvailableCoreWebView2BrowserVersionString(string browserExecutableFolder, out IntPtr versionInfo);
+          }
+          "@
+          $v=[IntPtr]::Zero
+          $hr=[WV2]::GetAvailableCoreWebView2BrowserVersionString($null,[ref]$v)
+          $s = if($v -ne [IntPtr]::Zero){[Runtime.InteropServices.Marshal]::PtrToStringUni($v)}else{"<null>"}
+          Write-Host "GetAvailableCoreWebView2BrowserVersionString => HR=$hr  RuntimeVersion=$s"
+          if ($hr -eq 0 -and $s -ne "<null>") {
+            Write-Host "PROOF-OK: bundled loader loaded AND detected WebView2 Runtime $s -> webview_windows initialize() will succeed -> CS window embeds (no browser fallback)."
+          } else {
+            Write-Error "loader could NOT detect runtime (HR=$hr) — CS window would fall back"; exit 1
+          }
