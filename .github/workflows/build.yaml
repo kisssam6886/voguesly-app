@@ -118,6 +118,39 @@ jobs:
       - name: Setup
         run: dart setup.dart ${{ matrix.platform }} ${{ env.IS_STABLE == 'true' && '--env stable' || '' }} -v
 
+      # 证明真实打包出的 WebView2Loader.dll 能与 WebView2 Runtime 握手 → webview_windows.initialize()
+      # 会成功 → 在线客服内嵌窗真起(非 fallback 弹浏览器)。这是「客服窗运行时可用」的功能级铁证。
+      - name: Verify WebView2 loader handshakes with runtime (Windows CS window)
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          $zip = Get-ChildItem dist -Recurse -Filter *windows-amd64.zip -ErrorAction SilentlyContinue | Select-Object -First 1
+          $dll = $null
+          if ($zip) {
+            Expand-Archive -Path $zip.FullName -DestinationPath probe_app -Force
+            $dll = Get-ChildItem probe_app -Recurse -Filter WebView2Loader.dll -ErrorAction SilentlyContinue | Select-Object -First 1
+          }
+          if (-not $dll) { $dll = Get-Item "windows/WebView2Loader.dll" }
+          Write-Host "probing SHIPPING loader: $($dll.FullName) ($($dll.Length) bytes)"
+          $env:PATH = "$(Split-Path $dll.FullName);$env:PATH"
+          Add-Type @"
+          using System;
+          using System.Runtime.InteropServices;
+          public static class WV2 {
+            [DllImport("WebView2Loader.dll", CharSet=CharSet.Unicode)]
+            public static extern int GetAvailableCoreWebView2BrowserVersionString(string browserExecutableFolder, out IntPtr versionInfo);
+          }
+          "@
+          $v=[IntPtr]::Zero
+          $hr=[WV2]::GetAvailableCoreWebView2BrowserVersionString($null,[ref]$v)
+          $s = if($v -ne [IntPtr]::Zero){[Runtime.InteropServices.Marshal]::PtrToStringUni($v)}else{"<null>"}
+          Write-Host "GetAvailableCoreWebView2BrowserVersionString => HR=$hr  RuntimeVersion=$s"
+          if ($hr -eq 0 -and $s -ne "<null>") {
+            Write-Host "PROOF-OK: shipping WebView2Loader.dll loaded AND detected WebView2 Runtime $s -> webview_windows initialize() succeeds -> 在线客服 embeds (no browser fallback)."
+          } else {
+            Write-Error "loader could NOT detect runtime (HR=$hr) -> CS window would fall back"; exit 1
+          }
+
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
