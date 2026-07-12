@@ -2,6 +2,10 @@
 cmake_minimum_required(VERSION 3.14)
 project(Voguesly LANGUAGES CXX)
 
+# [Voguesly] webview_windows 0.4.0 用 <experimental/coroutine>,新版 MSVC(VS18)当硬错误 STL1011;
+# 全局抑制该弃用错误,令 webview_windows plugin 能编译(否则 Windows installer 打包失败)。
+add_compile_definitions(_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)
+
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
 set(BINARY_NAME "Voguesly")
