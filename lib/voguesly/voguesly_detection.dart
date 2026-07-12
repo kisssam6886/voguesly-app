@@ -132,7 +132,12 @@ class DetectionService {
       }
     }
 
-    await once(); // 预热:建连+握手,唔计
+    // 预热建连+握手(唔计入):重试至成功(最多 3 次),确保之后量到嘅係「暖连接」真 RTT,
+    // 唔係冷握手虚高(≈4×RTT)。曾见个别/全部国际探针冷握手令延迟虚报(如 262ms→~1000ms)。
+    var warmed = false;
+    for (var i = 0; i < 3 && !warmed; i++) {
+      warmed = await once() != null;
+    }
     int? best;
     for (var i = 0; i < 2; i++) {
       final t = await once();
