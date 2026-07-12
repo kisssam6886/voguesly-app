@@ -115,6 +115,14 @@ jobs:
           flutter --version
           flutter pub get
 
+      # 端到端:真 Windows 上挂载 webview_windows 的 Webview,导航到线上 cs.html,断言
+      # navigationCompleted = 客服页在内嵌 WebView2 里真渲染。continue-on-error 只为不因 GUI 测抖动
+      # 阻断出包;结论看日志 CS_SELFTEST=PASS。
+      - name: CS webview end-to-end render test (Windows)
+        if: matrix.platform == 'windows'
+        continue-on-error: true
+        run: flutter test integration_test/cs_webview_test.dart -d windows
+
       - name: Setup
         run: dart setup.dart ${{ matrix.platform }} ${{ env.IS_STABLE == 'true' && '--env stable' || '' }} -v
 
