@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../pages/pages.dart';
-import 'voguesly_api.dart';
 import 'voguesly_auth.dart';
 import 'voguesly_login_page.dart';
 import 'voguesly_subscription.dart';
