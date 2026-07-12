@@ -494,7 +494,10 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
   // 唔好用主站根域(google.com/github.com 要完整 TLS 到源站数据中心 → 虚高)。
   static const _intlTargets = {
     'Cloudflare': 'https://cloudflare.com/cdn-cgi/trace', // CF anycast 边缘,最能反映到节点距离
-    'Google': 'https://www.gstatic.com/generate_204', // gstatic CDN 204 空 body
+    // ⚠️ 唔用 www.gstatic.com:佢只解析到单个 IP(如 74.125.24.94),经节点若路由到嗰个
+    // 单点差,就冇第二个 IP 可绕 → 虚高(实测见过 1055ms≈4×基线,而同属 Google 嘅 YouTube 只 262ms)。
+    // www.google.com/generate_204 解析到多个边缘 IP(≈ytimg 分布),可绕开单点坏路;同样返 204 空 body、无跳转。
+    'Google': 'https://www.google.com/generate_204',
     'YouTube': 'https://i.ytimg.com/generate_204', // YouTube 图片 CDN 边缘
     'jsDelivr': 'https://cdn.jsdelivr.net/npm/latency-test@1.0.0/generate_200', // 专为测延迟造
   };
@@ -558,17 +561,36 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
   }
 
   // 延迟测试:两组并发量往返,量完各组一次性刷新(避免 loading 时 null 误显「超时」)。
+  // ⚠️ 唔好一次过全部 ping 挤爆一条代理隧道:并发暴发会令个别探针嘅暖连接建唔起、量到冷握手
+  // (虚高≈4×RTT,曾令 Google 单项显 1055ms)。限并发 2,与「解锁检测」限流同思路;顺序保留。
+  Future<List<LatencyResult>> _pingBounded(
+      DetectionService svc, Map<String, String> targets) async {
+    final entries = targets.entries.toList();
+    final out = List<LatencyResult?>.filled(entries.length, null);
+    var idx = 0;
+    Future<void> worker() async {
+      while (true) {
+        final i = idx++;
+        if (i >= entries.length) return;
+        out[i] =
+            LatencyResult(entries[i].key, await svc.ping(entries[i].value));
+      }
+    }
+
+    const cap = 2;
+    await Future.wait([for (var w = 0; w < cap; w++) worker()]);
+    return out.cast<LatencyResult>();
+  }
+
   Future<void> _runLatency(DetectionService svc) async {
     if (!mounted) return;
     setState(() {
       _domestic = const [];
       _intl = const [];
     });
-    final dom = await Future.wait(_domesticTargets.entries
-        .map((e) async => LatencyResult(e.key, await svc.ping(e.value))));
+    final dom = await _pingBounded(svc, _domesticTargets);
     if (mounted) setState(() => _domestic = dom);
-    final intl = await Future.wait(_intlTargets.entries
-        .map((e) async => LatencyResult(e.key, await svc.ping(e.value))));
+    final intl = await _pingBounded(svc, _intlTargets);
     if (mounted) setState(() => _intl = intl);
   }
 
