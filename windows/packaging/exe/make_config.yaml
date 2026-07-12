@@ -10,5 +10,7 @@ setup_icon_file: ..\windows\runner\resources\app_icon.ico
 locales:
   - lang: zh
     file: ..\windows\packaging\exe\ChineseSimplified.isl
+  - lang: zh-Hant
+    file: ..\windows\packaging\exe\ChineseTraditional.isl
   - lang: en
 privileges_required: admin
