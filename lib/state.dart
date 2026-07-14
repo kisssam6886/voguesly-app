@@ -105,7 +105,7 @@ class GlobalState {
     final appStateOverrides = buildAppStateOverrides(appState);
     packageInfo = await PackageInfo.fromPlatform();
     final configMap = await preferences.getConfigMap();
-    final config = await migration.migrationIfNeeded(
+    var config = await migration.migrationIfNeeded(
       configMap,
       sync: (data) async {
         final newConfigMap = data.configMap;
@@ -123,6 +123,30 @@ class GlobalState {
         return config;
       },
     );
+    // ⚠️修复(2026-07-14): Apple 域名(icloud/App Store 等)必须经 doh.pub 直接解析。
+    // 病根:默认 dns 的 fallback-filter(geoip-code:CN)会把 Apple 返回的非 CN 正确 IP
+    // (如 icloud.com→17.253.144.10)当成污染,转去 fallback DoT(tls://8.8.4.4);而 DoT/UDP53
+    // 在国内家网被封 → DNS 超时 → iCloud/App Store 打不开(apple.com 因返回 CN CDN 反而正常)。
+    // nameserver-policy 命中即用、不进 fallback-filter,故把整个 Apple 家族钉到 doh.pub。
+    // 每次启动强制合并,令已持久化的旧 dns 配置(overrideDns 用户)也自动修好。
+    {
+      const appleDohPolicy = <String, String>{
+        'geosite:apple': 'https://doh.pub/dns-query',
+        '+.icloud.com': 'https://doh.pub/dns-query',
+        '+.icloud-content.com': 'https://doh.pub/dns-query',
+        '+.apple.com': 'https://doh.pub/dns-query',
+        '+.mzstatic.com': 'https://doh.pub/dns-query',
+        '+.cdn-apple.com': 'https://doh.pub/dns-query',
+        '+.apple-cloudkit.com': 'https://doh.pub/dns-query',
+      };
+      final dns = config.patchClashConfig.dns;
+      final mergedPolicy = {...dns.nameserverPolicy, ...appleDohPolicy};
+      config = config.copyWith(
+        patchClashConfig: config.patchClashConfig.copyWith(
+          dns: dns.copyWith(nameserverPolicy: mergedPolicy),
+        ),
+      );
+    }
     final configOverrides = buildConfigOverrides(config);
     container = ProviderContainer(
       overrides: [...appStateOverrides, ...configOverrides],

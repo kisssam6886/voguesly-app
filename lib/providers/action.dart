@@ -1065,10 +1065,16 @@ class ProfilesAction extends _$ProfilesAction {
       final updated =
           await profile.copyWith(url: fetched.url).saveFile(fetched.bytes);
       ref.read(profilesProvider.notifier).put(updated);
-      if (profile.id == ref.read(currentProfileIdProvider)) {
-        ref
+      if (updated.id == ref.read(currentProfileIdProvider)) {
+        // ⚠️修复(2026-07-13):更新订阅写了新盘却不重载运行核心=节点/规则(iCloud等)全不生效。
+        // 两个原因叠加:①setupStateProvider(id) 按 id 缓存解析态,saveFile 写同一 id 的新内容
+        //   不会令其失效→getProfile 仍用旧解析态生成旧配置;②旧的 applyProfileDebounce(silence:true)
+        //   force=false 会被 _setupConfig 的 `yamlMd5==lastConfigMd5 && force==false` 短路(L526)。
+        // 修法:先失效 setupState 缓存令其重解析新文件,再 force:true 强制重载核心。
+        ref.invalidate(setupStateProvider(updated.id));
+        await ref
             .read(setupActionProvider.notifier)
-            .applyProfileDebounce(silence: true);
+            .applyProfile(force: true, silence: true);
       }
       return true;
     } catch (_) {

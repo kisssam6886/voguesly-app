@@ -285,6 +285,14 @@ abstract class Dns with _$Dns {
       'www.baidu.com': '114.114.114.114',
       '+.internal.crop.com': '10.0.0.1',
       'geosite:cn': 'https://doh.pub/dns-query',
+      // Apple 家族钉 doh.pub 直连解析,绕 fallback-filter(否则 icloud/App Store 走被封的 DoT fallback→超时打不开)
+      'geosite:apple': 'https://doh.pub/dns-query',
+      '+.icloud.com': 'https://doh.pub/dns-query',
+      '+.icloud-content.com': 'https://doh.pub/dns-query',
+      '+.apple.com': 'https://doh.pub/dns-query',
+      '+.mzstatic.com': 'https://doh.pub/dns-query',
+      '+.cdn-apple.com': 'https://doh.pub/dns-query',
+      '+.apple-cloudkit.com': 'https://doh.pub/dns-query',
     })
     @JsonKey(name: 'nameserver-policy')
     Map<String, String> nameserverPolicy,
