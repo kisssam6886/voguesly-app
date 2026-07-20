@@ -138,6 +138,18 @@ class GlobalState {
         '+.mzstatic.com': 'https://doh.pub/dns-query',
         '+.cdn-apple.com': 'https://doh.pub/dns-query',
         '+.apple-cloudkit.com': 'https://doh.pub/dns-query',
+        // reddit(2026-07-15 实测):家网 DNS 把 www.reddit.com 投毒成 69.171.235.22(Facebook 的 IP,
+        // 真身是 reddit.map.fastly.net)。浏览器优先 HTTP/3 直打那个假 IP → 卡死打不开;
+        // curl 走 TCP 靠 SNI 嗅探仍能被核心认出域名,所以只测 curl 看不出来(踩过)。
+        // 钉 doh.pub 拿真 IP;另在订阅规则里禁了 reddit 的 QUIC 逼浏览器回退 TCP。
+        '+.reddit.com': 'https://doh.pub/dns-query',
+        '+.redd.it': 'https://doh.pub/dns-query',
+        '+.redditstatic.com': 'https://doh.pub/dns-query',
+        '+.redditmedia.com': 'https://doh.pub/dns-query',
+        // zonefoundry.dev(2026-07-20 实测):自家站托管喺香港(104.245.40.48)。国内 DNS 解析
+        // 得到非 CN 的港 IP → geoip-CN fallback-filter 当被污染 → 转去问被封的海外 DoT
+        // (tls://8.8.4.4 / 1.1.1.1)→ 解析超时 → 站完全打不开。同 Apple/reddit 一样钉 doh.pub。
+        '+.zonefoundry.dev': 'https://doh.pub/dns-query',
       };
       final dns = config.patchClashConfig.dns;
       final mergedPolicy = {...dns.nameserverPolicy, ...appleDohPolicy};
