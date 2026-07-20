@@ -457,13 +457,26 @@ class SetupAction extends _$SetupAction {
     return '';
   }
 
-  Future<Result<bool>> _requestAdmin(bool enableTun) async {
+  /// 本次运行内是否已经授权失败过(用户取消 / chown 被系统拒)。
+  ///
+  /// 防的是这个死循环:偏好里 tun.enable=true,但 realTunEnable 是内存态、授权失败后
+  /// 又被打回 false → 下一次后台 `_setupConfig`(订阅每小时自动更新会触发)条件再次成立
+  /// → 再弹一次密码,周而复始。所以后台触发的授权只尝试一次,失败后本次运行不再骚扰用户;
+  /// 用户自己去开关 TUN 仍然会重新尝试(走 updateConfigDebounce,不带 auto)。
+  bool _authorizeFailedThisSession = false;
+
+  Future<Result<bool>> _requestAdmin(bool enableTun, {bool auto = false}) async {
     final realTunEnable = ref.read(realTunEnableProvider);
     // [TUN-DIAG] 每次调用(含双弹时的两次)入口状态,便于对齐 checkIsAdmin 日志。
     commonPrint.log(
-      '[TUN-DIAG] _requestAdmin enableTun=$enableTun realTunEnable=$realTunEnable',
+      '[TUN-DIAG] _requestAdmin enableTun=$enableTun realTunEnable=$realTunEnable '
+      'auto=$auto failedThisSession=$_authorizeFailedThisSession',
       logLevel: LogLevel.info,
     );
+    if (auto && _authorizeFailedThisSession) {
+      ref.read(realTunEnableProvider.notifier).value = false;
+      return Result.success(false);
+    }
     if (enableTun != realTunEnable && realTunEnable == false) {
       final code = await system.authorizeCore();
       // [TUN-DIAG] authorizeCore 返回的枚举名(success/none/error)。
@@ -473,11 +486,14 @@ class SetupAction extends _$SetupAction {
       );
       switch (code) {
         case AuthorizeCode.success:
+          _authorizeFailedThisSession = false;
           await ref.read(coreActionProvider.notifier).restartCore();
           return Result.error('');
         case AuthorizeCode.none:
+          _authorizeFailedThisSession = false;
           break;
         case AuthorizeCode.error:
+          _authorizeFailedThisSession = true;
           enableTun = false;
           break;
       }
@@ -500,7 +516,9 @@ class SetupAction extends _$SetupAction {
     }
     commonPrint.log('setup ===> ${profile?.id}');
     final patchConfig = ref.read(patchClashConfigProvider);
-    final res = await _requestAdmin(patchConfig.tun.enable);
+    // auto: true —— 这条路径由订阅自动更新 / 配置重载触发,不是用户主动操作,
+    // 授权失败过就不要再每小时弹一次密码。
+    final res = await _requestAdmin(patchConfig.tun.enable, auto: true);
     if (res.isError) return;
     final realTunEnable = ref.read(realTunEnableProvider);
     // [TUN-DIAG] 核心配置下发前:期望 TUN vs 实际 realTunEnable。

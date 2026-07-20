@@ -73,6 +73,9 @@ class GlobalState {
     coreSHA256 = const String.fromEnvironment('CORE_SHA256');
     isPre = const String.fromEnvironment('APP_ENV') != 'stable';
     await _initDynamicColor();
+    // macOS:核心必须先铺到 Application Support 才能拿到可 setuid 的 corePath,
+    // 且要早于任何 checkIsAdmin / 核心启动。详见 AppPath.corePath 注释。
+    await appPath.provisionExternalCore();
     return _initData(version);
   }
 

@@ -48,7 +48,12 @@ class System {
   }
 
   Future<bool> checkIsAdmin() async {
-    final corePath = appPath.corePath.replaceAll(' ', '\\\\ ');
+    // ⚠️ 这里**不能**对空格做转义。`Process.run` 不经 shell,参数是原样传给 stat 的;
+    // 原来的 `replaceAll(' ', '\\\\ ')` 会把真实空格变成「反斜杠+空格」两个字符,
+    // stat 直接 file-not-found → 恒返 false → TUN 授权永远过不去。
+    // 旧的 corePath 在 /Applications/...app/Contents/MacOS/ 下没有空格,所以这个 bug 一直潜伏;
+    // 核心搬到 `~/Library/Application Support/` 后路径含空格,会立刻引爆。
+    final corePath = appPath.corePath;
     if (system.isWindows) {
       final result = await windows?.checkService();
       return result == WindowsHelperServiceStatus.running;
@@ -86,6 +91,33 @@ class System {
     return "'${value.replaceAll("'", "'\\''")}'";
   }
 
+  /// 与 TunHelper (macos/TunHelper/main.swift kCoreRequirement) 保持一致的签名要求:
+  /// 必须是 Apple 根信任链下、叶证书 OU == 我们 team 的产物。
+  static const _macCoreRequirement =
+      'anchor apple generic and certificate leaf[subject.OU] = "236T6T3629"';
+
+  /// 校验将要被抬成 setuid-root 的核心确实是我们签的。失败一律拒绝提权。
+  Future<bool> _verifyMacCoreSignature() async {
+    try {
+      final result = await Process.run('codesign', [
+        '--verify',
+        '--strict',
+        '-R=$_macCoreRequirement',
+        appPath.corePath,
+      ]);
+      final ok = result.exitCode == 0;
+      commonPrint.log(
+        '[TUN-DIAG] 核心验签 exitCode=${result.exitCode} ok=$ok '
+        'stderr="${result.stderr.toString().trim()}"',
+        logLevel: ok ? LogLevel.info : LogLevel.error,
+      );
+      return ok;
+    } catch (e) {
+      commonPrint.log('核心验签异常: $e', logLevel: LogLevel.error);
+      return false;
+    }
+  }
+
   Future<AuthorizeCode> authorizeCore() async {
     if (system.isAndroid) {
       return AuthorizeCode.error;
@@ -110,6 +142,12 @@ class System {
         'corePath=${appPath.corePath}',
         logLevel: LogLevel.info,
       );
+      // 纵深防线:核心已搬出 app bundle(见 AppPath.corePath 注释),落在用户可写目录。
+      // 抬 setuid-root 之前必须验签,确保只有本 team 签名的核心能被提权 —— 否则任何
+      // 以当前用户身份跑的进程只要事先把核心换掉,就能骗到一个 root shell(confused deputy)。
+      if (!await _verifyMacCoreSignature()) {
+        return AuthorizeCode.error;
+      }
       // 加法:优先走 root helper(免重复密码)。返回 null = helper 不可用/未接入,回退旧 osascript。
       final helperResult = await _authorizeCoreViaMacHelper();
       if (helperResult != null) {

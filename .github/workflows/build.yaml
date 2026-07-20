@@ -46,12 +46,12 @@ jobs:
           - platform: windows
             os: windows-latest
             arch: amd64
-          - platform: macos
-            os: macos-latest
-            arch: arm64
-          - platform: macos
-            os: macos-13
-            arch: amd64
+          # macOS 不走 CI:
+          #  ① `macos-13` runner image 已被 GitHub 退役,job 会永久 queued,
+          #     整个 run 挂着不结束(实测 run 29772711705 卡死;上一次熬到 24 小时超时才死),
+          #     连带 Windows/Android 的产物也拿不到 release。
+          #  ② macOS 版本本来就在本地出:签名 + 公证 + staple + DMG 走 ~/yl-devid/finish-*.sh,
+          #     CI 产物没有 Developer ID 签名,对我们没有用。
 
     steps:
       - name: Setup rust

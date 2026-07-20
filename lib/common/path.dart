@@ -13,9 +13,13 @@ class AppPath {
   Completer<Directory> cacheDir = Completer();
   late String appDirPath;
 
+  /// dataDir 解析后的同步快照 —— corePath 是同步 getter,拿不到 Future。
+  String? _dataDirPath;
+
   AppPath._internal() {
     appDirPath = join(dirname(Platform.resolvedExecutable));
     getApplicationSupportDirectory().then((value) {
+      _dataDirPath = value.path;
       dataDir.complete(value);
     });
     getTemporaryDirectory().then((value) {
@@ -43,8 +47,73 @@ class AppPath {
     return dirname(currentExecutablePath);
   }
 
-  String get corePath {
+  /// App bundle / 安装目录内自带的核心(签名产物,视为只读母本)。
+  String get bundledCorePath {
     return join(executableDirPath, 'FlClashCore$executableExtension');
+  }
+
+  /// 实际拿来跑的核心路径。
+  ///
+  /// ⚠️ macOS 26 起,已公证签名的 app bundle 受「App 管理」保护:bundle 内的文件
+  /// **连 root 都改不了**(实测 `sudo chown root:admin <bundle内核心>` →
+  /// `Operation not permitted`,而同一条命令对 Application Support 下的文件成功)。
+  /// 后果:`authorizeCore()` 的 `chown+chmod +s` 永远失败 → `checkIsAdmin()` 永远
+  /// false → 每次 `_setupConfig`(含每小时订阅自动更新)都重新弹一次管理员密码,
+  /// 而 TUN 仍被降级成 false。所以 macOS 改从 Application Support 下的副本执行,
+  /// 该目录不受此保护,setuid 打得上、且一次授权长期有效。
+  ///
+  /// 副本由 [provisionExternalCore] 在 app 启动时铺好;若尚未就绪则回退到 bundle 内
+  /// 路径(至少能把核心跑起来,只是 TUN 授权仍会失败)。
+  String get corePath {
+    if (system.isMacOS && _dataDirPath != null) {
+      return join(_dataDirPath!, 'FlClashCore');
+    }
+    return bundledCorePath;
+  }
+
+  /// macOS 专用:把 bundle 内的核心铺到 Application Support 供执行。
+  ///
+  /// 只在「不存在」或「与 bundle 母本对不上」时才复制(核心 ~100MB,不能每次启动都搬)。
+  /// 用 `大小-mtime` 戳做比对,戳文件与副本同目录。复制走 `.new` + rename 原子替换,
+  /// 避免旧核心进程仍在跑时写入报 ETXTBSY。
+  ///
+  /// 复制必然清掉 setuid 位(内核行为),所以每次 app 升级后用户需要重新授权一次 —— 这是
+  /// 预期行为,与旧方案一致。
+  Future<void> provisionExternalCore() async {
+    if (!system.isMacOS) return;
+    try {
+      final dir = await dataDir.future;
+      _dataDirPath = dir.path;
+      final src = File(bundledCorePath);
+      if (!await src.exists()) {
+        commonPrint.log('provisionExternalCore: bundle 内核心不存在,跳过');
+        return;
+      }
+      final dstPath = join(dir.path, 'FlClashCore');
+      final stampFile = File('$dstPath.stamp');
+      final srcStat = await src.stat();
+      final stamp =
+          '${srcStat.size}-${srcStat.modified.millisecondsSinceEpoch}';
+      if (await File(dstPath).exists() &&
+          await stampFile.exists() &&
+          (await stampFile.readAsString()).trim() == stamp) {
+        return;
+      }
+      final tmpPath = '$dstPath.new';
+      await File(tmpPath).delete().catchError((_) => File(tmpPath));
+      // 优先用 APFS clonefile(`cp -c`):瞬时完成、不额外占 100MB 磁盘。
+      // 非 APFS 卷会失败,回退到普通字节复制。
+      final clone = await Process.run('cp', ['-c', bundledCorePath, tmpPath]);
+      if (clone.exitCode != 0) {
+        await src.copy(tmpPath);
+      }
+      await Process.run('chmod', ['755', tmpPath]);
+      await File(tmpPath).rename(dstPath);
+      await stampFile.writeAsString(stamp);
+      commonPrint.log('provisionExternalCore: 已铺设核心 → $dstPath');
+    } catch (e) {
+      commonPrint.log('provisionExternalCore failed: $e');
+    }
   }
 
   String get helperPath {
