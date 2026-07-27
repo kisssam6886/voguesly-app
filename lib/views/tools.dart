@@ -29,10 +29,12 @@ import '../voguesly/voguesly_notice.dart';
 import '../voguesly/voguesly_shop.dart';
 import '../voguesly/voguesly_stat.dart';
 import '../voguesly/voguesly_subscription.dart';
+import '../voguesly/voguesly_tickets.dart';
 import '../voguesly/voguesly_user_center.dart';
 import 'profiles/profiles.dart';
 import 'config/advanced.dart';
 import 'developer.dart';
+import 'logs.dart';
 import 'theme.dart';
 
 class ToolsView extends ConsumerStatefulWidget {
@@ -83,6 +85,8 @@ class _ToolViewState extends ConsumerState<ToolsView> {
       const _QuickActions(),
       const _AccountServices(),
       const _FeedbackItem(),
+      const _MyTicketsItem(),
+      const _LogsViewItem(),
       ..._getSettingList(),
       // 诊断项(请求/连接/资源)收入「进阶工具」子页,「我的」一级唔再露工程化菜单。
       ..._getOtherList(vm2.b),
@@ -576,6 +580,38 @@ class _FeedbackItem extends StatelessWidget {
       title: const Text('反馈问题 / 上传日志'),
       subtitle: const Text('一键把日志发给客服，帮你快速定位'),
       onTap: () => showVogueslyFeedbackSheet(context),
+    );
+  }
+}
+
+/// 2026-07-27 补:提交完反馈之后用户睇唔到客服有冇回、亦冇得跟进,唯有再开多张工单。
+/// 呢度补返「我的工单」——列表 / 详情 / 继续回复 / 关闭,全部行 XBoard 现成 API。
+class _MyTicketsItem extends StatelessWidget {
+  const _MyTicketsItem();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListItem(
+      leading: const Icon(Icons.confirmation_number_outlined),
+      title: const Text('我的工单'),
+      subtitle: const Text('查看客服回复、继续跟进'),
+      onTap: () => VogueslyTicketsPage.open(context),
+    );
+  }
+}
+
+/// 2026-07-27 补:上面「反馈问题/上传日志」只能上传,冇地方睇——LogsView 一直存在
+/// 但成个 app 冇任何入口跳过去(孤儿页)。呢度补返个一级入口,等用户/客服自己都睇到实时日志。
+class _LogsViewItem extends StatelessWidget {
+  const _LogsViewItem();
+
+  @override
+  Widget build(BuildContext context) {
+    return const ListItem.open(
+      leading: Icon(Icons.article_outlined),
+      title: Text('查看日志'),
+      subtitle: Text('实时连接日志，排查问题用'),
+      delegate: OpenDelegate(widget: LogsView()),
     );
   }
 }

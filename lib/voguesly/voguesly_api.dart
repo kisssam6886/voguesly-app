@@ -747,6 +747,150 @@ class VogueslyApi {
       return (ok: false, message: '提交失败: $e');
     }
   }
+
+  /// 我的工单列表(GET /user/ticket/fetch,唔带 id = 列表)。
+  /// 2026-07-27 补:之前得「提交反馈」冇地方睇返工单/客服回复,用户唔知有冇人跟进。
+  Future<List<VogueslyTicket>> fetchTickets(String token) async {
+    try {
+      final resp = await _try('/user/ticket/fetch',
+          headers: {'Authorization': token}, retryOn401: true);
+      final data = (resp.data as Map<String, dynamic>?)?['data'];
+      if (data is List) {
+        return data
+            .whereType<Map<String, dynamic>>()
+            .map(VogueslyTicket.fromJson)
+            .toList();
+      }
+    } catch (_) {}
+    return const [];
+  }
+
+  /// 单个工单详情 + 全部往来消息(GET /user/ticket/fetch?id=N)。
+  Future<VogueslyTicket?> fetchTicketDetail(String token, int id) async {
+    try {
+      final resp = await _try('/user/ticket/fetch?id=$id',
+          headers: {'Authorization': token}, retryOn401: true);
+      final data = (resp.data as Map<String, dynamic>?)?['data'];
+      if (data is Map<String, dynamic>) {
+        return VogueslyTicket.fromJson(data);
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// 继续回复工单(POST /user/ticket/reply)。
+  /// ⚠️后端规则:同一个人唔可以连续回两次(要等客服先回),嗰个 message 会原样带返俾用户睇。
+  Future<({bool ok, String message})> replyTicket(
+    String token, {
+    required int id,
+    required String message,
+  }) async {
+    try {
+      final resp = await _try(
+        '/user/ticket/reply',
+        method: 'POST',
+        data: {'id': id, 'message': message},
+        headers: {'Authorization': token},
+        idempotent: false,
+      );
+      final json = resp.data as Map<String, dynamic>?;
+      if (resp.statusCode == 200 && json?['data'] != null) {
+        return (ok: true, message: '已发送');
+      }
+      return (
+        ok: false,
+        message: json?['message']?.toString() ?? '发送失败，请稍后再试',
+      );
+    } on DioException catch (e) {
+      return (ok: false, message: '网络异常: ${e.message ?? e.type.name}');
+    } catch (e) {
+      return (ok: false, message: '发送失败: $e');
+    }
+  }
+
+  /// 用户主动关闭工单(POST /user/ticket/close)。
+  Future<bool> closeTicket(String token, int id) async {
+    try {
+      final resp = await _try(
+        '/user/ticket/close',
+        method: 'POST',
+        data: {'id': id},
+        headers: {'Authorization': token},
+        idempotent: false,
+      );
+      return resp.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+}
+
+/// XBoard 工单(GET /user/ticket/fetch)。status 0=开启中 1=已关闭;
+/// reply_status 1=等紧客服回 0=已回复。列表冇 message 字段,详情先有。
+class VogueslyTicket {
+  const VogueslyTicket({
+    required this.id,
+    required this.subject,
+    required this.level,
+    required this.status,
+    required this.replyStatus,
+    required this.createdAt,
+    this.messages = const [],
+  });
+
+  final int id;
+  final String subject;
+  final int level;
+  final int status;
+  final int replyStatus;
+  final int createdAt;
+  final List<VogueslyTicketMessage> messages;
+
+  bool get isClosed => status == 1;
+  bool get waitingReply => replyStatus == 1;
+
+  static int _i(Object? v) =>
+      v is int ? v : (v is num ? v.toInt() : int.tryParse('$v') ?? 0);
+
+  factory VogueslyTicket.fromJson(Map<String, dynamic> json) {
+    final rawMsg = json['message'];
+    return VogueslyTicket(
+      id: _i(json['id']),
+      subject: json['subject']?.toString() ?? '',
+      level: _i(json['level']),
+      status: _i(json['status']),
+      replyStatus: _i(json['reply_status']),
+      createdAt: _i(json['created_at']),
+      messages: rawMsg is List
+          ? rawMsg
+              .whereType<Map<String, dynamic>>()
+              .map(VogueslyTicketMessage.fromJson)
+              .toList()
+          : const [],
+    );
+  }
+}
+
+/// 工单一条消息。is_me = 係咪用户自己发(后端已经计好)。
+class VogueslyTicketMessage {
+  const VogueslyTicketMessage({
+    required this.message,
+    required this.isMe,
+    required this.createdAt,
+  });
+
+  final String message;
+  final bool isMe;
+  final int createdAt;
+
+  factory VogueslyTicketMessage.fromJson(Map<String, dynamic> json) {
+    final v = json['created_at'];
+    return VogueslyTicketMessage(
+      message: json['message']?.toString() ?? '',
+      isMe: json['is_me'] == true || json['is_me'] == 1,
+      createdAt: v is int ? v : (v is num ? v.toInt() : int.tryParse('$v') ?? 0),
+    );
+  }
 }
 
 /// 免费测试资格(后端 /user/trial/status)。
