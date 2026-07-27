@@ -941,6 +941,7 @@ class VogueslyUser {
     required this.planId,
     this.planName,
     this.email,
+    this.deviceLimit,
   });
 
   final int upload;
@@ -950,6 +951,10 @@ class VogueslyUser {
   final int? planId;
   final String? planName; // 套餐名(getSubscribe 返 data.plan.name)
   final String? email;
+
+  /// 套餐并发/设备上限(getSubscribe 一直有返 device_limit,之前客户端冇取)。
+  /// null / 0 = 不限。用嚟喺连接卡显示上限,令用户知道「超限」係咩事。
+  final int? deviceLimit;
 
   int get used => upload + download;
   int get remain => (transferEnable - used).clamp(0, transferEnable);
@@ -972,6 +977,8 @@ class VogueslyUser {
             ? (j['plan'] as Map)['name']?.toString()
             : null,
         email: j['email']?.toString(),
+        deviceLimit:
+            j['device_limit'] == null ? null : _toInt(j['device_limit']),
       );
 }
 

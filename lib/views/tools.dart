@@ -805,6 +805,26 @@ class _AccountHeader extends ConsumerWidget {
                 color: cs.primary,
               ),
             ),
+            // 套餐并发上限:之前完全冇显示,用户撞到「连接数超限」只见到笼统网络错误,
+            // 唔知自己套餐限几多台、亦唔知旧客户端仲霸住 session。(0/null = 不限)
+            if ((user.deviceLimit ?? 0) > 0) ...[
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Icon(Icons.devices_outlined,
+                      size: 14, color: cs.onSurfaceVariant),
+                  const SizedBox(width: 5),
+                  Expanded(
+                    child: Text(
+                      '套餐可同时连接 ${user.deviceLimit} 台设备；'
+                      '若提示连接超限，先完全退出其他客户端再重连',
+                      style: context.textTheme.bodySmall
+                          ?.copyWith(color: cs.onSurfaceVariant),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ],
       ),

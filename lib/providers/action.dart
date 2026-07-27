@@ -363,8 +363,74 @@ class SetupAction extends _$SetupAction {
       ref
           .read(proxiesActionProvider.notifier)
           .updateCurrentGroupName(GroupName.GLOBAL.name);
+      // ⚠️ 只切 UI 组名唔够:核心嘅 GLOBAL.now 可能仲係 DIRECT,变成「界面显示全局、
+      // 实际由中国 IP 直出」。呢度必须把主选择器递归解析到具体节点再绑定落 GLOBAL。
+      repairGlobalBinding();
     }
     ref.read(checkIpNumProvider.notifier).add();
+  }
+
+  /// 把一个组名递归解析成「真正可用嘅具体节点」。
+  /// 逐层跟 selector/fallback/url-test 嘅 now 往下钻,直到钻到唔再係组为止。
+  /// 拒绝 DIRECT / REJECT / 空值;有环就断(depth 上限)。
+  String? _resolveConcreteProxy(List<Group> groups, String? name) {
+    var current = name;
+    for (var depth = 0; depth < 8; depth++) {
+      if (current == null || current.isEmpty) return null;
+      if (current == 'DIRECT' || current == 'REJECT' || current == 'COMPATIBLE') {
+        return null;
+      }
+      final group = groups.getGroup(current);
+      if (group == null) return current; // 唔係组 = 已经係具体节点
+      final next = group.now;
+      if (next == null || next.isEmpty || next == current) return null;
+      current = next;
+    }
+    return null;
+  }
+
+  /// 幂等修复 GLOBAL 绑定:App 启动、订阅刷新、节点失效之后都可以安全再调一次。
+  /// 只喺 global 模式下动手;解析唔到可用节点就唔改(唔好静静哋跌返 DIRECT)。
+  Future<void> repairGlobalBinding() async {
+    final mode = ref.read(patchClashConfigProvider).mode;
+    if (mode != Mode.global) return;
+    final groups = ref.read(groupsProvider);
+    if (groups.isEmpty) return;
+
+    final globalGroup = groups.getGroup(GroupName.GLOBAL.name);
+    if (globalGroup == null) return;
+
+    // 主选择器 = 订阅入面第一个 selector 组(易聯 Residential IP),
+    // 佢下面可能仲套住宅池等子组,所以要递归解析。
+    Group? master;
+    for (final g in groups) {
+      if (g.name != GroupName.GLOBAL.name && g.type == GroupType.Selector) {
+        master = g;
+        break;
+      }
+    }
+    final target = _resolveConcreteProxy(groups, master?.name) ??
+        _resolveConcreteProxy(groups, globalGroup.now);
+
+    if (target == null) {
+      commonPrint.log('[MODE-DIAG] global repair failed reason=no-available-proxy');
+      return;
+    }
+    if (globalGroup.now == target) {
+      commonPrint.log('[MODE-DIAG] global now=$target (already bound)');
+      return;
+    }
+
+    commonPrint.log(
+      '[MODE-DIAG] mode=global master=${master?.name} resolved=$target '
+      'was=${globalGroup.now}',
+    );
+    await ref
+        .read(proxiesActionProvider.notifier)
+        .changeProxy(groupName: GroupName.GLOBAL.name, proxyName: target);
+    ref
+        .read(profilesActionProvider.notifier)
+        .updateCurrentSelectedMap(GroupName.GLOBAL.name, target);
   }
 
   void autoApplyProfile() {
@@ -385,6 +451,9 @@ class SetupAction extends _$SetupAction {
       onUpdated: () async {
         await ref.read(proxiesActionProvider.notifier).updateGroups();
         await ref.read(providersProvider.notifier).syncProviders();
+        // 订阅刷新 / 配置重载之后节点可能已经换晒名或者消失,GLOBAL 会跌返 DIRECT。
+        // 呢度幂等修复一次;唔係 global 模式会即刻 return,零成本。
+        await repairGlobalBinding();
       },
     );
   }
