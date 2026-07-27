@@ -9,11 +9,42 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+/// 切去「全局」时弹一次说明:全局会覆盖智能分流,IP 检测站只会见到手选嗰条线路。
+/// 唔提示嘅话,用户手选咗机房线路再去 ping0/ipinfo 测,会误以为「买咗住宅 IP 但显示机房」。
+/// 只喺 rule → global 嗰刻弹,切返 rule 或者本来就 global 都唔骚扰。
+Future<void> showGlobalModeNoticeIfNeeded(
+  BuildContext context,
+  Mode from,
+  Mode to,
+) async {
+  if (to != Mode.global || from == Mode.global) return;
+  if (!context.mounted) return;
+  await showDialog<void>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('已切换到全局加速'),
+      content: const Text(
+        '全局模式下，所有流量都走你在「线路」里选的那一条，不再按 AI／银行／'
+        '国内网站自动分流。\n\n'
+        '如果选的是机房线路，IP 检测网站会显示机房 IP。需要美国住宅 IP，'
+        '请在「线路」选住宅节点，或切回智能分流。',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: const Text('知道了'),
+        ),
+      ],
+    ),
+  );
+}
+
 class OutboundMode extends StatelessWidget {
   const OutboundMode({super.key});
 
-  void _handleChangeMode(Mode mode) {
+  void _handleChangeMode(BuildContext context, Mode from, Mode mode) {
     globalState.container.read(setupActionProvider.notifier).changeMode(mode);
+    showGlobalModeNoticeIfNeeded(context, from, mode);
   }
 
   @override
@@ -47,7 +78,7 @@ class OutboundMode extends StatelessWidget {
                     if (value == null) {
                       return;
                     }
-                    _handleChangeMode(value);
+                    _handleChangeMode(context, mode, value);
                   },
                   child: LayoutBuilder(
                     builder: (_, constraints) {
@@ -74,7 +105,7 @@ class OutboundMode extends StatelessWidget {
                               ),
                               delegate: RadioDelegate(
                                 onTab: () {
-                                  _handleChangeMode(item);
+                                  _handleChangeMode(context, mode, item);
                                 },
                                 value: item,
                               ),
@@ -102,8 +133,9 @@ class OutboundMode extends StatelessWidget {
 class OutboundModeV2 extends StatelessWidget {
   const OutboundModeV2({super.key});
 
-  void _handleChangeMode(Mode mode) {
+  void _handleChangeMode(BuildContext context, Mode from, Mode mode) {
     globalState.container.read(setupActionProvider.notifier).changeMode(mode);
+    showGlobalModeNoticeIfNeeded(context, from, mode);
   }
 
   Color _getTextColor(BuildContext context, Mode mode) {
@@ -173,7 +205,7 @@ class OutboundModeV2 extends StatelessWidget {
                             if (value == null) {
                               return;
                             }
-                            _handleChangeMode(value);
+                            _handleChangeMode(context, mode, value);
                           },
                           thumbColor: thumbColor,
                         ),

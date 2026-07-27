@@ -33,6 +33,7 @@ import '../voguesly/voguesly_tickets.dart';
 import '../voguesly/voguesly_user_center.dart';
 import 'profiles/profiles.dart';
 import 'config/advanced.dart';
+import 'dashboard/widgets/outbound_mode.dart' show showGlobalModeNoticeIfNeeded;
 import 'developer.dart';
 import 'logs.dart';
 import 'theme.dart';
@@ -463,9 +464,10 @@ class _AccelModeItem extends ConsumerWidget {
     final isGlobal = mode == Mode.global;
     // ⚠️ 三态判:direct=裸奔(会显绿但流量唔走节点),唔可以当「智能分流(推荐)」谎报。
     final (subtitle, warn) = switch (mode) {
-      Mode.global => ('全局加速 · 所有流量走节点', false),
+      // 全局 = 唔再自动分流,IP 跟手选线路走(选机房就显示机房 IP),要讲明白。
+      Mode.global => ('全局加速 · 全部走所选线路，IP 跟该线路', false),
       Mode.direct => ('⚠️ 直连模式 · 未加速,流量未走节点(不安全)', true),
-      _ => ('智能分流 · 国内直连，境外走节点（推荐）', false),
+      _ => ('智能分流 · AI/银行走住宅，国内直连（推荐）', false),
     };
     return ListItem(
       leading: Icon(Icons.tune, color: warn ? const Color(0xFFEF4444) : null),
@@ -490,10 +492,13 @@ class _AccelModeItem extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
+              isThreeLine: true,
               leading: Icon(Icons.alt_route, color: cs.primary),
               title: const Text('智能分流（推荐）'),
-              subtitle:
-                  const Text('国内网站直连更快，境外自动走节点，省流量'),
+              subtitle: const Text(
+                'AI、银行、支付自动走美国住宅 IP；国内网站直连更快，'
+                '看片下载走机房省住宅流量。IP 检测会显示住宅 IP。',
+              ),
               trailing: !isGlobal ? Icon(Icons.check, color: cs.primary) : null,
               onTap: () {
                 ref.read(setupActionProvider.notifier).changeMode(Mode.rule);
@@ -501,14 +506,26 @@ class _AccelModeItem extends ConsumerWidget {
               },
             ),
             ListTile(
+              isThreeLine: true,
               leading: Icon(Icons.public, color: cs.primary),
               title: const Text('全局加速'),
-              subtitle:
-                  const Text('所有流量都走节点（更耗流量，国内网站可能变慢）'),
+              // ⚠️ 呢句係重点:全局会覆盖智能分流,IP 检测站会显示你手选嗰条线路。
+              // 用户选咗机房线路再去测 IP,会以为「买咗住宅 IP 但显示机房」= 产品信任伤害。
+              subtitle: const Text(
+                '所有流量都走你选的那一条线路，不再自动分流。'
+                '若选了机房线路，IP 检测会显示机房 IP；'
+                '需要住宅 IP 请在「线路」选住宅节点，或用智能分流。',
+              ),
               trailing: isGlobal ? Icon(Icons.check, color: cs.primary) : null,
               onTap: () {
                 ref.read(setupActionProvider.notifier).changeMode(Mode.global);
                 Navigator.of(ctx).pop();
+                // 同仪表盘嗰个切换入口一致:rule → global 弹一次说明。
+                showGlobalModeNoticeIfNeeded(
+                  context,
+                  isGlobal ? Mode.global : Mode.rule,
+                  Mode.global,
+                );
               },
             ),
             const SizedBox(height: 8),
