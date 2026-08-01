@@ -289,7 +289,7 @@ class AppSidebarContainer extends ConsumerWidget {
                     child: SingleChildScrollView(
                       // ⚠️ 固定宽度锚定:侧栏 Column 系 content-sized,冇呢个 stretch 会畀子 unbounded 宽→黑屏。
                       child: SizedBox(
-                        width: showLabel ? 196 : 58,
+                        width: 196,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [

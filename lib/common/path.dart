@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:fl_clash/common/common.dart';
+import 'package:crypto/crypto.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -74,11 +75,11 @@ class AppPath {
   /// macOS 专用:把 bundle 内的核心铺到 Application Support 供执行。
   ///
   /// 只在「不存在」或「与 bundle 母本对不上」时才复制(核心 ~100MB,不能每次启动都搬)。
-  /// 用 `大小-mtime` 戳做比对,戳文件与副本同目录。复制走 `.new` + rename 原子替换,
+  /// 用母本 SHA-256 戳做比对,避免只靠 mtime 导致无谓替换并清掉 setuid。
+  /// 复制走 `.new` + rename 原子替换,
   /// 避免旧核心进程仍在跑时写入报 ETXTBSY。
   ///
-  /// 复制必然清掉 setuid 位(内核行为),所以每次 app 升级后用户需要重新授权一次 —— 这是
-  /// 预期行为,与旧方案一致。
+  /// 复制必然清掉 setuid 位(内核行为),所以只有核心内容真正更新时才需要重新授权一次。
   Future<void> provisionExternalCore() async {
     if (!system.isMacOS) return;
     try {
@@ -91,9 +92,8 @@ class AppPath {
       }
       final dstPath = join(dir.path, 'FlClashCore');
       final stampFile = File('$dstPath.stamp');
-      final srcStat = await src.stat();
-      final stamp =
-          '${srcStat.size}-${srcStat.modified.millisecondsSinceEpoch}';
+      final digest = await sha256.bind(src.openRead()).first;
+      final stamp = digest.toString();
       if (await File(dstPath).exists() &&
           await stampFile.exists() &&
           (await stampFile.readAsString()).trim() == stamp) {

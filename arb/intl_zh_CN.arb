@@ -34,7 +34,7 @@
   "allowLan": "局域网代理",
   "allowLanDesc": "允许通过局域网访问代理",
   "tun": "虚拟网卡",
-  "tunDesc": "仅在管理员模式生效",
+  "tunDesc": "开启后 Telegram、部分游戏和 App 才能用（首次需输入密码授权）；不开只有浏览器等能上网",
   "minimizeOnExit": "退出时最小化",
   "minimizeOnExitDesc": "修改系统默认退出事件",
   "autoLaunch": "自启动",

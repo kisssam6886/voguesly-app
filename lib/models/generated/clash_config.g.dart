@@ -248,6 +248,13 @@ _Dns _$DnsFromJson(Map<String, dynamic> json) => _Dns(
         'www.baidu.com': '114.114.114.114',
         '+.internal.crop.com': '10.0.0.1',
         'geosite:cn': 'https://doh.pub/dns-query',
+        'geosite:apple': 'https://doh.pub/dns-query',
+        '+.icloud.com': 'https://doh.pub/dns-query',
+        '+.icloud-content.com': 'https://doh.pub/dns-query',
+        '+.apple.com': 'https://doh.pub/dns-query',
+        '+.mzstatic.com': 'https://doh.pub/dns-query',
+        '+.cdn-apple.com': 'https://doh.pub/dns-query',
+        '+.apple-cloudkit.com': 'https://doh.pub/dns-query',
       },
   nameserver:
       (json['nameserver'] as List<dynamic>?)

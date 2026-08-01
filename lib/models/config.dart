@@ -173,6 +173,9 @@ abstract class VpnProps with _$VpnProps {
 @freezed
 abstract class NetworkProps with _$NetworkProps {
   const factory NetworkProps({
+    // The model default remains platform-neutral. Desktop bootstrap/migration
+    // explicitly changes this to false for its TUN-first normal mode; Android
+    // keeps its existing platform VPN/system-proxy behaviour.
     @Default(true) bool systemProxy,
     @Default(defaultBypassDomain) List<String> bypassDomain,
     @Default(RouteMode.config) RouteMode routeMode,

@@ -34,7 +34,7 @@
   "allowLan": "LANを許可",
   "allowLanDesc": "LAN経由でのプロキシアクセスを許可",
   "tun": "TUN",
-  "tunDesc": "管理者モードでのみ有効",
+  "tunDesc": "有効にすると Telegram や一部のゲーム・アプリが使えます（初回はパスワード認証が必要）。無効の場合はブラウザ等のみ通信可能",
   "minimizeOnExit": "終了時に最小化",
   "minimizeOnExitDesc": "システムの終了イベントを変更",
   "autoLaunch": "自動起動",

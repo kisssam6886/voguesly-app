@@ -687,7 +687,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "tproxyPort": MessageLookupByLibrary.simpleMessage("Tproxy端口"),
     "trafficUsage": MessageLookupByLibrary.simpleMessage("流量統計"),
     "tun": MessageLookupByLibrary.simpleMessage("虛擬網卡"),
-    "tunDesc": MessageLookupByLibrary.simpleMessage("僅在管理員模式生效"),
+    "tunDesc": MessageLookupByLibrary.simpleMessage("開啟後 Telegram、部分遊戲和 App 才能用（首次需輸入密碼授權）；不開只有瀏覽器等能上網"),
     "turnOff": MessageLookupByLibrary.simpleMessage("關閉"),
     "turnOn": MessageLookupByLibrary.simpleMessage("開啓"),
     "undo": MessageLookupByLibrary.simpleMessage("撤銷"),

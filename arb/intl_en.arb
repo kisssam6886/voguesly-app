@@ -34,7 +34,7 @@
   "allowLan": "AllowLan",
   "allowLanDesc": "Allow access proxy through the LAN",
   "tun": "TUN",
-  "tunDesc": "only effective in administrator mode",
+  "tunDesc": "Enable so Telegram, some games and apps work (password required the first time); otherwise only apps like browsers get through",
   "minimizeOnExit": "Minimize on exit",
   "minimizeOnExitDesc": "Modify the default system exit event",
   "autoLaunch": "Auto launch",

@@ -100,7 +100,10 @@ UpdateParams updateParams(Ref ref) {
 @riverpod
 ProxyState proxyState(Ref ref) {
   final suspend = ref.watch(suspendProvider);
-  final isStart = ref.watch(runTimeProvider.select((state) => state != null));
+  final hasRuntime = ref.watch(
+    runTimeProvider.select((state) => state != null),
+  );
+  final realTunEnable = ref.watch(realTunEnableProvider);
   final vm2 = ref.watch(
     networkSettingProvider.select(
       (state) => VM2(state.systemProxy, state.bypassDomain),
@@ -109,6 +112,7 @@ ProxyState proxyState(Ref ref) {
   final mixedPort = ref.watch(
     patchClashConfigProvider.select((state) => state.mixedPort),
   );
+  final isStart = hasRuntime && (!system.isDesktop || realTunEnable || vm2.a);
   return ProxyState(
     isStart: suspend ? false : isStart,
     systemProxy: vm2.a,
@@ -119,7 +123,7 @@ ProxyState proxyState(Ref ref) {
 
 @riverpod
 TrayState trayState(Ref ref) {
-  final isStart = ref.watch(runTimeProvider.select((state) => state != null));
+  final isStart = ref.watch(isStartProvider);
   final systemProxy = ref.watch(
     networkSettingProvider.select((state) => state.systemProxy),
   );
@@ -315,7 +319,15 @@ ProxiesTabState proxiesTabState(Ref ref) {
 
 @riverpod
 bool isStart(Ref ref) {
-  return ref.watch(runTimeProvider.select((state) => state != null));
+  final hasRuntime = ref.watch(
+    runTimeProvider.select((state) => state != null),
+  );
+  if (!system.isDesktop) return hasRuntime;
+  final realTunEnable = ref.watch(realTunEnableProvider);
+  final systemProxy = ref.watch(
+    networkSettingProvider.select((state) => state.systemProxy),
+  );
+  return hasRuntime && (realTunEnable || systemProxy);
 }
 
 @riverpod
@@ -548,8 +560,9 @@ ColorScheme genColorScheme(
   // 旧 FlClash 默认色(0xD8C0C3 玫瑰灰)视为「未自定义」,连同 null 一律用品牌靛蓝。
   // 唔再跟系统 Material You(用户壁纸色),保证全 app 品牌色一致。
   const oldDefaultColor = 0xFFD8C0C3;
-  final customColor =
-      (vm2.a == null || vm2.a == oldDefaultColor) ? null : vm2.a;
+  final customColor = (vm2.a == null || vm2.a == oldDefaultColor)
+      ? null
+      : vm2.a;
   if (color == null && (ignoreConfig == true || customColor == null)) {
     return ColorScheme.fromSeed(
       seedColor: const Color(defaultPrimaryColor),

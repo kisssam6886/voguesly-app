@@ -1042,7 +1042,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "tun": MessageLookupByLibrary.simpleMessage("TUN"),
     "tunDesc": MessageLookupByLibrary.simpleMessage(
-      "действительно только в режиме администратора",
+      "Включите, чтобы работали Telegram, некоторые игры и приложения (при первом запуске нужен пароль); иначе доступ только у браузеров и подобных приложений",
     ),
     "turnOff": MessageLookupByLibrary.simpleMessage("Выключить"),
     "turnOn": MessageLookupByLibrary.simpleMessage("Включить"),

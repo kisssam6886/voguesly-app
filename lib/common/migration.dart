@@ -7,7 +7,9 @@ class Migration {
 
   Migration._internal();
 
-  final currentVersion = 1;
+  // v2: desktop connection defaults changed to TUN-first.  Existing desktop
+  // installs are migrated once; Android keeps its platform VPN behaviour.
+  final currentVersion = 2;
 
   factory Migration() {
     _instance ??= Migration._internal();
@@ -31,6 +33,9 @@ class Migration {
         }
       }
     }
+    if (_oldVersion < 2 && configMap != null && system.isDesktop) {
+      _migrateDesktopConnectionDefaults(configMap);
+    }
     MigrationData data = MigrationData(configMap: configMap);
     if (_oldVersion == 0 && configMap != null) {
       final clashConfigMap = await preferences.getClashConfigMap();
@@ -47,6 +52,27 @@ class Migration {
 
   Future<MigrationData> _oldToNow(Map<String, Object?> configMap) async {
     return oldToNowTask(configMap);
+  }
+
+  void _migrateDesktopConnectionDefaults(Map<String, Object?> configMap) {
+    final networkRaw = configMap['networkProps'];
+    final network = networkRaw is Map
+        ? Map<String, Object?>.from(networkRaw)
+        : <String, Object?>{};
+    network['systemProxy'] = false;
+    configMap['networkProps'] = network;
+
+    final patchRaw = configMap['patchClashConfig'];
+    final patch = patchRaw is Map
+        ? Map<String, Object?>.from(patchRaw)
+        : <String, Object?>{};
+    final tunRaw = patch['tun'];
+    final tun = tunRaw is Map
+        ? Map<String, Object?>.from(tunRaw)
+        : <String, Object?>{};
+    tun['enable'] = true;
+    patch['tun'] = tun;
+    configMap['patchClashConfig'] = patch;
   }
 }
 

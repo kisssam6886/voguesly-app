@@ -14,10 +14,10 @@ import 'package:fl_clash/state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../voguesly/voguesly_apk_installer.dart';
 import '../voguesly/voguesly_auth.dart';
+import '../voguesly/voguesly_mac_installer.dart';
 import '../voguesly/voguesly_win_installer.dart';
 
 part 'generated/action.g.dart';
@@ -127,10 +127,7 @@ class CommonAction extends _$CommonAction {
                 context: context,
                 showDragHandle: true,
                 isScrollControlled: true,
-                builder: (_) => ApkUpdateSheet(
-                  url: downloadUrl,
-                  version: ver,
-                ),
+                builder: (_) => ApkUpdateSheet(url: downloadUrl, version: ver),
               );
             }
           } else if (system.isWindows) {
@@ -141,18 +138,20 @@ class CommonAction extends _$CommonAction {
                 context: context,
                 showDragHandle: true,
                 isScrollControlled: true,
-                builder: (_) => WinUpdateSheet(
-                  url: downloadUrl,
-                  version: ver,
-                ),
+                builder: (_) => WinUpdateSheet(url: downloadUrl, version: ver),
               );
             }
           } else {
-            // macOS:dmg 系拖拽安装,冇静默安装,仍开浏览器下载正确架构 dmg。
-            launchUrl(
-              Uri.parse(downloadUrl),
-              mode: LaunchMode.externalApplication,
-            );
+            // macOS:应用内下载 DMG,先优雅停止核心/TUN 再打开 Finder。
+            // Finder 的拖拽仍由用户完成;DMG 无法监听该动作。
+            if (context.mounted) {
+              showModalBottomSheet(
+                context: context,
+                showDragHandle: true,
+                isScrollControlled: true,
+                builder: (_) => MacUpdateSheet(url: downloadUrl, version: ver),
+              );
+            }
           }
         }
       } else if (!isUser && res == false) {
@@ -175,6 +174,8 @@ class SetupAction extends _$SetupAction {
   DateTime? startTime;
   int _updateTick = 0;
   int _nativeVerifyFailCount = 0;
+  int _desktopTunVerifyFailCount = 0;
+  int _desktopProxyVerifyFailCount = 0;
 
   bool get isStart => startTime != null && startTime!.isBeforeNow;
 
@@ -207,6 +208,8 @@ class SetupAction extends _$SetupAction {
     }
     _updateTick = 0;
     _nativeVerifyFailCount = 0;
+    _desktopTunVerifyFailCount = 0;
+    _desktopProxyVerifyFailCount = 0;
     _updateTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       ref.read(commonActionProvider.notifier).updateRunTime();
       ref.read(commonActionProvider.notifier).updateTraffic();
@@ -216,6 +219,8 @@ class SetupAction extends _$SetupAction {
       _updateTick++;
       if (_updateTick % 3 == 0) {
         _verifyNativeConnected();
+        _verifyDesktopTunConnected();
+        _verifyDesktopSystemProxyConnected();
       }
     });
   }
@@ -260,6 +265,52 @@ class SetupAction extends _$SetupAction {
     globalState.showNotifier('VPN 未能建立连接(可能权限被拒或系统限制),请重新连接');
   }
 
+  Future<void> _verifyDesktopTunConnected() async {
+    if (!system.isDesktop || startTime == null) return;
+    if (!ref.read(realTunEnableProvider)) return;
+    final ok = await system.verifyDesktopTunTransport();
+    commonPrint.log(
+      '[TUN-DIAG] desktop transport ok=$ok',
+      logLevel: ok ? LogLevel.info : LogLevel.warning,
+    );
+    if (ok) {
+      _desktopTunVerifyFailCount = 0;
+      return;
+    }
+    _desktopTunVerifyFailCount++;
+    // Avoid dropping a connection on one transient route-table read. Three
+    // consecutive samples means the core process is not enough to claim TUN.
+    if (_desktopTunVerifyFailCount < 3) return;
+    _desktopTunVerifyFailCount = 0;
+    await handleStop();
+    ref.read(runTimeProvider.notifier).value = null;
+    globalState.showNotifier('TUN 未能接管系统流量，请检查权限或关闭其他 VPN 后重试');
+  }
+
+  Future<void> _verifyDesktopSystemProxyConnected() async {
+    if (!system.isDesktop || startTime == null) return;
+    if (ref.read(realTunEnableProvider)) return;
+    final network = ref.read(networkSettingProvider);
+    if (!network.systemProxy) return;
+    final ok = await system.verifyDesktopSystemProxy(
+      ref.read(patchClashConfigProvider).mixedPort,
+    );
+    commonPrint.log(
+      '[PROXY-DIAG] desktop system proxy ok=$ok',
+      logLevel: ok ? LogLevel.info : LogLevel.warning,
+    );
+    if (ok) {
+      _desktopProxyVerifyFailCount = 0;
+      return;
+    }
+    _desktopProxyVerifyFailCount++;
+    if (_desktopProxyVerifyFailCount < 3) return;
+    _desktopProxyVerifyFailCount = 0;
+    await handleStop();
+    ref.read(runTimeProvider.notifier).value = null;
+    globalState.showNotifier('系统代理未能接管流量，请检查系统代理权限后重试');
+  }
+
   Future _updateStartTime() async {
     startTime = await service?.getRunTime();
   }
@@ -268,6 +319,8 @@ class SetupAction extends _$SetupAction {
     startTime = null;
     _updateTimer?.cancel();
     _updateTimer = null;
+    _desktopTunVerifyFailCount = 0;
+    _desktopProxyVerifyFailCount = 0;
     await coreController.stopListener();
   }
 
@@ -292,6 +345,17 @@ class SetupAction extends _$SetupAction {
 
   Future<void> updateStatus(bool isStart, {bool isInit = false}) async {
     if (isStart) {
+      if (system.isDesktop && ref.read(patchClashConfigProvider).tun.enable) {
+        final conflict = await system.detectThirdPartyTunnel();
+        if (conflict != null) {
+          commonPrint.log(
+            '[TUN-DIAG] third-party tunnel conflict=$conflict',
+            logLevel: LogLevel.warning,
+          );
+          globalState.showNotifier('检测到其他代理正在运行($conflict)，请先关闭后再连接易联');
+          return;
+        }
+      }
       if (!isInit) {
         final res = await ref
             .read(coreActionProvider.notifier)
@@ -377,7 +441,9 @@ class SetupAction extends _$SetupAction {
     var current = name;
     for (var depth = 0; depth < 8; depth++) {
       if (current == null || current.isEmpty) return null;
-      if (current == 'DIRECT' || current == 'REJECT' || current == 'COMPATIBLE') {
+      if (current == 'DIRECT' ||
+          current == 'REJECT' ||
+          current == 'COMPATIBLE') {
         return null;
       }
       final group = groups.getGroup(current);
@@ -409,11 +475,14 @@ class SetupAction extends _$SetupAction {
         break;
       }
     }
-    final target = _resolveConcreteProxy(groups, master?.name) ??
+    final target =
+        _resolveConcreteProxy(groups, master?.name) ??
         _resolveConcreteProxy(groups, globalGroup.now);
 
     if (target == null) {
-      commonPrint.log('[MODE-DIAG] global repair failed reason=no-available-proxy');
+      commonPrint.log(
+        '[MODE-DIAG] global repair failed reason=no-available-proxy',
+      );
       return;
     }
     if (globalGroup.now == target) {
@@ -442,7 +511,7 @@ class SetupAction extends _$SetupAction {
   Future<void> applyProfile({
     bool silence = false,
     bool force = false,
-    VoidCallback? preloadInvoke,
+    FutureOr<void> Function()? preloadInvoke,
   }) async {
     await _setupConfig(
       force: force,
@@ -534,7 +603,10 @@ class SetupAction extends _$SetupAction {
   /// 用户自己去开关 TUN 仍然会重新尝试(走 updateConfigDebounce,不带 auto)。
   bool _authorizeFailedThisSession = false;
 
-  Future<Result<bool>> _requestAdmin(bool enableTun, {bool auto = false}) async {
+  Future<Result<bool>> _requestAdmin(
+    bool enableTun, {
+    bool auto = false,
+  }) async {
     final realTunEnable = ref.read(realTunEnableProvider);
     // [TUN-DIAG] 每次调用(含双弹时的两次)入口状态,便于对齐 checkIsAdmin 日志。
     commonPrint.log(
@@ -546,6 +618,16 @@ class SetupAction extends _$SetupAction {
       ref.read(realTunEnableProvider.notifier).value = false;
       return Result.success(false);
     }
+    if (enableTun && system.isDesktop && !ref.read(isStartProvider)) {
+      final conflict = await system.detectThirdPartyTunnel();
+      if (conflict != null) {
+        ref.read(realTunEnableProvider.notifier).value = false;
+        globalState.showNotifier(
+          '检测到其他代理正在运行($conflict)，本次暂不启用易联 TUN；关闭后可直接重试',
+        );
+        return Result.success(false);
+      }
+    }
     if (enableTun != realTunEnable && realTunEnable == false) {
       final code = await system.authorizeCore();
       // [TUN-DIAG] authorizeCore 返回的枚举名(success/none/error)。
@@ -556,6 +638,9 @@ class SetupAction extends _$SetupAction {
       switch (code) {
         case AuthorizeCode.success:
           _authorizeFailedThisSession = false;
+          // Set the effective flag before restarting. Otherwise the restart's
+          // applyProfile re-enters authorizeCore and prompts a second time.
+          ref.read(realTunEnableProvider.notifier).value = true;
           await ref.read(coreActionProvider.notifier).restartCore();
           return Result.error('');
         case AuthorizeCode.none:
@@ -574,7 +659,7 @@ class SetupAction extends _$SetupAction {
   Future<void> _setupConfig({
     bool force = false,
     bool silence = false,
-    VoidCallback? preloadInvoke,
+    FutureOr<void> Function()? preloadInvoke,
     FutureOr Function()? onUpdated,
   }) async {
     var profile = ref.read(currentProfileProvider);
@@ -696,6 +781,8 @@ class BackupAction extends _$BackupAction {
 
 @Riverpod(keepAlive: true)
 class CoreAction extends _$CoreAction {
+  Future<void>? _restartFuture;
+
   @override
   void build() {}
 
@@ -732,6 +819,7 @@ class CoreAction extends _$CoreAction {
       final code = await system.authorizeCore();
       switch (code) {
         case AuthorizeCode.success:
+          ref.read(realTunEnableProvider.notifier).value = true;
           await restartCore();
           return Result.error('');
         case AuthorizeCode.none:
@@ -745,7 +833,17 @@ class CoreAction extends _$CoreAction {
     return Result.success(enableTun);
   }
 
-  Future<void> restartCore([bool start = false]) async {
+  Future<void> restartCore([bool start = false]) {
+    final existing = _restartFuture;
+    if (existing != null) return existing;
+    final future = _restartCore(start);
+    _restartFuture = future;
+    return future.whenComplete(() {
+      if (identical(_restartFuture, future)) _restartFuture = null;
+    });
+  }
+
+  Future<void> _restartCore(bool start) async {
     final isDisconnected =
         ref.read(coreStatusProvider) == CoreStatus.disconnected;
     ref.read(coreStatusProvider.notifier).value = CoreStatus.disconnected;
@@ -1083,7 +1181,8 @@ class ProfilesAction extends _$ProfilesAction {
       try {
         // voguesly 订阅走我哋自家 dio(cp 被封时核心 _clashDio 直连必失败,后台静默更新唔到节点);
         // 判定同 voguesly_subscription.isVogueslyProfile 一致(此处 inline 避免 providers→voguesly 反向依赖)。
-        final isVoguesly = profile.url.contains('ylink') ||
+        final isVoguesly =
+            profile.url.contains('ylink') ||
             profile.url.contains('samseah') ||
             profile.url.contains('qzz.io') ||
             profile.url.contains('ccwu') ||
@@ -1146,11 +1245,13 @@ class ProfilesAction extends _$ProfilesAction {
       if (showLoading) {
         ref.read(isUpdatingProvider(profile.updatingKey).notifier).value = true;
       }
-      final fetched =
-          await ref.read(vogueslyApiProvider).fetchSubscribeBytes(profile.url);
+      final fetched = await ref
+          .read(vogueslyApiProvider)
+          .fetchSubscribeBytes(profile.url);
       if (fetched == null) return false;
-      final updated =
-          await profile.copyWith(url: fetched.url).saveFile(fetched.bytes);
+      final updated = await profile
+          .copyWith(url: fetched.url)
+          .saveFile(fetched.bytes);
       ref.read(profilesProvider.notifier).put(updated);
       if (updated.id == ref.read(currentProfileIdProvider)) {
         // ⚠️修复(2026-07-13):更新订阅写了新盘却不重载运行核心=节点/规则(iCloud等)全不生效。

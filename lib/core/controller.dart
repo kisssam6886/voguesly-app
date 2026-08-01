@@ -103,12 +103,14 @@ class CoreController {
   Future<String> setupConfig({
     required SetupParams params,
     required SetupState setupState,
-    VoidCallback? preloadInvoke,
+    FutureOr<void> Function()? preloadInvoke,
   }) async {
+    // Start/preload is intentionally launched alongside the config request so
+    // a cold core can become ready for _invoke. Awaiting the callback prevents
+    // the caller from returning while the lifecycle operation is still racing
+    // the profile apply.
     final res = _interface.setupConfig(params);
-    if (preloadInvoke != null) {
-      preloadInvoke();
-    }
+    await preloadInvoke?.call();
     return res;
   }
 

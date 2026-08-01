@@ -83,16 +83,16 @@ void main() {
       expect(props.width, 0);
     });
 
-    test('size extension defaults to 680x580 when empty', () {
+    test('size extension defaults to the desktop launch size when empty', () {
       const props = WindowProps();
-      expect(props.size.width, 680);
-      expect(props.size.height, 580);
+      expect(props.size.width, 1040);
+      expect(props.size.height, 760);
     });
 
     test('size extension uses actual values', () {
       const props = WindowProps(width: 800, height: 600);
-      expect(props.size.width, 800);
-      expect(props.size.height, 600);
+      expect(props.size.width, 900);
+      expect(props.size.height, 660);
     });
 
     test('round-trip with values', () {

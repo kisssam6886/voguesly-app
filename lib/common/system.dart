@@ -63,7 +63,8 @@ class System {
       // [TUN-DIAG] 只加诊断,不改判定逻辑。若授权后 corePath 仍在只读的 AppTranslocation/
       // /private/var/folders 路径 => chmod +sx 无效 => 核心非 root => utun 创不成 => 假连接。
       final rawCorePath = appPath.corePath;
-      final translocated = rawCorePath.contains('AppTranslocation') ||
+      final translocated =
+          rawCorePath.contains('AppTranslocation') ||
           rawCorePath.contains('/private/var/folders');
       final isAdminDiag =
           output.startsWith('root:admin') && output.contains('rws');
@@ -129,7 +130,7 @@ class System {
 
     if (system.isWindows) {
       final result = await windows?.registerService();
-      if (result == true) {
+      if (result == true && await checkIsAdmin()) {
         return AuthorizeCode.success;
       }
       return AuthorizeCode.error;
@@ -175,7 +176,11 @@ class System {
         '(若授权后仍 false => 只读/translocation 路径 chmod 无效)',
         logLevel: LogLevel.info,
       );
-      if (result.exitCode != 0) {
+      if (result.exitCode != 0 || !postAuthIsAdmin) {
+        commonPrint.log(
+          '[TUN-DIAG] authorizeCore failed post-auth verification',
+          logLevel: LogLevel.error,
+        );
         return AuthorizeCode.error;
       }
       return AuthorizeCode.success;
@@ -220,48 +225,180 @@ class System {
         await globalState.showMessage(
           title: currentAppLocalizations.tip,
           message: const TextSpan(
-            text: '需要在「系统设置 → 通用 → 登录项与扩展」允许「易联」的后台项目,'
+            text:
+                '需要在「系统设置 → 通用 → 登录项与扩展」允许「易联」的后台项目,'
                 '开启后重试即可开启 TUN,之后免密码。',
           ),
         );
         return AuthorizeCode.error;
       }
-      if (status != 'enabled') {
-        // notFound / notRegistered / error / unknown:helper 不可用,回退旧路径保底可用。
-        commonPrint.log(
-          'tunhelper register status: $status, fallback to osascript',
-          logLevel: LogLevel.warning,
-        );
+      if (status == 'unsupported') {
+        // macOS <13: SMAppService is unavailable; keep the legacy path.
         return null;
       }
-      final result = await _tunHelperChannel.invokeMethod<Map<Object?, Object?>>(
-        'ensureSetuid',
-        {'corePath': corePath},
-      );
+      if (status != 'enabled') {
+        // The helper is present but not usable. Falling back to a password
+        // prompt on every reconnect is the repeated-authorization bug.
+        commonPrint.log(
+          'tunhelper register status: $status',
+          logLevel: LogLevel.error,
+        );
+        await globalState.showMessage(
+          title: currentAppLocalizations.tip,
+          message: const TextSpan(text: '易联后台 TUN 服务未启用，请在系统设置允许易联后台项目后重试。'),
+        );
+        return AuthorizeCode.error;
+      }
+      final result = await _tunHelperChannel
+          .invokeMethod<Map<Object?, Object?>>('ensureSetuid', {
+            'corePath': corePath,
+          });
       if (result != null && result['ok'] == true) {
-        return AuthorizeCode.success;
+        return await checkIsAdmin()
+            ? AuthorizeCode.success
+            : AuthorizeCode.error;
       }
       commonPrint.log(
-        'tunhelper ensureSetuid failed: ${result?['msg']}, fallback to osascript',
-        logLevel: LogLevel.warning,
+        'tunhelper ensureSetuid failed: ${result?['msg']}',
+        logLevel: LogLevel.error,
       );
-      return null;
+      return AuthorizeCode.error;
     } on MissingPluginException {
       // helper target 未接入(Xcode GUI 步骤未做)——回退,保证接入前 app 照常可用。
       return null;
     } on PlatformException catch (e) {
       commonPrint.log(
-        'tunhelper channel error: ${e.message}, fallback to osascript',
-        logLevel: LogLevel.warning,
+        'tunhelper channel error: ${e.message}',
+        logLevel: LogLevel.error,
       );
-      return null;
+      return AuthorizeCode.error;
     } catch (e) {
       commonPrint.log(
-        'tunhelper unexpected error: $e, fallback to osascript',
+        'tunhelper unexpected error: $e',
+        logLevel: LogLevel.error,
+      );
+      return AuthorizeCode.error;
+    }
+  }
+
+  /// Returns a known third-party proxy/TUN process currently running.
+  /// We warn instead of killing it: route ownership cannot be safely stolen
+  /// from arbitrary VPN/network-extension clients.
+  Future<String?> detectThirdPartyTunnel() async {
+    if (!isDesktop) return null;
+    try {
+      final output = isWindows
+          ? (await Process.run('tasklist', const [])).stdout.toString()
+          : (await Process.run('ps', ['-axo', 'comm='])).stdout.toString();
+      const known = [
+        'clash verge',
+        'clash-verge',
+        'clashx',
+        'clash meta',
+        'mihomo-party',
+        'daed',
+        'sing-box',
+        'singbox',
+      ];
+      final lower = output.toLowerCase();
+      for (final name in known) {
+        if (lower.contains(name) && await verifyDesktopTunTransport()) {
+          return name;
+        }
+      }
+    } catch (e) {
+      commonPrint.log('third-party tunnel detection failed: $e');
+    }
+    return null;
+  }
+
+  /// Best-effort device-level TUN probe used for truthful desktop status.
+  /// Mihomo desktop TUN should own the default route; if it does not, the
+  /// green connected state is unsafe.
+  Future<bool> verifyDesktopTunTransport() async {
+    if (!isDesktop) return true;
+    try {
+      if (isMacOS) {
+        final result = await Process.run('route', ['-n', 'get', 'default']);
+        final line = result.stdout
+            .toString()
+            .split('\n')
+            .firstWhere(
+              (item) => item.trim().startsWith('interface:'),
+              orElse: () => '',
+            );
+        final interfaceName = line.split(':').skip(1).join(':').trim();
+        return interfaceName.startsWith('utun');
+      }
+      if (isWindows) {
+        final result = await Process.run('route', ['print', '-4']);
+        final output = result.stdout.toString();
+        // Mihomo's default Wintun route is normally in the 198.18/16 test
+        // network.  A missing route means the core process alone is not proof
+        // that the device is actually tunneled.
+        return output.contains('198.18.') || output.contains('198.19.');
+      }
+    } catch (e) {
+      commonPrint.log(
+        'desktop TUN probe failed: $e',
         logLevel: LogLevel.warning,
       );
-      return null;
+      return false;
     }
+    return true;
+  }
+
+  /// Best-effort check that the desktop system proxy is actually enabled and
+  /// points at this core's mixed port. The setting provider is only intent;
+  /// this probes the OS state so a green connection cannot hide a failed
+  /// networksetup/registry write.
+  Future<bool> verifyDesktopSystemProxy(int port) async {
+    if (!isDesktop) return true;
+    try {
+      if (isMacOS) {
+        final result = await Process.run('/usr/sbin/scutil', ['--proxy']);
+        if (result.exitCode != 0) return false;
+        final output = result.stdout.toString();
+        final enabled = RegExp(
+          r'(HTTPEnable|HTTPSEnable|SOCKSEnable)\s*:\s*1',
+        ).hasMatch(output);
+        if (!enabled) return false;
+        return RegExp(
+          r'(HTTPPort|HTTPSPort|SOCKSPort)\s*:\s*' + port.toString(),
+        ).hasMatch(output);
+      }
+      if (isWindows) {
+        final base = [
+          r'HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings',
+        ];
+        final enabledResult = await Process.run('reg', [
+          'query',
+          ...base,
+          '/v',
+          'ProxyEnable',
+        ]);
+        final enabledOutput = enabledResult.stdout.toString().toLowerCase();
+        if (enabledResult.exitCode != 0 || !enabledOutput.contains('0x1')) {
+          return false;
+        }
+        final serverResult = await Process.run('reg', [
+          'query',
+          ...base,
+          '/v',
+          'ProxyServer',
+        ]);
+        final server = serverResult.stdout.toString().toLowerCase();
+        return serverResult.exitCode == 0 &&
+            (server.contains(':$port') || server.contains(port.toString()));
+      }
+    } catch (e) {
+      commonPrint.log(
+        'desktop system proxy probe failed: $e',
+        logLevel: LogLevel.warning,
+      );
+      return false;
+    }
+    return true;
   }
 
   Future<void> back() async {

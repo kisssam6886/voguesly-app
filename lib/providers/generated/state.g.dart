@@ -228,7 +228,7 @@ final class ProxyStateProvider
   }
 }
 
-String _$proxyStateHash() => r'3df11daa70bd06de32da43e9b3e09a74389264b2';
+String _$proxyStateHash() => r'219c1a224c6b9ffe4b25be43f398feb4f21ae771';
 
 @ProviderFor(trayState)
 final trayStateProvider = TrayStateProvider._();
@@ -269,7 +269,7 @@ final class TrayStateProvider
   }
 }
 
-String _$trayStateHash() => r'b03770ae2eb7fe1a73372f1128af3b38fdebb818';
+String _$trayStateHash() => r'7e50cfd4f2fe1315c5dd77d8bbde83c90a9e30c0';
 
 @ProviderFor(trayTitleState)
 final trayTitleStateProvider = TrayTitleStateProvider._();
@@ -729,7 +729,7 @@ final class ProxiesTabStateProvider
   }
 }
 
-String _$proxiesTabStateHash() => r'b16734b2578c4e9a91880af8af41faa2e293b257';
+String _$proxiesTabStateHash() => r'c8f3707a786b633637b3f19efe73e3e50ffa65d3';
 
 @ProviderFor(isStart)
 final isStartProvider = IsStartProvider._();
@@ -769,7 +769,7 @@ final class IsStartProvider extends $FunctionalProvider<bool, bool, bool>
   }
 }
 
-String _$isStartHash() => r'f8bcefa8515c44fbe14876a5fc6676110508e9b2';
+String _$isStartHash() => r'0de85d86ba111cd724a631f39660f1f9a6283314';
 
 @ProviderFor(proxiesTabControllerState)
 final proxiesTabControllerStateProvider = ProxiesTabControllerStateProvider._();
@@ -1929,7 +1929,7 @@ final class GenColorSchemeProvider
   }
 }
 
-String _$genColorSchemeHash() => r'25f648db7c33ac00e7152f3d304da372a4de9fdd';
+String _$genColorSchemeHash() => r'ab36f319cccccd60d7cba1394b955b0a2517f781';
 
 final class GenColorSchemeFamily extends $Family
     with

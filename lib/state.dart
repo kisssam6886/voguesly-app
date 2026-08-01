@@ -126,6 +126,17 @@ class GlobalState {
         return config;
       },
     );
+    // New desktop installs start in the same TUN-first mode as migrated
+    // installs. Android keeps its platform VPN defaults unchanged.
+    if (configMap == null && system.isDesktop) {
+      config = config.copyWith(
+        networkProps: config.networkProps.copyWith(systemProxy: false),
+        patchClashConfig: config.patchClashConfig.copyWith(
+          tun: config.patchClashConfig.tun.copyWith(enable: true),
+        ),
+      );
+      await preferences.saveConfig(config);
+    }
     // ⚠️修复(2026-07-14): Apple 域名(icloud/App Store 等)必须经 doh.pub 直接解析。
     // 病根:默认 dns 的 fallback-filter(geoip-code:CN)会把 Apple 返回的非 CN 正确 IP
     // (如 icloud.com→17.253.144.10)当成污染,转去 fallback DoT(tls://8.8.4.4);而 DoT/UDP53

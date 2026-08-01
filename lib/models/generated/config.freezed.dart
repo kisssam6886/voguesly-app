@@ -1202,6 +1202,9 @@ $AccessControlPropsCopyWith<$Res> get accessControlProps {
 /// @nodoc
 mixin _$NetworkProps {
 
+// The model default remains platform-neutral. Desktop bootstrap/migration
+// explicitly changes this to false for its TUN-first normal mode; Android
+// keeps its existing platform VPN/system-proxy behaviour.
  bool get systemProxy; List<String> get bypassDomain; RouteMode get routeMode; bool get autoSetSystemDns; bool get appendSystemDns;
 /// Create a copy of NetworkProps
 /// with the given fields replaced by the non-null parameter values.
@@ -1403,6 +1406,9 @@ class _NetworkProps implements NetworkProps {
   const _NetworkProps({this.systemProxy = true, final  List<String> bypassDomain = defaultBypassDomain, this.routeMode = RouteMode.config, this.autoSetSystemDns = true, this.appendSystemDns = false}): _bypassDomain = bypassDomain;
   factory _NetworkProps.fromJson(Map<String, dynamic> json) => _$NetworkPropsFromJson(json);
 
+// The model default remains platform-neutral. Desktop bootstrap/migration
+// explicitly changes this to false for its TUN-first normal mode; Android
+// keeps its existing platform VPN/system-proxy behaviour.
 @override@JsonKey() final  bool systemProxy;
  final  List<String> _bypassDomain;
 @override@JsonKey() List<String> get bypassDomain {

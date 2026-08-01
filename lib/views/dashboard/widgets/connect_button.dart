@@ -114,6 +114,19 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
   }
 
   void _toggleCore(bool start) {
+    if (start && system.isDesktop) {
+      final tun = ref.read(patchClashConfigProvider).tun;
+      final systemProxy = ref.read(networkSettingProvider).systemProxy;
+      // The consumer-facing circle is the TUN-first entry point. If an
+      // advanced user previously disabled both transport switches, restore
+      // TUN for this explicit click instead of starting a core that cannot
+      // take over any traffic.
+      if (!tun.enable && !systemProxy) {
+        ref
+            .read(patchClashConfigProvider.notifier)
+            .update((state) => state.copyWith.tun(enable: true));
+      }
+    }
     // 唔做乐观更新:isStart 由 isStartProvider 监听器做唯一真相源,确保 UI 同实际连接状态一致。
     debouncer.call(FunctionTag.updateStatus, () {
       globalState.container
@@ -133,6 +146,7 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
     final importFailed =
         ref.watch(vogueslyImportFailedProvider) && !hasProfile && !importing;
     final suspend = ref.watch(suspendProvider);
+    final realTunEnable = ref.watch(realTunEnableProvider);
     // 已连接但被排除SSID旁路(suspend)→ 流量实际走直连,圆圈唔可以显示「已连接·绿色」。
     final bypassed = isStart && suspend;
     final cs = context.colorScheme;
@@ -158,17 +172,19 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
     }
     final title = !hasProfile
         ? (importing
-            ? '正在载入订阅…'
-            : importFailed
-                ? '载入失败·点我重试'
-                : '点我开通')
+              ? '正在载入订阅…'
+              : importFailed
+              ? '载入失败·点我重试'
+              : '点我开通')
         : bypassed
-            ? '已跳过加速' // 唔用 l10n「挂起中...」(OS黑话),同副标题「已跳过加速」口径一致
-            : isStart
-                ? '已连接'
-                : connecting
-                    ? '正在开启'
-                    : '开启易联';
+        ? '已跳过加速' // 唔用 l10n「挂起中...」(OS黑话),同副标题「已跳过加速」口径一致
+        : isStart
+        ? system.isDesktop
+              ? (realTunEnable ? '已连接 · TUN' : '已连接 · 系统代理')
+              : '已连接'
+        : connecting
+        ? '正在开启'
+        : '开启易联';
 
     return Column(
       children: [
@@ -206,12 +222,13 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
                     shape: BoxShape.circle,
                     color: fill,
                     border: Border.all(
-                      color: (bypassed
-                              ? _amber
-                              : isStart
+                      color:
+                          (bypassed
+                                  ? _amber
+                                  : isStart
                                   ? _green
                                   : cs.primary)
-                          .withValues(alpha: 0.5),
+                              .withValues(alpha: 0.5),
                       width: 3,
                     ),
                   ),
@@ -238,8 +255,11 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
                       else if (importFailed)
                         Icon(Icons.refresh_rounded, size: 52, color: fg)
                       else
-                        Icon(Icons.power_settings_new_rounded,
-                            size: 52, color: fg),
+                        Icon(
+                          Icons.power_settings_new_rounded,
+                          size: 52,
+                          color: fg,
+                        ),
                       const SizedBox(height: 6),
                       Text(
                         title,
@@ -261,27 +281,25 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
           child: !isStart
               ? null
               : bypassed
-                  ? Text(
-                      '当前网络已跳过加速 · 走直连',
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: _amber,
+              ? Text(
+                  '当前网络已跳过加速 · 走直连',
+                  style: context.textTheme.bodySmall?.copyWith(color: _amber),
+                )
+              : Consumer(
+                  builder: (_, ref, _) {
+                    final t = ref.watch(
+                      trafficsProvider.select(
+                        (s) => s.list.safeLast(const Traffic()),
                       ),
-                    )
-                  : Consumer(
-                      builder: (_, ref, _) {
-                        final t = ref.watch(
-                          trafficsProvider.select(
-                            (s) => s.list.safeLast(const Traffic()),
-                          ),
-                        );
-                        return Text(
-                          '轻触断开  ·  ${t.speedText}',
-                          style: context.textTheme.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
-                        );
-                      },
-                    ),
+                    );
+                    return Text(
+                      '轻触断开  ·  ${t.speedText}',
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    );
+                  },
+                ),
         ),
       ],
     );

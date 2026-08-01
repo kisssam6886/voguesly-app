@@ -794,7 +794,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "tproxyPort": MessageLookupByLibrary.simpleMessage("Tproxyポート"),
     "trafficUsage": MessageLookupByLibrary.simpleMessage("トラフィック使用量"),
     "tun": MessageLookupByLibrary.simpleMessage("TUN"),
-    "tunDesc": MessageLookupByLibrary.simpleMessage("管理者モードでのみ有効"),
+    "tunDesc": MessageLookupByLibrary.simpleMessage("有効にすると Telegram や一部のゲーム・アプリが使えます（初回はパスワード認証が必要）。無効の場合はブラウザ等のみ通信可能"),
     "turnOff": MessageLookupByLibrary.simpleMessage("オフ"),
     "turnOn": MessageLookupByLibrary.simpleMessage("オン"),
     "undo": MessageLookupByLibrary.simpleMessage("元に戻す"),

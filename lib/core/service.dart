@@ -20,6 +20,8 @@ class CoreService extends CoreHandlerInterface {
   final Map<String, Completer> _callbackCompleterMap = {};
 
   Process? _process;
+  final AsyncLock _lifecycleLock = AsyncLock();
+  Future<void>? _startFuture;
 
   factory CoreService() {
     _instance ??= CoreService._internal();
@@ -85,9 +87,22 @@ class CoreService extends CoreHandlerInterface {
     );
   }
 
-  Future<void> start() async {
+  Future<void> start() {
+    final existing = _startFuture;
+    if (existing != null) return existing;
+    final future = _lifecycleLock.run(_startImpl);
+    _startFuture = future;
+    return future.whenComplete(() {
+      if (identical(_startFuture, future)) _startFuture = null;
+    });
+  }
+
+  Future<void> _startImpl() async {
     if (_process != null) {
-      await shutdown(false);
+      // A stale process after a crash must be torn down before the next start.
+      // Concurrent callers are coalesced by _startFuture, so this does not
+      // create a second helper/TUN cycle.
+      await _shutdownImpl(false);
     }
     if (system.isWindows && await system.checkIsAdmin()) {
       final isSuccess = await request.startCoreByHelper(_transport.address);
@@ -144,7 +159,10 @@ class CoreService extends CoreHandlerInterface {
   }
 
   @override
-  Future<bool> shutdown(bool isUser) async {
+  Future<bool> shutdown(bool isUser) =>
+      _lifecycleLock.run(() => _shutdownImpl(isUser));
+
+  Future<bool> _shutdownImpl(bool isUser) async {
     _shutdownCompleter = Completer();
     if (system.isWindows) {
       await request.stopCoreByHelper();
