@@ -75,7 +75,7 @@ final class TunHelperManager {
         channel.setMethodCallHandler { call, result in
             guard #available(macOS 13.0, *) else {
                 switch call.method {
-                case "register", "status", "unregister":
+                case "register", "status", "unregister", "migrate":
                     result("unsupported")
                 case "ensureSetuid":
                     result(["ok": false, "msg": "unsupported: requires macOS 13+"])
@@ -91,6 +91,8 @@ final class TunHelperManager {
                 result(statusString(daemonService.status))
             case "unregister":
                 result(handleUnregister())
+            case "migrate":
+                result(handleMigrate())
             case "ensureSetuid":
                 guard let args = call.arguments as? [String: Any],
                       let corePath = args["corePath"] as? String, !corePath.isEmpty else {
@@ -120,32 +122,32 @@ final class TunHelperManager {
         let expectedRegistrationVersion = "\(shortVersion)+\(buildVersion)"
         let registeredVersion = UserDefaults.standard.string(forKey: registrationVersionKey)
 
-        if current == .enabled && registeredVersion == expectedRegistrationVersion {
-            return "enabled"
-        }
-
-        // 当前版本尚未登记，或 App 刚升级但旧 daemon 仍处于 enabled：先卸载旧
-        // launchd job，再注册当前 bundle 携带的 plist/helper。这个操作不会弹密码；
-        // 已批准的后台项目继续沿用批准状态，只有首次安装才会进入 requiresApproval。
+        // ⚠️ 2026-08-05 根因:唔可以再「一见版本唔同就 unregister + register」。
+        //
+        // 0.9.57 加呢段係想解决「升级后旧 helper 仲驻留」。但实测(Sam 本机 0.9.62)
+        // 副作用致命:re-register 之后 daemonService.status **唔一定即刻返 .enabled**
+        // (macOS 要用户重新批准),于是下面「只有 .enabled 先写 registrationVersion」
+        // 永远写唔入 → 每次连接都重新拆一次 daemon → ensureSetuid 永远调唔到 →
+        // 核心永远攞唔到 setuid-root(实测 stat = sam:staff 无 rws)→ **TUN 永远起唔到**。
+        // 现场证据:registrationVersion 卡死喺 0.9.60,而 App 已经係 0.9.62。
+        //
+        // 改为:daemon 已经 enabled 就直接用,顺手补写版本标记(唔好再空转)。
+        // 真正嘅「旧 helper 唔认新核心路径」由 ensureSetuid 失败时反应式迁移处理
+        // (Dart 侧收到失败会调 migrate 再重试一次),唔再喺每次升级主动破坏注册。
         if current == .enabled {
-            do {
-                try daemonService.unregister()
+            if registeredVersion != expectedRegistrationVersion {
+                UserDefaults.standard.set(
+                    expectedRegistrationVersion,
+                    forKey: registrationVersionKey
+                )
                 os_log(
-                    "daemon unregistered for helper migration oldVersion=%{public}@ newVersion=%{public}@",
+                    "daemon already enabled; recorded version %{public}@ without re-registering",
                     log: log,
                     type: .info,
-                    registeredVersion ?? "unknown",
                     expectedRegistrationVersion
                 )
-            } catch {
-                os_log(
-                    "daemon migration unregister failed: %{public}@",
-                    log: log,
-                    type: .error,
-                    String(describing: error)
-                )
-                return "error"
             }
+            return "enabled"
         }
         do {
             try daemonService.register()
@@ -176,6 +178,47 @@ final class TunHelperManager {
             os_log("daemon unregister() failed: %{public}@",
                    log: log, type: .error, String(describing: error))
             return "error"
+        }
+    }
+
+    /// 反应式迁移:只喺 ensureSetuid 真係失败(例如旧 helper 唔认新核心路径)先至拆
+    /// daemon 重注册。取代 0.9.57 嗰种「一见版本唔同就主动拆」——嗰种做法会喺每次
+    /// 升级都令 daemon 掉出 .enabled,反而令 TUN 永久起唔到。
+    @available(macOS 13.0, *)
+    private static func handleMigrate() -> String {
+        let before = daemonService.status
+        if before == .enabled {
+            do {
+                try daemonService.unregister()
+                os_log("daemon unregistered for reactive migration", log: log, type: .info)
+            } catch {
+                os_log("reactive migration unregister failed: %{public}@",
+                       log: log, type: .error, String(describing: error))
+                return "error"
+            }
+        }
+        do {
+            try daemonService.register()
+            let after = daemonService.status
+            if after == .enabled {
+                let shortVersion = Bundle.main.object(
+                    forInfoDictionaryKey: "CFBundleShortVersionString"
+                ) as? String ?? "unknown"
+                let buildVersion = Bundle.main.object(
+                    forInfoDictionaryKey: "CFBundleVersion"
+                ) as? String ?? "unknown"
+                UserDefaults.standard.set(
+                    "\(shortVersion)+\(buildVersion)",
+                    forKey: registrationVersionKey
+                )
+            }
+            os_log("reactive migration register() status=%{public}@",
+                   log: log, type: .info, statusString(after))
+            return statusString(after)
+        } catch {
+            os_log("reactive migration register() failed: %{public}@",
+                   log: log, type: .error, String(describing: error))
+            return statusString(daemonService.status)
         }
     }
 

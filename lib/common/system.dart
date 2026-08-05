@@ -302,6 +302,42 @@ class System {
         'tunhelper ensureSetuid failed: ${result?['msg']}',
         logLevel: LogLevel.error,
       );
+      // 反应式迁移:升级覆盖后可能仲係旧 helper 驻留(唔认新嘅外置核心路径)。
+      // 呢种情况先至值得拆 daemon 重注册 —— 0.9.57 嗰种「一见版本唔同就主动拆」
+      // 会喺每次升级都令 daemon 掉出 .enabled,系 0.9.61/0.9.62 TUN 永久起唔到嘅根因。
+      final migrated = await _tunHelperChannel.invokeMethod<String>('migrate');
+      commonPrint.log(
+        '[TUN-DIAG] tunhelper reactive migrate status=$migrated',
+        logLevel: LogLevel.warning,
+      );
+      if (migrated != 'enabled') {
+        if (migrated == 'requiresApproval') {
+          final openSettings = await globalState.showMessage(
+            title: currentAppLocalizations.tip,
+            message: const TextSpan(
+              text:
+                  '易联的后台 TUN 服务需要重新授权。请在「系统设置 → 通用 → 登录项与扩展」'
+                  '中允许「易联」的后台项目，然后回到易联再点一次连接。',
+            ),
+            confirmText: '打开系统设置',
+          );
+          if (openSettings == true) await system.openMacTunSettings();
+        }
+        return AuthorizeCode.error;
+      }
+      final retry = await _tunHelperChannel
+          .invokeMethod<Map<Object?, Object?>>('ensureSetuid', {
+            'corePath': corePath,
+          });
+      if (retry != null && retry['ok'] == true) {
+        return await checkIsAdmin()
+            ? AuthorizeCode.success
+            : AuthorizeCode.error;
+      }
+      commonPrint.log(
+        'tunhelper ensureSetuid retry failed: ${retry?['msg']}',
+        logLevel: LogLevel.error,
+      );
       return AuthorizeCode.error;
     } on MissingPluginException {
       // helper target 未接入(Xcode GUI 步骤未做)——回退,保证接入前 app 照常可用。
