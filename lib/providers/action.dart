@@ -180,6 +180,11 @@ class SetupAction extends _$SetupAction {
   bool _desktopTunRecoveryAttempted = false;
   bool _desktopTunVerifyInFlight = false;
 
+  /// 本次会话内 TUN 已被证实接管不了(授权失败 / 第三方占用 / 路由探测持续失败)。
+  /// 置位后 `_requestAdmin` 不再重复尝试 TUN,避免「兜底→重启→又拿 TUN→又失败」死循环。
+  /// ⚠️ 只在内存里,不落盘 —— 用户断开重连或重启 App 都会重新尝试 TUN。
+  bool _desktopTunProvenBroken = false;
+
   bool get isStart => startTime != null && startTime!.isBeforeNow;
 
   @override
@@ -342,25 +347,56 @@ class SetupAction extends _$SetupAction {
     }
 
     _desktopTunVerifyFailCount = 0;
-    await handleStop();
-    // stopListener closes the TUN listener; shutdown also removes a stale
-    // core process/socket so the next click starts from a clean lifecycle.
-    await coreController.shutdown(false);
+    // ⚠️ 这里**不能**再 handleStop() + shutdown()。
+    // 旧实现把核心整个拆掉,而桌面端系统代理又是关的 —— 用户于是一条通路都不剩,
+    // 表现就是「全部超时」。正确做法是保住核心,把这次会话降级到兼容模式,
+    // 让流量仍然走得通,同时如实告诉用户当前不是整机接管。
+    _desktopTunProvenBroken = true;
     ref.read(realTunEnableProvider.notifier).value = false;
-    _disableTunPreference();
-    ref.read(runTimeProvider.notifier).value = null;
-    globalState.showNotifier(
-      'TUN 连续两次启动仍未能接管系统流量，请检查易联后台权限后重试；也可在仪表盘打开“系统代理（兼容模式）”',
-    );
+    _ensureFallbackTransport('TUN 连续两次启动仍未能接管系统流量');
+    // 带 TUN 配置的核心已经处于不确定状态,重启一次让它干净地以「无 TUN + mixed-port」
+    // 起来;此时 _requestAdmin 会看到 _desktopTunProvenBroken 而不再重复索要授权。
+    try {
+      await ref.read(coreActionProvider.notifier).restartCore(true);
+    } catch (e) {
+      commonPrint.log(
+        '[TUN-DIAG] fallback restart failed: $e',
+        logLevel: LogLevel.error,
+      );
+    }
   }
 
-  /// 连接授权/接管失败时，不能把「期望开启 TUN」留在设置里继续显示为开启。
-  /// 否则下一次订阅刷新会再次尝试，主页开关也会让用户误以为 TUN 已经接管。
-  void _disableTunPreference() {
-    if (!ref.read(patchClashConfigProvider).tun.enable) return;
+  /// TUN 接管失败时保证设备仍然有一条可用通路。
+  ///
+  /// 背景(2026-08-05 根因):旧实现在失败时把 `tun.enable` 持久化写成 false,而桌面端
+  /// `systemProxy` 又被迁移强制关掉 —— 两者同时为假时 `proxyState.isStart` 恒为 false,
+  /// 核心进程还在跑、mixed-port 还在监听,但操作系统没有任何机制把流量送进去,
+  /// 用户看到的就是「全部超时」,后台看到零流量。
+  ///
+  /// 现在改成:
+  /// 1. **不再把失败落盘**。TUN 偏好保持用户的意图,下次连接照常重试(授权弹窗由
+  ///    `_authorizeFailedThisSession` 单独限流,不会变成每小时骚扰)。
+  /// 2. 若此刻系统代理是关的,**显式打开并明确告知用户**,而不是静默留下一个断网状态。
+  ///    这不是「静默降级」:大圆圈会如实显示「已连接 · 系统代理」,仪表盘兼容模式卡片
+  ///    同步变为打开,用户一眼看得出当前不是整机接管。
+  void _ensureFallbackTransport(String reason) {
+    final network = ref.read(networkSettingProvider);
+    if (network.systemProxy) {
+      globalState.showNotifier('$reason；已保持「系统代理（兼容模式）」承载流量');
+      return;
+    }
     ref
-        .read(patchClashConfigProvider.notifier)
-        .update((state) => state.copyWith.tun(enable: false));
+        .read(networkSettingProvider.notifier)
+        .update((state) => state.copyWith(systemProxy: true));
+    commonPrint.log(
+      '[TUN-DIAG] fallback: enabled system proxy after TUN failure ($reason)',
+      logLevel: LogLevel.warning,
+    );
+    globalState.showNotifier(
+      '$reason；已临时启用「系统代理（兼容模式）」保证上网。'
+      '注意:兼容模式只接管遵循系统代理的应用,Telegram 等可能仍不通;'
+      '修好权限后可在仪表盘重新打开「虚拟网卡（设备接管）」。',
+    );
   }
 
   Future<void> _verifyDesktopSystemProxyConnected() async {
@@ -400,6 +436,10 @@ class SetupAction extends _$SetupAction {
     _desktopTunVerificationStartedAt = null;
     _desktopTunRecoveryAttempted = false;
     _desktopTunVerifyInFlight = false;
+    // 用户主动断开 = 一次新嘅开始:清走「本次会话 TUN 已坏」同授权失败标记,
+    // 下次点大圆圈会重新尝试 TUN(权限修好之后唔使重开 App 就恢复得到)。
+    _desktopTunProvenBroken = false;
+    _authorizeFailedThisSession = false;
     await coreController.stopListener();
   }
 
@@ -697,14 +737,21 @@ class SetupAction extends _$SetupAction {
       ref.read(realTunEnableProvider.notifier).value = false;
       return Result.success(false);
     }
+    // 本次会话已证实 TUN 接管不了 —— 直接走兼容模式,唔好再重启一次又攞一次授权,
+    // 否则会同 _ensureFallbackTransport 触发嘅 restartCore 组成死循环。
+    if (enableTun && system.isDesktop && _desktopTunProvenBroken) {
+      ref.read(realTunEnableProvider.notifier).value = false;
+      return Result.success(false);
+    }
     if (enableTun && system.isDesktop && !ref.read(isStartProvider)) {
       final conflict = await system.detectThirdPartyTunnel();
       if (conflict != null) {
+        // 第三方占用系临时状态(用户随时可以关咗对方),所以只标记本次会话,
+        // 绝对唔可以把 tun.enable 落盘 —— 旧实现落咗盘,用户照提示关掉对方再连,
+        // TUN 偏好已经系 false,永远唔会自动恢复,提示文案变成骗人。
+        _desktopTunProvenBroken = true;
         ref.read(realTunEnableProvider.notifier).value = false;
-        _disableTunPreference();
-        globalState.showNotifier(
-          '检测到其他代理正在运行($conflict)，本次暂不启用易联 TUN；关闭后可直接重试',
-        );
+        _ensureFallbackTransport('检测到其他代理正在运行($conflict)，本次暂不启用易联 TUN');
         return Result.success(false);
       }
     }
@@ -728,9 +775,12 @@ class SetupAction extends _$SetupAction {
           break;
         case AuthorizeCode.error:
           _authorizeFailedThisSession = true;
+          _desktopTunProvenBroken = true;
           enableTun = false;
           ref.read(realTunEnableProvider.notifier).value = false;
-          _disableTunPreference();
+          // 授权失败唔好落盘关 TUN(旧实现落咗盘 → 加上迁移强制关咗系统代理 = 断网)。
+          // 保住用户嘅 TUN 意图,同时即刻拉起兼容模式顶住,重连/重开 App 会再试 TUN。
+          _ensureFallbackTransport('TUN 授权未通过，暂时无法接管整机流量');
           break;
       }
     }
