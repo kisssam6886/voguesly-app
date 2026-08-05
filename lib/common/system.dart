@@ -398,45 +398,57 @@ class System {
     if (!isDesktop) return true;
     try {
       if (isMacOS) {
-        final interfaces = await Future.wait([
-          _macRouteInterface('default'),
+        // ⚠️ 2026-08-05 根因:**绝对唔可以用 `route -n get default` 做判据**。
+        //
+        // macOS 上 mihomo/sing-tun 係用两条「更具体」嘅路由(0.0.0.0/1 + 128.0.0.0/1)
+        // 覆盖式接管流量,**从来唔会替换 `default` 条目**。所以 TUN 完全正常运作嗰阵,
+        // `route get default` 照样返物理网卡。实测(Sam 本机,TUN 健康、Telegram 流量
+        // 已经喺 utun9 上跑):
+        //     route get default  → en1     ← 旧实现第一条就 return false
+        //     route get 1.1.1.1  → utun9   ← 真实公网流量喺呢度
+        //     route get 8.8.8.8  → utun9
+        // 旧实现把一个健康嘅 TUN 判成失败,连锁触发「持久化关 TUN → 兜底 → 断网」
+        // 成条 bug 链嘅源头就係呢度。
+        //
+        // 新判据:睇真实公网目标行边个接口,再证明嗰个 utun 係易联自己嘅。
+        final targets = await Future.wait([
           _macRouteInterface('1.1.1.1'),
           _macRouteInterface('8.8.8.8'),
         ]);
-        final defaultInterface = interfaces[0];
-        if (defaultInterface == null || !defaultInterface.startsWith('utun')) {
+        final tunNames = targets
+            .whereType<String>()
+            .where((item) => item.startsWith('utun'))
+            .toSet();
+        if (tunNames.isEmpty) {
           commonPrint.log(
-            '[TUN-DIAG] macOS route probe default=${defaultInterface ?? '-'} '
-            'routes=${interfaces.map((item) => item ?? '-').join(',')}',
+            '[TUN-DIAG] macOS route probe: 公网目标唔行 utun '
+            'routes=${targets.map((item) => item ?? '-').join(',')}',
             logLevel: LogLevel.warning,
           );
           return false;
         }
-
-        // A split route can legitimately differ while a third-party VPN is
-        // active.  We only require one public destination to follow the same
-        // utun as the default route, then verify that the interface is up.
-        final sameRoute = interfaces
-            .skip(1)
-            .any((item) => item == defaultInterface);
-        if (!sameRoute) {
+        // handoff §5.3 要求「证明 utun 属于易联会话」:第三方(Tailscale 100.64/10、
+        // 其他 VPN)一样开 utun,单睇接口名会认错。mihomo TUN 固定攞 198.18.0.0/30,
+        // 用呢个 inet 地址做归属判据。
+        for (final name in tunNames) {
+          final ifconfig = await Process.run('ifconfig', [name]);
+          final output = ifconfig.stdout.toString();
+          final isUp =
+              output.contains('UP') && !output.contains('status: inactive');
+          final isOurs = output.contains('inet 198.18.');
           commonPrint.log(
-            '[TUN-DIAG] macOS route probe split default=$defaultInterface '
-            'routes=${interfaces.map((item) => item ?? '-').join(',')}',
-            logLevel: LogLevel.warning,
+            '[TUN-DIAG] macOS route probe interface=$name '
+            'isUp=$isUp isOurs=$isOurs',
+            logLevel: isUp && isOurs ? LogLevel.info : LogLevel.warning,
           );
-          return false;
+          if (isUp && isOurs) return true;
         }
-        final ifconfig = await Process.run('ifconfig', [defaultInterface]);
-        final output = ifconfig.stdout.toString();
-        final isUp =
-            output.contains('UP') && !output.contains('status: inactive');
         commonPrint.log(
-          '[TUN-DIAG] macOS route probe interface=$defaultInterface '
-          'sameRoute=$sameRoute isUp=$isUp',
-          logLevel: isUp ? LogLevel.info : LogLevel.warning,
+          '[TUN-DIAG] macOS route probe: 公网流量行紧 ${tunNames.join(',')} '
+          '但唔係易联嘅 TUN(198.18.x)',
+          logLevel: LogLevel.warning,
         );
-        return isUp;
+        return false;
       }
       if (isWindows) {
         final result = await Process.run('route', ['print', '-4']);
