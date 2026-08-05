@@ -4,7 +4,9 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
+import 'package:fl_clash/common/proxy.dart';
 import 'package:fl_clash/providers/providers.dart';
+import 'package:fl_clash/voguesly/voguesly_diagnosis.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -481,6 +483,9 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
   List<LatencyResult> _domestic = const [];
   List<LatencyResult> _intl = const [];
   List<SplitRouteResult> _split = const [];
+  LocalDiagnosis? _diag;
+  bool _diagLoading = false;
+  bool _resettingProxy = false;
 
   static const _names = [
     'YouTube Premium', 'Netflix', 'Disney+', 'ChatGPT', 'Claude',
@@ -517,8 +522,50 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
     });
   }
 
+  /// 本机环境诊断:纯本地、只读、几百毫秒;同网络检测分开跑,唔使等解锁检测。
+  /// 网络唔通嗰阵呢一段一样出到结果 —— 事实上正正係嗰阵至最有用。
+  Future<void> _runDiag() async {
+    if (!mounted || _diagLoading) return;
+    setState(() => _diagLoading = true);
+    final proxyState = ref.read(proxyStateProvider);
+    final mixedPort = ref.read(
+      patchClashConfigProvider.select((s) => s.mixedPort),
+    );
+    final tunPreferred = ref.read(
+      patchClashConfigProvider.select((s) => s.tun.enable),
+    );
+    final result = await diagnoseLocal(
+      mixedPort: mixedPort,
+      coreRunning: proxyState.isStart,
+      tunPreferred: tunPreferred,
+    );
+    if (!mounted) return;
+    setState(() {
+      _diag = result;
+      _diagLoading = false;
+    });
+  }
+
+  /// 重设**易联自己**嘅系统代理 —— 全页唯一一个会写嘢嘅动作。
+  /// ⚠️ 只重写易联自己嗰份设置;绝不碰第三方软件嘅进程或配置(见 voguesly_diagnosis 铁律)。
+  Future<void> _resetOwnSystemProxy() async {
+    if (_resettingProxy) return;
+    setState(() => _resettingProxy = true);
+    final proxyState = ref.read(proxyStateProvider);
+    try {
+      await proxy?.stopProxy();
+      await proxy?.startProxy(proxyState.port, proxyState.bassDomain);
+    } catch (_) {
+      // 失败唔弹错:跟住即刻重新诊断,用户直接喺表度见到结果,比一个 toast 有用。
+    }
+    if (!mounted) return;
+    setState(() => _resettingProxy = false);
+    await _runDiag();
+  }
+
   Future<void> _runAll() async {
     if (!mounted || _running) return;
+    unawaited(_runDiag());
     final mixedPort = ref.read(
       patchClashConfigProvider.select((s) => s.mixedPort),
     );
@@ -625,6 +672,39 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 「本机环境」摆最上:出故障嗰阵用户第一眼要见到嘅係「我部机而家点」,
+            // 而唔係 Netflix 解唔解锁。而且呢一段纯本地,网络断咗一样出到结果。
+            Row(
+              children: [
+                Text('本机环境',
+                    style: Theme.of(context).textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700)),
+                const SizedBox(width: 8),
+                if (_diagLoading)
+                  const SizedBox(
+                      width: 14, height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2)),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: _diagLoading ? null : _runDiag,
+                  icon: const Icon(Icons.refresh, size: 16),
+                  label: const Text('重新检测'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text('装咗其他代理软件?呢度讲清楚而家边条通路喺度行、边个占咗乜。',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant.withValues(alpha: 0.7))),
+            const SizedBox(height: 10),
+            _DiagCard(
+              diag: _diag,
+              loading: _diagLoading,
+              cs: cs,
+              resetting: _resettingProxy,
+              onReset: _resetOwnSystemProxy,
+            ),
+            const SizedBox(height: 24),
             Text('解锁检测',
                 style: Theme.of(context).textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.w700)),
@@ -696,6 +776,165 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// 本机环境卡:结论一句话 + 逐项事实 + 唯一一个「只动自己」嘅动作掣。
+class _DiagCard extends StatelessWidget {
+  final LocalDiagnosis? diag;
+  final bool loading;
+  final bool resetting;
+  final ColorScheme cs;
+  final VoidCallback onReset;
+
+  const _DiagCard({
+    required this.diag,
+    required this.loading,
+    required this.resetting,
+    required this.cs,
+    required this.onReset,
+  });
+
+  static const _green = Color(0xFF16A34A);
+  static const _amber = Color(0xFFF59E0B);
+  static const _red = Color(0xFFDC2626);
+
+  Color _color(DiagLevel level) => switch (level) {
+        DiagLevel.ok => _green,
+        DiagLevel.warn => _amber,
+        DiagLevel.bad => _red,
+        DiagLevel.info => cs.onSurfaceVariant,
+      };
+
+  IconData _icon(DiagLevel level) => switch (level) {
+        DiagLevel.ok => Icons.check_circle,
+        DiagLevel.warn => Icons.error_outline,
+        DiagLevel.bad => Icons.cancel,
+        DiagLevel.info => Icons.info_outline,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final data = diag;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
+      ),
+      child: data == null
+          ? Row(
+              children: [
+                SizedBox(
+                  width: 16, height: 16,
+                  child: loading
+                      ? const CircularProgressIndicator(strokeWidth: 2)
+                      : null,
+                ),
+                const SizedBox(width: 10),
+                Text(loading ? '正在检测本机环境…' : '未检测',
+                    style: TextStyle(color: cs.onSurfaceVariant)),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 结论行:用户只睇呢一句都应该知自己有冇事。
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(_icon(data.level), size: 18, color: _color(data.level)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        data.verdict,
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          height: 1.45,
+                          fontWeight: FontWeight.w600,
+                          color: _color(data.level),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (data.items.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  const Divider(height: 1),
+                  const SizedBox(height: 4),
+                  for (final item in data.items)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 7),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(_icon(item.level),
+                                  size: 15, color: _color(item.level)),
+                              const SizedBox(width: 8),
+                              SizedBox(
+                                width: 116,
+                                child: Text(item.title,
+                                    style: TextStyle(
+                                        fontSize: 12.5,
+                                        color: cs.onSurfaceVariant)),
+                              ),
+                              Expanded(
+                                child: Text(item.value,
+                                    style: const TextStyle(
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.w600)),
+                              ),
+                            ],
+                          ),
+                          if (item.detail != null)
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(left: 23, top: 3),
+                              child: Text(item.detail!,
+                                  style: TextStyle(
+                                      fontSize: 11.5,
+                                      height: 1.5,
+                                      color: cs.onSurfaceVariant
+                                          .withValues(alpha: 0.85))),
+                            ),
+                        ],
+                      ),
+                    ),
+                ],
+                // ⚠️ 全页唯一一个写操作,而且只重写易联自己嗰份系统代理设置。
+                // 永远唔提供「清理其他代理软件」—— 做唔干净,而且可能断咗用户连公司内网嘅通道。
+                if (data.systemProxyHijacked) ...[
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: FilledButton.tonalIcon(
+                      onPressed: resetting ? null : onReset,
+                      icon: resetting
+                          ? const SizedBox(
+                              width: 14, height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.settings_backup_restore, size: 17),
+                      label: const Text('重设易联的系统代理'),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      '只会重写易联自己的设置,不会关闭或修改你其他的代理软件。',
+                      style: TextStyle(
+                          fontSize: 11.5,
+                          color: cs.onSurfaceVariant.withValues(alpha: 0.75)),
+                    ),
+                  ),
+                ],
+              ],
+            ),
     );
   }
 }

@@ -401,20 +401,25 @@ class AppSidebarContainer extends ConsumerWidget {
                             // macOS 仍走半框 overlay。
                             onTap: () => VogueslyCsPanel.open(context),
                           ),
-                          // 「有新版本」:只喺真係检查到新版先出现(平时唔占位、唔骚扰)。
-                          // Sam 2026-08-05 要求:唔好逼用户入「设置 → 关于」先搵到更新。
-                          // 撳落去直接行返现成嘅 manualCheckUpdate(会弹版本说明 + 下载),
-                          // 唔另开一套更新流程,免得两条路行为唔一致。
-                          if (updateVersion != null)
-                            _SidebarLink(
-                              icon: Icons.system_update_alt_rounded,
-                              label: '有新版本 $updateVersion',
-                              showLabel: showLabel,
-                              highlight: true,
-                              onTap: () => ref
-                                  .read(commonActionProvider.notifier)
-                                  .manualCheckUpdate(),
-                            ),
+                          // 「检查更新」**常驻**。
+                          // ⚠️ 2026-08-05 初版写成 `if (updateVersion != null)` 先出现,
+                          // 结果係:已经喺最新版嘅用户(即大多数)**永远见唔到呢个入口**,
+                          // 连「想手动查一次」都做唔到,亦无从知道功能有冇喺度行 —— Sam 第一时间
+                          // 就问「点解冇」。呢个係错嘅设计:入口应该常驻,状态先至变。
+                          // 平时 = 「检查更新」普通样式;静默检查到新版 = 高亮 +「有新版本 x.x.x」。
+                          // 两种状态撳落去都係行现成嘅 manualCheckUpdate(有新版弹版本说明+下载,
+                          // 冇新版弹「已是最新」),唔另开一套更新流程免得行为唔一致。
+                          _SidebarLink(
+                            icon: Icons.system_update_alt_rounded,
+                            label: updateVersion != null
+                                ? '有新版本 $updateVersion'
+                                : '检查更新',
+                            showLabel: showLabel,
+                            highlight: updateVersion != null,
+                            onTap: () => ref
+                                .read(commonActionProvider.notifier)
+                                .manualCheckUpdate(),
+                          ),
                           const SizedBox(height: 12),
                           ],
                         ),
