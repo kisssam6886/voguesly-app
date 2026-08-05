@@ -20,6 +20,25 @@ import 'package:fl_clash/voguesly/voguesly_subscription.dart';
 import 'package:fl_clash/voguesly/voguesly_user_center.dart';
 import 'package:intl/intl.dart';
 
+/// 侧栏「有新版本」入口用嘅版本号(null = 已係最新 / 未检查到)。
+///
+/// 独立于 appSetting.autoCheckUpdate 嗰个开关:嗰个开关嘅语义係「唔好弹窗打扰我」,
+/// 唔应该顺带令用户**连边度睇更新都揾唔到**。所以呢度做一次静默检查,只喺侧栏亮一个
+/// 入口,唔弹任何嘢;用户想更新先撳。呢样先至係 Sam 要嘅「唔使入设置→关于」。
+/// ⚠️ riverpod 3 已经移除 StateProvider,手写 Notifier(唔使跑 build_runner,
+/// 网络断嗰阵一样改得郁)。
+class VogueslyUpdateVersion extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void set(String? value) => state = value;
+}
+
+final vogueslyUpdateVersionProvider =
+    NotifierProvider<VogueslyUpdateVersion, String?>(
+      VogueslyUpdateVersion.new,
+    );
+
 class AppStateManager extends ConsumerStatefulWidget {
   final Widget child;
 
@@ -31,10 +50,31 @@ class AppStateManager extends ConsumerStatefulWidget {
 
 class _AppStateManagerState extends ConsumerState<AppStateManager>
     with WidgetsBindingObserver {
+  /// 启动后静默检查一次新版本,只写 provider 畀侧栏亮入口,**唔弹任何窗**。
+  /// 延迟少少先跑,唔同启动嘅其他网络请求抢;失败一律静默(唔可以因为检查更新
+  /// 失败就打扰用户)。
+  Future<void> _silentCheckUpdate() async {
+    await Future.delayed(const Duration(seconds: 5));
+    if (!mounted) return;
+    try {
+      final res = await request.checkForUpdate();
+      if (!mounted || res == null) return;
+      // checkForUpdate 内部已经做咗版本比较,有返回 = 真係有新版;
+      // __net_error__ 係网络异常标记,唔当有更新。
+      if (res['__net_error__'] == true) return;
+      final tag = res['tag_name'] as String?;
+      if (tag == null || tag.isEmpty) return;
+      ref.read(vogueslyUpdateVersionProvider.notifier).set(tag);
+    } catch (_) {
+      // 静默:侧栏唔亮入口就算,唔好因为呢个 feature 影响正常使用。
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _silentCheckUpdate();
     ref.listenManual(checkIpProvider, (prev, next) {
       if (prev != next && next.a && next.c) {
         ref.read(networkDetectionProvider.notifier).startCheck();
@@ -247,6 +287,7 @@ class AppSidebarContainer extends ConsumerWidget {
     }
     final currentIndex = navigationState.currentIndex;
     final overlay = ref.watch(contentOverlayProvider);
+    final updateVersion = ref.watch(vogueslyUpdateVersionProvider);
     // 侧栏常显文字(Sam 要求:图标一定加文字,唔好净图标)。
     const showLabel = true;
     return Row(
@@ -360,6 +401,20 @@ class AppSidebarContainer extends ConsumerWidget {
                             // macOS 仍走半框 overlay。
                             onTap: () => VogueslyCsPanel.open(context),
                           ),
+                          // 「有新版本」:只喺真係检查到新版先出现(平时唔占位、唔骚扰)。
+                          // Sam 2026-08-05 要求:唔好逼用户入「设置 → 关于」先搵到更新。
+                          // 撳落去直接行返现成嘅 manualCheckUpdate(会弹版本说明 + 下载),
+                          // 唔另开一套更新流程,免得两条路行为唔一致。
+                          if (updateVersion != null)
+                            _SidebarLink(
+                              icon: Icons.system_update_alt_rounded,
+                              label: '有新版本 $updateVersion',
+                              showLabel: showLabel,
+                              highlight: true,
+                              onTap: () => ref
+                                  .read(commonActionProvider.notifier)
+                                  .manualCheckUpdate(),
+                            ),
                           const SizedBox(height: 12),
                           ],
                         ),
@@ -436,6 +491,7 @@ class _SidebarLink extends StatelessWidget {
   final bool showLabel;
   final bool selected; // 半框 overlay 打开时高亮对应项
   final bool danger; // 危险/次要样式(登出):红色文字图标,同功能项区分
+  final bool highlight; // 主动引导样式(有新版本):主色 + 加粗,平时唔用
   final VoidCallback onTap;
   const _SidebarLink({
     required this.icon,
@@ -444,6 +500,7 @@ class _SidebarLink extends StatelessWidget {
     required this.onTap,
     this.selected = false,
     this.danger = false,
+    this.highlight = false,
   });
 
   @override
@@ -451,6 +508,8 @@ class _SidebarLink extends StatelessWidget {
     final cs = context.colorScheme;
     final color = danger
         ? cs.error
+        : highlight
+        ? cs.primary
         : (selected ? cs.onSecondaryContainer : cs.onSurfaceVariant);
     void open() => onTap();
     if (showLabel) {
@@ -461,7 +520,12 @@ class _SidebarLink extends StatelessWidget {
         child: Align(
           alignment: Alignment.centerLeft,
           child: Material(
-            color: selected ? cs.secondaryContainer : Colors.transparent,
+            color: selected
+                ? cs.secondaryContainer
+                : highlight
+                // 有新版本:淡主色底,喺一列灰字入面一眼睇到,但唔会抢过大圆圈。
+                ? cs.primary.withValues(alpha: 0.12)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
@@ -476,8 +540,9 @@ class _SidebarLink extends StatelessWidget {
                     Text(label,
                         style: context.textTheme.labelLarge?.copyWith(
                             color: color,
-                            fontWeight:
-                                selected ? FontWeight.w700 : FontWeight.w500)),
+                            fontWeight: (selected || highlight)
+                                ? FontWeight.w700
+                                : FontWeight.w500)),
                   ],
                 ),
               ),

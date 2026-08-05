@@ -182,16 +182,22 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
         : bypassed
         ? '已跳过加速' // 唔用 l10n「挂起中...」(OS黑话),同副标题「已跳过加速」口径一致
         : isStart
-        ? system.isDesktop
-              ? (realTunEnable && systemProxy
-                    ? '已连接 · TUN + 系统代理'
-                    : realTunEnable
-                    ? '已连接 · TUN'
-                    : '已连接 · 系统代理')
-              : '已连接'
+        ? '已连接'
         : connecting
         ? '正在开启'
         : '开启易联';
+
+    // 桌面已连接时,承载方式(TUN / 系统代理)拆做圆内第二行小字。
+    // 旧实现塞成一行「已连接 · TUN + 系统代理」,喺 150 直径嘅圆入面必然溢出圆外
+    // (Sam 2026-08-05 实测截图)。拆两行 + 下面 _CircleLabel 限宽 scaleDown,
+    // 长短文案都唔会冲出圆边。
+    final modeLabel = (isStart && !bypassed && system.isDesktop)
+        ? (realTunEnable && systemProxy
+              ? 'TUN + 系统代理'
+              : realTunEnable
+              ? 'TUN'
+              : '系统代理')
+        : null;
 
     return Column(
       children: [
@@ -267,12 +273,43 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
                           size: 52,
                           color: fg,
                         ),
-                      const SizedBox(height: 6),
-                      Text(
-                        title,
-                        style: context.textTheme.titleMedium?.copyWith(
-                          color: fg,
-                          fontWeight: FontWeight.w600,
+                      SizedBox(height: modeLabel == null ? 6 : 4),
+                      // ⚠️ 圆形容器:越靠近上下边缘可用宽度越窄。文字喺图标下方,
+                      // 实际可用弦长只得 ~130px,所以限宽 116 + scaleDown 兜底。
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 116),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                title,
+                                maxLines: 1,
+                                softWrap: false,
+                                style: context.textTheme.titleMedium?.copyWith(
+                                  color: fg,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            if (modeLabel != null) ...[
+                              const SizedBox(height: 1),
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  modeLabel,
+                                  maxLines: 1,
+                                  softWrap: false,
+                                  style: context.textTheme.labelSmall?.copyWith(
+                                    color: fg.withValues(alpha: 0.88),
+                                    fontWeight: FontWeight.w500,
+                                    letterSpacing: 0.1,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     ],
