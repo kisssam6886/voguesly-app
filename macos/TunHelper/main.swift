@@ -31,7 +31,13 @@ private let log = OSLog(subsystem: HelperID.machServiceName, category: "helper")
 
 // MARK: - corePath 校验
 //
-// 只允许给「装进 /Applications 的 .app 里的核心」提权,挡任意路径提权(如 /tmp 里的恶意二进制)。
+// 只允许给 Voguesly 自己的核心提权,挡任意路径提权(如 /tmp 里的恶意二进制)。
+//
+// macOS 26 起,App 不能可靠地修改已公证 bundle 内的核心,所以 Runner 实际运行的是
+// `~/Library/Application Support/com.voguesly.app/FlClashCore` 的外置副本。这里不能
+// 退回只允许 /Applications/*.app/Contents 的旧白名单,否则 helper 永远拒绝真实核心,
+// TUN 会被 Dart 侧静默降级为 false。路径白名单仍然是严格的:只能是某个用户 home 下
+// Voguesly 的固定 Application Support 路径,不能是任意 /Users 路径。
 private func validateCorePath(_ raw: String) -> (URL?, String?) {
     if raw.isEmpty {
         return (nil, "empty corePath")
@@ -42,9 +48,16 @@ private func validateCorePath(_ raw: String) -> (URL?, String?) {
     if path.contains("..") {
         return (nil, "corePath contains ..")
     }
-    // 必须在 /Applications/<something>.app/Contents/ 下。
-    guard path.hasPrefix("/Applications/"), path.contains(".app/Contents/") else {
-        return (nil, "corePath must live under /Applications/*.app/Contents/, got: \(path)")
+    // 必须是 Voguesly 外置核心的固定路径:
+    // /Users/<one-component-user>/Library/Application Support/com.voguesly.app/FlClashCore
+    // 不接受 /tmp、任意 App、任意 Application Support 子目录或额外路径段。
+    let suffix = "/Library/Application Support/com.voguesly.app/FlClashCore"
+    guard path.hasPrefix("/Users/"), path.hasSuffix(suffix) else {
+        return (nil, "corePath must be Voguesly external core under /Users/<user>/Library/Application Support/com.voguesly.app, got: \(path)")
+    }
+    let userPart = String(path.dropFirst("/Users/".count).dropLast(suffix.count))
+    guard !userPart.isEmpty, !userPart.contains("/") else {
+        return (nil, "corePath has invalid user home component: \(path)")
     }
     // 必须真实存在且是普通文件(非目录/非符号链接)。
     var isDir: ObjCBool = false

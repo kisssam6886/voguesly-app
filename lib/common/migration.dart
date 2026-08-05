@@ -7,9 +7,11 @@ class Migration {
 
   Migration._internal();
 
-  // v2: desktop connection defaults changed to TUN-first.  Existing desktop
-  // installs are migrated once; Android keeps its platform VPN behaviour.
-  final currentVersion = 2;
+  // v3: existing desktop installs are migrated once back to TUN-first. The
+  // dashboard may expose system proxy as an explicit compatibility fallback,
+  // but an old systemProxy=true preference must not silently choose it for the
+  // normal connection circle. Android keeps its platform VPN behaviour.
+  final currentVersion = 3;
 
   factory Migration() {
     _instance ??= Migration._internal();
@@ -33,7 +35,7 @@ class Migration {
         }
       }
     }
-    if (_oldVersion < 2 && configMap != null && system.isDesktop) {
+    if (_oldVersion < 3 && configMap != null && system.isDesktop) {
       _migrateDesktopConnectionDefaults(configMap);
     }
     MigrationData data = MigrationData(configMap: configMap);

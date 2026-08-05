@@ -41,8 +41,8 @@ class TUNItem extends ConsumerWidget {
     );
 
     return ListItem.switchItem(
-      title: Text(appLocalizations.tun),
-      subtitle: Text(appLocalizations.tunDesc),
+      title: Text('${appLocalizations.tun}（设备接管）'),
+      subtitle: const Text('接管整台设备流量；需关闭其他 VPN，并完成系统权限授权'),
       delegate: SwitchDelegate(
         value: enable,
         onChanged: (value) async {
@@ -114,8 +114,8 @@ class SystemProxyItem extends ConsumerWidget {
     );
 
     return ListItem.switchItem(
-      title: Text(appLocalizations.systemProxy),
-      subtitle: Text(appLocalizations.systemProxyDesc),
+      title: Text('${appLocalizations.systemProxy}（兼容模式）'),
+      subtitle: const Text('仅接管支持系统代理的应用；Telegram 等应用可能仍需要 TUN'),
       delegate: SwitchDelegate(
         value: systemProxy,
         onChanged: (bool value) async {
@@ -161,6 +161,9 @@ class AutoSetSystemDnsItem extends ConsumerWidget {
     );
     return ListItem.switchItem(
       title: Text(appLocalizations.autoSetSystemDns),
+      subtitle: const Text(
+        '仅 macOS TUN 运行时临时加入易联 DNS，断开或退出后自动恢复；系统代理模式不修改 DNS',
+      ),
       delegate: SwitchDelegate(
         value: autoSetSystemDns,
         onChanged: (bool value) async {

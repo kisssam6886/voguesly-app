@@ -9,7 +9,6 @@ import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-
 typedef _IsEditWidgetBuilder = Widget Function(bool isEdit);
 
 class DashboardView extends ConsumerStatefulWidget {
@@ -116,16 +115,16 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
     final dashboardState = ref.watch(dashboardStateProvider);
     final columns = max(4 * ((dashboardState.contentWidth / 280).ceil()), 8);
     final spacing = 14.mAp;
-    // 固定简洁主页:忽略旧 saved grid config,直接用消费者向简洁集
-    // (账号 / 大圆圈连接 / 当前线路 / 网络速度 / 模式)。无编辑、无工程化卡。
+    // 固定简洁主页:忽略旧 saved grid config,直接用消费者集。
+    // 两种桌面接管方式都在主页显式展示；文案区分「设备接管」与「兼容模式」，
+    // 圆圈状态只反映真正已启动的路径，避免用户在进阶页来回寻找开关。
     const orderedWidgets = [
       DashboardWidget.vogueslyAccount,
       DashboardWidget.connectButton,
       DashboardWidget.currentRoute,
-      // 半宽卡两两并排(紧凑)。⚠️ 移除「系统代理」开关:它只是模式偏好(默认开,连接后自动生效),
-      // 核心未连时开住只会令用户误以为同「开启易联」重复(Sam 反馈)。保留「虚拟网卡 TUN」做进阶模式。
       DashboardWidget.outboundMode,
       DashboardWidget.tunButton,
+      DashboardWidget.systemProxyButton,
       DashboardWidget.trafficUsage,
       DashboardWidget.networkSpeed,
     ];

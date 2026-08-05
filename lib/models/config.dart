@@ -37,13 +37,16 @@ const defaultAccessControlProps = AccessControlProps();
 const defaultThemeProps = ThemeProps(primaryColor: defaultPrimaryColor);
 
 // 简洁消费者向主页:账号 + 大圆圈连接 + 当前线路 + 网络速度 + 模式。
-// 删走工程化嗰啲(网络检测/流量统计/内网IP/系统代理/TUN 掣)。
+// 桌面端同时保留 TUN(设备接管)和系统代理(兼容模式)两个明确的开关，
+// 让用户不需要进入进阶页面才能恢复可用的兼容路径。
 const List<DashboardWidget> defaultDashboardWidgets = [
   DashboardWidget.vogueslyAccount,
   DashboardWidget.connectButton,
   DashboardWidget.currentRoute,
   DashboardWidget.networkSpeed,
   DashboardWidget.outboundMode,
+  DashboardWidget.tunButton,
+  DashboardWidget.systemProxyButton,
 ];
 
 List<DashboardWidget> dashboardWidgetsSafeFormJson(
@@ -173,10 +176,9 @@ abstract class VpnProps with _$VpnProps {
 @freezed
 abstract class NetworkProps with _$NetworkProps {
   const factory NetworkProps({
-    // The model default remains platform-neutral. Desktop bootstrap/migration
-    // explicitly changes this to false for its TUN-first normal mode; Android
-    // keeps its existing platform VPN/system-proxy behaviour.
-    @Default(true) bool systemProxy,
+    // Desktop normal mode is TUN-first. Android has its own VPN/system-proxy
+    // setting and is not affected by this desktop compatibility switch.
+    @Default(false) bool systemProxy,
     @Default(defaultBypassDomain) List<String> bypassDomain,
     @Default(RouteMode.config) RouteMode routeMode,
     @Default(true) bool autoSetSystemDns,

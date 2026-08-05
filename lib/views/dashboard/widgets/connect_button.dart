@@ -147,6 +147,9 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
         ref.watch(vogueslyImportFailedProvider) && !hasProfile && !importing;
     final suspend = ref.watch(suspendProvider);
     final realTunEnable = ref.watch(realTunEnableProvider);
+    final systemProxy = ref.watch(
+      networkSettingProvider.select((state) => state.systemProxy),
+    );
     // 已连接但被排除SSID旁路(suspend)→ 流量实际走直连,圆圈唔可以显示「已连接·绿色」。
     final bypassed = isStart && suspend;
     final cs = context.colorScheme;
@@ -180,7 +183,11 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
         ? '已跳过加速' // 唔用 l10n「挂起中...」(OS黑话),同副标题「已跳过加速」口径一致
         : isStart
         ? system.isDesktop
-              ? (realTunEnable ? '已连接 · TUN' : '已连接 · 系统代理')
+              ? (realTunEnable && systemProxy
+                    ? '已连接 · TUN + 系统代理'
+                    : realTunEnable
+                    ? '已连接 · TUN'
+                    : '已连接 · 系统代理')
               : '已连接'
         : connecting
         ? '正在开启'

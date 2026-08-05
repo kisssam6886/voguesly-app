@@ -37,6 +37,30 @@ class System {
 
   bool get isLinux => Platform.isLinux;
 
+  /// TUN helper 需要从已安装的 App bundle 注册到 macOS 后台项目。
+  /// 从 DMG 挂载卷或 App Translocation 直接运行时，SMAppService 不能可靠地
+  /// 注册/启动这个 helper；这时必须先把 App 拖进 Applications，再从那里打开。
+  bool get isMacRunningFromInstaller =>
+      isMacOS &&
+      (Platform.resolvedExecutable.startsWith('/Volumes/') ||
+          Platform.resolvedExecutable.contains('/AppTranslocation/'));
+
+  Future<bool> openMacTunSettings() async {
+    if (!isMacOS) return false;
+    try {
+      final result = await Process.run('/usr/bin/open', [
+        'x-apple.systempreferences:com.apple.LoginItems-Settings.extension',
+      ]);
+      return result.exitCode == 0;
+    } catch (e) {
+      commonPrint.log(
+        'open macOS TUN settings failed: $e',
+        logLevel: LogLevel.warning,
+      );
+      return false;
+    }
+  }
+
   Future<int> get version async {
     final deviceInfo = await DeviceInfoPlugin().deviceInfo;
     return switch (Platform.operatingSystem) {
@@ -219,17 +243,31 @@ class System {
   Future<AuthorizeCode?> _authorizeCoreViaMacHelper() async {
     final corePath = appPath.corePath;
     try {
-      // 先确保 daemon 已注册。首次会是 requiresApproval,引导用户去系统设置放行。
-      final status = await _tunHelperChannel.invokeMethod<String>('register');
-      if (status == 'requiresApproval') {
+      if (system.isMacRunningFromInstaller) {
         await globalState.showMessage(
           title: currentAppLocalizations.tip,
           message: const TextSpan(
             text:
-                '需要在「系统设置 → 通用 → 登录项与扩展」允许「易联」的后台项目,'
-                '开启后重试即可开启 TUN,之后免密码。',
+                '当前是从 DMG 磁盘映像直接运行易联。请先把易联拖入 Applications，'
+                '再从 Applications 打开；从 DMG 直接运行无法启用 TUN 后台服务。',
           ),
+          confirmText: '知道了',
         );
+        return AuthorizeCode.error;
+      }
+      // 先确保 daemon 已注册。首次会是 requiresApproval,引导用户去系统设置放行。
+      final status = await _tunHelperChannel.invokeMethod<String>('register');
+      if (status == 'requiresApproval') {
+        final openSettings = await globalState.showMessage(
+          title: currentAppLocalizations.tip,
+          message: const TextSpan(
+            text:
+                '需要在「系统设置 → 通用 → 登录项与扩展」允许「易联」的后台项目,'
+                '开启后返回易联再点一次 TUN 即可，之后免密码。',
+          ),
+          confirmText: '打开系统设置',
+        );
+        if (openSettings == true) await system.openMacTunSettings();
         return AuthorizeCode.error;
       }
       if (status == 'unsupported') {
@@ -243,10 +281,12 @@ class System {
           'tunhelper register status: $status',
           logLevel: LogLevel.error,
         );
-        await globalState.showMessage(
+        final openSettings = await globalState.showMessage(
           title: currentAppLocalizations.tip,
           message: const TextSpan(text: '易联后台 TUN 服务未启用，请在系统设置允许易联后台项目后重试。'),
+          confirmText: '打开系统设置',
         );
+        if (openSettings == true) await system.openMacTunSettings();
         return AuthorizeCode.error;
       }
       final result = await _tunHelperChannel
@@ -314,21 +354,53 @@ class System {
 
   /// Best-effort device-level TUN probe used for truthful desktop status.
   /// Mihomo desktop TUN should own the default route; if it does not, the
-  /// green connected state is unsafe.
+  /// green connected state is unsafe.  During startup macOS may publish the
+  /// utun interface before the route table settles, so this probe deliberately
+  /// checks more than one route and the interface itself instead of treating a
+  /// single transient `route -n get default` result as a disconnect.
   Future<bool> verifyDesktopTunTransport() async {
     if (!isDesktop) return true;
     try {
       if (isMacOS) {
-        final result = await Process.run('route', ['-n', 'get', 'default']);
-        final line = result.stdout
-            .toString()
-            .split('\n')
-            .firstWhere(
-              (item) => item.trim().startsWith('interface:'),
-              orElse: () => '',
-            );
-        final interfaceName = line.split(':').skip(1).join(':').trim();
-        return interfaceName.startsWith('utun');
+        final interfaces = await Future.wait([
+          _macRouteInterface('default'),
+          _macRouteInterface('1.1.1.1'),
+          _macRouteInterface('8.8.8.8'),
+        ]);
+        final defaultInterface = interfaces[0];
+        if (defaultInterface == null || !defaultInterface.startsWith('utun')) {
+          commonPrint.log(
+            '[TUN-DIAG] macOS route probe default=${defaultInterface ?? '-'} '
+            'routes=${interfaces.map((item) => item ?? '-').join(',')}',
+            logLevel: LogLevel.warning,
+          );
+          return false;
+        }
+
+        // A split route can legitimately differ while a third-party VPN is
+        // active.  We only require one public destination to follow the same
+        // utun as the default route, then verify that the interface is up.
+        final sameRoute = interfaces
+            .skip(1)
+            .any((item) => item == defaultInterface);
+        if (!sameRoute) {
+          commonPrint.log(
+            '[TUN-DIAG] macOS route probe split default=$defaultInterface '
+            'routes=${interfaces.map((item) => item ?? '-').join(',')}',
+            logLevel: LogLevel.warning,
+          );
+          return false;
+        }
+        final ifconfig = await Process.run('ifconfig', [defaultInterface]);
+        final output = ifconfig.stdout.toString();
+        final isUp =
+            output.contains('UP') && !output.contains('status: inactive');
+        commonPrint.log(
+          '[TUN-DIAG] macOS route probe interface=$defaultInterface '
+          'sameRoute=$sameRoute isUp=$isUp',
+          logLevel: isUp ? LogLevel.info : LogLevel.warning,
+        );
+        return isUp;
       }
       if (isWindows) {
         final result = await Process.run('route', ['print', '-4']);
@@ -346,6 +418,21 @@ class System {
       return false;
     }
     return true;
+  }
+
+  Future<String?> _macRouteInterface(String destination) async {
+    final result = await Process.run('route', ['-n', 'get', destination]);
+    if (result.exitCode != 0) return null;
+    final line = result.stdout
+        .toString()
+        .split('\n')
+        .firstWhere(
+          (item) => item.trim().startsWith('interface:'),
+          orElse: () => '',
+        );
+    if (line.isEmpty) return null;
+    final interfaceName = line.split(':').skip(1).join(':').trim();
+    return interfaceName.isEmpty ? null : interfaceName;
   }
 
   /// Best-effort check that the desktop system proxy is actually enabled and
@@ -616,6 +703,9 @@ class MacOS {
   static MacOS? _instance;
 
   List<String>? originDns;
+  String? originDnsServiceName;
+  bool dnsAppendedByVoguesly = false;
+  Future<void> _dnsOperation = Future<void>.value();
 
   MacOS._internal();
 
@@ -660,52 +750,81 @@ class MacOS {
     return currentServiceNameLineSplits[1];
   }
 
-  Future<List<String>?> get systemDns async {
-    final deviceServiceName = await defaultServiceName;
-    if (deviceServiceName == null) {
-      return null;
-    }
+  Future<List<String>?> _readDns(String serviceName) async {
     final result = await Process.run('networksetup', [
       '-getdnsservers',
-      deviceServiceName,
+      serviceName,
     ]);
     final output = result.stdout.toString().trim();
     if (output.startsWith("There aren't any DNS Servers set on")) {
-      originDns = [];
-    } else {
-      originDns = output.split('\n');
+      return [];
     }
-    return originDns;
+    if (result.exitCode != 0 || output.isEmpty) return null;
+    return output.split('\n');
   }
 
-  Future<void> updateDns(bool restore) async {
+  Future<List<String>?> get systemDns async {
     final serviceName = await defaultServiceName;
-    if (serviceName == null) {
-      return;
-    }
-    List<String>? nextDns;
+    if (serviceName == null) return null;
+    return _readDns(serviceName);
+  }
+
+  Future<void> updateDns(bool restore) {
+    // AppStateManager 的监听不会阻塞 UI；串行化 enable/restore，避免用户
+    // 快速开关 TUN 时 restore 先于 append 或反过来执行。
+    _dnsOperation = _dnsOperation.then((_) => _updateDns(restore));
+    return _dnsOperation;
+  }
+
+  Future<void> _updateDns(bool restore) async {
+    final serviceName = await defaultServiceName;
+    if (serviceName == null) return;
+    late List<String> nextDns;
     if (restore) {
-      nextDns = originDns;
+      // 只撤销本次由易联追加的 223.5.5.5。用户在 TUN 运行期间手动改过
+      // 其他 DNS 时，不要用旧快照覆盖那些改动。
+      if (!dnsAppendedByVoguesly ||
+          originDnsServiceName != serviceName ||
+          originDns == null) {
+        return;
+      }
+      final currentDns = await _readDns(serviceName);
+      if (currentDns == null || !currentDns.contains('223.5.5.5')) {
+        dnsAppendedByVoguesly = false;
+        originDns = null;
+        originDnsServiceName = null;
+        return;
+      }
+      nextDns = currentDns.where((dns) => dns != '223.5.5.5').toList();
     } else {
-      final originDns = await systemDns;
-      if (originDns == null) {
-        return;
+      // 同一轮 TUN 生命周期只保存一次原始 DNS。旧实现每次启动都会刷新
+      // originDns，第二次启动时会把已追加的 223.5.5.5 误存成“原始值”。
+      if (originDns == null || originDnsServiceName != serviceName) {
+        originDns = await _readDns(serviceName);
+        originDnsServiceName = serviceName;
       }
+      final currentDns = await _readDns(serviceName);
+      if (currentDns == null) return;
       const needAddDns = '223.5.5.5';
-      if (originDns.contains(needAddDns)) {
+      if (currentDns.contains(needAddDns)) {
         return;
       }
-      nextDns = List.from(originDns)..add(needAddDns);
+      nextDns = List.from(currentDns)..add(needAddDns);
     }
-    if (nextDns == null) {
-      return;
-    }
-    await Process.run('networksetup', [
+    final result = await Process.run('networksetup', [
       '-setdnsservers',
       serviceName,
       if (nextDns.isNotEmpty) ...nextDns,
       if (nextDns.isEmpty) 'Empty',
     ]);
+    if (result.exitCode != 0) return;
+    if (restore) {
+      dnsAppendedByVoguesly = false;
+      originDns = null;
+      originDnsServiceName = null;
+    } else {
+      dnsAppendedByVoguesly = true;
+    }
   }
 }
 

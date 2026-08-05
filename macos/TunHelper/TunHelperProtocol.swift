@@ -3,7 +3,8 @@ import Foundation
 /// XPC 协议:App(不可信 client)⇄ root helper(可信 server)之间的唯一接口。
 ///
 /// 设计约束(方案 b — 持久化提权,非在 helper 内跑核心):
-///   - helper **只**负责把 App bundle 内的 mihomo 核心二进制打上 setuid(chown root:admin + chmod u+s)。
+///   - helper **只**负责把 Voguesly 的 Application Support 外置 mihomo 核心二进制打上 setuid
+///     (chown root:admin + chmod u+s)。
 ///   - helper **绝不**启动 / 管理 / kill 核心进程 —— 核心照旧由 App 自己用现有 setuid 路径拉起。
 ///   - 这样「弹密码 chmod」这步只在首次注册 helper 时发生一次,之后换核心/更新都免密码。
 ///
@@ -12,7 +13,8 @@ import Foundation
 @objc protocol TunHelperProtocol {
     /// 给指定核心二进制打 setuid。
     /// - Parameters:
-    ///   - corePath: App bundle 内核心的绝对路径,必须落在 `/Applications/*.app/Contents/` 下。
+    ///   - corePath: 外置核心的绝对路径,必须落在
+    ///     `/Users/<user>/Library/Application Support/com.voguesly.app/` 下的固定路径。
     ///   - reply: (成功?, 错误串)。成功时错误串为 nil;失败时 Bool=false 且带可读原因。
     func ensureCoreSetuid(_ corePath: String, withReply reply: @escaping (Bool, String?) -> Void)
 

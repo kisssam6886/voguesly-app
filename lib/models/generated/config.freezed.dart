@@ -1202,9 +1202,8 @@ $AccessControlPropsCopyWith<$Res> get accessControlProps {
 /// @nodoc
 mixin _$NetworkProps {
 
-// The model default remains platform-neutral. Desktop bootstrap/migration
-// explicitly changes this to false for its TUN-first normal mode; Android
-// keeps its existing platform VPN/system-proxy behaviour.
+// Desktop normal mode is TUN-first. Android has its own VPN/system-proxy
+// setting and is not affected by this desktop compatibility switch.
  bool get systemProxy; List<String> get bypassDomain; RouteMode get routeMode; bool get autoSetSystemDns; bool get appendSystemDns;
 /// Create a copy of NetworkProps
 /// with the given fields replaced by the non-null parameter values.
@@ -1403,12 +1402,11 @@ return $default(_that.systemProxy,_that.bypassDomain,_that.routeMode,_that.autoS
 @JsonSerializable()
 
 class _NetworkProps implements NetworkProps {
-  const _NetworkProps({this.systemProxy = true, final  List<String> bypassDomain = defaultBypassDomain, this.routeMode = RouteMode.config, this.autoSetSystemDns = true, this.appendSystemDns = false}): _bypassDomain = bypassDomain;
+  const _NetworkProps({this.systemProxy = false, final  List<String> bypassDomain = defaultBypassDomain, this.routeMode = RouteMode.config, this.autoSetSystemDns = true, this.appendSystemDns = false}): _bypassDomain = bypassDomain;
   factory _NetworkProps.fromJson(Map<String, dynamic> json) => _$NetworkPropsFromJson(json);
 
-// The model default remains platform-neutral. Desktop bootstrap/migration
-// explicitly changes this to false for its TUN-first normal mode; Android
-// keeps its existing platform VPN/system-proxy behaviour.
+// Desktop normal mode is TUN-first. Android has its own VPN/system-proxy
+// setting and is not affected by this desktop compatibility switch.
 @override@JsonKey() final  bool systemProxy;
  final  List<String> _bypassDomain;
 @override@JsonKey() List<String> get bypassDomain {

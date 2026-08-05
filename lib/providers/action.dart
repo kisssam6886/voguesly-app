@@ -176,6 +176,9 @@ class SetupAction extends _$SetupAction {
   int _nativeVerifyFailCount = 0;
   int _desktopTunVerifyFailCount = 0;
   int _desktopProxyVerifyFailCount = 0;
+  DateTime? _desktopTunVerificationStartedAt;
+  bool _desktopTunRecoveryAttempted = false;
+  bool _desktopTunVerifyInFlight = false;
 
   bool get isStart => startTime != null && startTime!.isBeforeNow;
 
@@ -206,10 +209,15 @@ class SetupAction extends _$SetupAction {
     if (!ref.read(suspendProvider)) {
       await coreController.startListener();
     }
+    _desktopTunVerificationStartedAt ??= DateTime.now();
     _updateTick = 0;
     _nativeVerifyFailCount = 0;
     _desktopTunVerifyFailCount = 0;
     _desktopProxyVerifyFailCount = 0;
+    // A profile refresh can call _handleStart again while the core is already
+    // running.  Keep one timer only; duplicate timers used to race the TUN
+    // probe and make a transient false result look like a sustained failure.
+    _updateTimer?.cancel();
     _updateTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       ref.read(commonActionProvider.notifier).updateRunTime();
       ref.read(commonActionProvider.notifier).updateTraffic();
@@ -268,7 +276,31 @@ class SetupAction extends _$SetupAction {
   Future<void> _verifyDesktopTunConnected() async {
     if (!system.isDesktop || startTime == null) return;
     if (!ref.read(realTunEnableProvider)) return;
-    final ok = await system.verifyDesktopTunTransport();
+    if (_desktopTunVerifyInFlight) return;
+    final verificationStartedAt = _desktopTunVerificationStartedAt;
+    if (verificationStartedAt == null) return;
+    final startupAge = DateTime.now().difference(verificationStartedAt);
+    // macOS has to create the utun interface and publish routes after the
+    // core listener starts.  Do not disconnect a user during that normal
+    // convergence window.
+    if (startupAge < const Duration(seconds: 20)) {
+      commonPrint.log(
+        '[TUN-DIAG] desktop transport startup grace '
+        'age=${startupAge.inSeconds}s',
+        logLevel: LogLevel.info,
+      );
+      return;
+    }
+    _desktopTunVerifyInFlight = true;
+    late final bool ok;
+    try {
+      ok = await system.verifyDesktopTunTransport();
+    } finally {
+      _desktopTunVerifyInFlight = false;
+    }
+    // The user may have disconnected while the route probe was in flight.
+    // Never let a stale probe tear down the next connection attempt.
+    if (startTime == null || !ref.read(realTunEnableProvider)) return;
     commonPrint.log(
       '[TUN-DIAG] desktop transport ok=$ok',
       logLevel: ok ? LogLevel.info : LogLevel.warning,
@@ -278,13 +310,57 @@ class SetupAction extends _$SetupAction {
       return;
     }
     _desktopTunVerifyFailCount++;
-    // Avoid dropping a connection on one transient route-table read. Three
-    // consecutive samples means the core process is not enough to claim TUN.
-    if (_desktopTunVerifyFailCount < 3) return;
+    // Require a sustained failure.  The old three-sample guard stopped the
+    // whole client roughly nine seconds after startup, which is exactly the
+    // "green for a few seconds, then off" symptom users saw.
+    if (_desktopTunVerifyFailCount < 5) return;
+
+    if (!_desktopTunRecoveryAttempted) {
+      _desktopTunRecoveryAttempted = true;
+      _desktopTunVerifyFailCount = 0;
+      commonPrint.log(
+        '[TUN-DIAG] desktop transport failed repeatedly; '
+        'performing one controlled core/TUN recovery',
+        logLevel: LogLevel.warning,
+      );
+      // Cancel only our own timer/state.  CoreAction.restartCore() performs
+      // the full core shutdown/start cycle without touching other VPNs.
+      startTime = null;
+      _desktopTunVerificationStartedAt = null;
+      _updateTimer?.cancel();
+      _updateTimer = null;
+      ref.read(runTimeProvider.notifier).value = null;
+      try {
+        await ref.read(coreActionProvider.notifier).restartCore(true);
+      } catch (e) {
+        commonPrint.log(
+          '[TUN-DIAG] controlled recovery failed: $e',
+          logLevel: LogLevel.error,
+        );
+      }
+      return;
+    }
+
     _desktopTunVerifyFailCount = 0;
     await handleStop();
+    // stopListener closes the TUN listener; shutdown also removes a stale
+    // core process/socket so the next click starts from a clean lifecycle.
+    await coreController.shutdown(false);
+    ref.read(realTunEnableProvider.notifier).value = false;
+    _disableTunPreference();
     ref.read(runTimeProvider.notifier).value = null;
-    globalState.showNotifier('TUN 未能接管系统流量，请检查权限或关闭其他 VPN 后重试');
+    globalState.showNotifier(
+      'TUN 连续两次启动仍未能接管系统流量，请检查易联后台权限后重试；也可在仪表盘打开“系统代理（兼容模式）”',
+    );
+  }
+
+  /// 连接授权/接管失败时，不能把「期望开启 TUN」留在设置里继续显示为开启。
+  /// 否则下一次订阅刷新会再次尝试，主页开关也会让用户误以为 TUN 已经接管。
+  void _disableTunPreference() {
+    if (!ref.read(patchClashConfigProvider).tun.enable) return;
+    ref
+        .read(patchClashConfigProvider.notifier)
+        .update((state) => state.copyWith.tun(enable: false));
   }
 
   Future<void> _verifyDesktopSystemProxyConnected() async {
@@ -321,6 +397,9 @@ class SetupAction extends _$SetupAction {
     _updateTimer = null;
     _desktopTunVerifyFailCount = 0;
     _desktopProxyVerifyFailCount = 0;
+    _desktopTunVerificationStartedAt = null;
+    _desktopTunRecoveryAttempted = false;
+    _desktopTunVerifyInFlight = false;
     await coreController.stopListener();
   }
 
@@ -622,6 +701,7 @@ class SetupAction extends _$SetupAction {
       final conflict = await system.detectThirdPartyTunnel();
       if (conflict != null) {
         ref.read(realTunEnableProvider.notifier).value = false;
+        _disableTunPreference();
         globalState.showNotifier(
           '检测到其他代理正在运行($conflict)，本次暂不启用易联 TUN；关闭后可直接重试',
         );
@@ -649,6 +729,8 @@ class SetupAction extends _$SetupAction {
         case AuthorizeCode.error:
           _authorizeFailedThisSession = true;
           enableTun = false;
+          ref.read(realTunEnableProvider.notifier).value = false;
+          _disableTunPreference();
           break;
       }
     }

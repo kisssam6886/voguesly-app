@@ -56,6 +56,10 @@ class MainFlutterWindow: NSWindow {
 final class TunHelperManager {
     private static let plistName = "com.follow.clash.tunhelper.plist"
     private static let machServiceName = "com.follow.clash.tunhelper"
+    // SMAppService.Status == .enabled 只说明“同名 daemon 已注册”，不说明
+    // launchd 内存里运行的是当前 App 携带的 helper。升级覆盖 App 后，旧 helper
+    // 可能继续驻留；用当前 App 版本做迁移标记，避免 0.9.55 的旧路径校验继续生效。
+    private static let registrationVersionKey = "com.voguesly.tunhelper.registrationVersion"
     private static let helperRequirement =
         "identifier \"com.follow.clash.tunhelper\" and anchor apple generic and certificate leaf[subject.OU] = \"236T6T3629\""
     private static let channelName = "voguesly/tunhelper"
@@ -107,14 +111,51 @@ final class TunHelperManager {
     @available(macOS 13.0, *)
     private static func handleRegister() -> String {
         let current = daemonService.status
-        if current == .enabled {
+        let shortVersion = Bundle.main.object(
+            forInfoDictionaryKey: "CFBundleShortVersionString"
+        ) as? String ?? "unknown"
+        let buildVersion = Bundle.main.object(
+            forInfoDictionaryKey: "CFBundleVersion"
+        ) as? String ?? "unknown"
+        let expectedRegistrationVersion = "\(shortVersion)+\(buildVersion)"
+        let registeredVersion = UserDefaults.standard.string(forKey: registrationVersionKey)
+
+        if current == .enabled && registeredVersion == expectedRegistrationVersion {
             return "enabled"
+        }
+
+        // 当前版本尚未登记，或 App 刚升级但旧 daemon 仍处于 enabled：先卸载旧
+        // launchd job，再注册当前 bundle 携带的 plist/helper。这个操作不会弹密码；
+        // 已批准的后台项目继续沿用批准状态，只有首次安装才会进入 requiresApproval。
+        if current == .enabled {
+            do {
+                try daemonService.unregister()
+                os_log(
+                    "daemon unregistered for helper migration oldVersion=%{public}@ newVersion=%{public}@",
+                    log: log,
+                    type: .info,
+                    registeredVersion ?? "unknown",
+                    expectedRegistrationVersion
+                )
+            } catch {
+                os_log(
+                    "daemon migration unregister failed: %{public}@",
+                    log: log,
+                    type: .error,
+                    String(describing: error)
+                )
+                return "error"
+            }
         }
         do {
             try daemonService.register()
+            let after = daemonService.status
+            if after == .enabled {
+                UserDefaults.standard.set(expectedRegistrationVersion, forKey: registrationVersionKey)
+            }
             os_log("daemon register() called, status=%{public}@",
-                   log: log, type: .info, statusString(daemonService.status))
-            return statusString(daemonService.status)
+                   log: log, type: .info, statusString(after))
+            return statusString(after)
         } catch {
             os_log("daemon register() failed: %{public}@",
                    log: log, type: .error, String(describing: error))
