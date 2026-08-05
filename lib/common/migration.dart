@@ -14,7 +14,11 @@ class Migration {
   // timed out.  v4 only asserts the TUN-first preference and leaves the
   // compatibility fallback exactly as the user had it.
   // Android keeps its platform VPN behaviour.
-  final currentVersion = 4;
+  // v5: 端口去撞。旧版沿用 Clash 生态默认 7890 / 9090,而 Clash Verge、ClashX、
+  // mihomo-party、原版 FlClash 全部都听呢两个;用户机上只要有其中一个,后启动
+  // 嗰个就绑唔到端口 → 表现係「显示已连接但上唔到网」,极难排查。
+  // v5 把仲係默认值嘅老配置搬去易联专属端口;**用户自己改过嘅唔郁**。
+  final currentVersion = 5;
 
   factory Migration() {
     _instance ??= Migration._internal();
@@ -41,6 +45,9 @@ class Migration {
     if (_oldVersion < 4 && configMap != null && system.isDesktop) {
       _migrateDesktopConnectionDefaults(configMap);
     }
+    if (_oldVersion < 5 && configMap != null) {
+      _migrateAwayFromClashDefaultPorts(configMap);
+    }
     MigrationData data = MigrationData(configMap: configMap);
     if (_oldVersion == 0 && configMap != null) {
       final clashConfigMap = await preferences.getClashConfigMap();
@@ -57,6 +64,23 @@ class Migration {
 
   Future<MigrationData> _oldToNow(Map<String, Object?> configMap) async {
     return oldToNowTask(configMap);
+  }
+
+  /// 把仲用紧 Clash 生态默认端口(7890 / 9090)嘅老配置搬去易联专属端口。
+  ///
+  /// ⚠️ 只搬「仲係旧默认值」嗰啲 —— 用户自己改过嘅端口一律唔郁,否则会覆盖佢
+  /// 自己嘅设置(例如佢特登配合第三方工具钉咗某个端口)。
+  void _migrateAwayFromClashDefaultPorts(Map<String, Object?> configMap) {
+    final patchRaw = configMap['patchClashConfig'];
+    if (patchRaw is Map) {
+      final patch = Map<String, Object?>.from(patchRaw);
+      if (patch['mixed-port'] == 7890) {
+        patch['mixed-port'] = defaultMixedPort;
+        configMap['patchClashConfig'] = patch;
+      }
+    }
+    // external-controller(9090)刻意唔搬:佢默认关闭、要用户主动开先监听,
+    // 撞端口机会低好多;而佢係枚举 @JsonValue,改咗会令旧配置反序列化失败。
   }
 
   void _migrateDesktopConnectionDefaults(Map<String, Object?> configMap) {

@@ -12,7 +12,14 @@ const defaultTun = Tun();
 const defaultDns = Dns();
 const defaultGeoXUrl = GeoXUrl();
 
-const defaultMixedPort = 7890;
+/// ⚠️ 唔可以用 Clash 生态嘅默认 7890。
+///
+/// Clash Verge / ClashX / mihomo-party / 原版 FlClash 全部默认听 7890,用户机上
+/// 只要装咗任何一个(易联本身就係 FlClash fork,用户装返原版嘅机会唔低),
+/// 后启动嗰个就绑唔到端口 —— 表现就係「明明连上咗但上唔到网」,而且极难排查。
+/// 改用易联专属高位端口,同任何主流客户端都唔撞;27890 保留 7890 嘅记忆关联,
+/// 方便日后排障一眼认得出。
+const defaultMixedPort = 27890;
 const defaultKeepAliveInterval = 30;
 
 const defaultBypassPrivateRouteAddress = [

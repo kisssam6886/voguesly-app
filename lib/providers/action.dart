@@ -185,6 +185,10 @@ class SetupAction extends _$SetupAction {
   /// ⚠️ 只在内存里,不落盘 —— 用户断开重连或重启 App 都会重新尝试 TUN。
   bool _desktopTunProvenBroken = false;
 
+  /// 「系统代理被第三方抢咗」已经提示过一次(TUN 仲喺度接管紧嗰种情况)。
+  /// 唔加呢个 flag 就会每 9 秒弹一次,变成骚扰。恢复正常时自动清返。
+  bool _systemProxyHijackWarned = false;
+
   bool get isStart => startTime != null && startTime!.isBeforeNow;
 
   @override
@@ -401,7 +405,11 @@ class SetupAction extends _$SetupAction {
 
   Future<void> _verifyDesktopSystemProxyConnected() async {
     if (!system.isDesktop || startTime == null) return;
-    if (ref.read(realTunEnableProvider)) return;
+    // ⚠️ 唔可以再因为 TUN 开住就跳过呢个校验(旧实现:`if (realTunEnable) return;`)。
+    // 实测(Sam Mac mini 2026-08-05):易联界面显示「系统代理(兼容模式)已开启」,
+    // 但系统代理实际指住 1082(Shadowrocket 抢咗去)。TUN 一开就唔再校验,
+    // 于是呢种「界面话自己接管紧、其实接管紧嘅係第三方」嘅状态永远冇人发现。
+    // 呢条正正係 handoff §2.3 要求嘅「外部改动要即刻反映」。
     final network = ref.read(networkSettingProvider);
     if (!network.systemProxy) return;
     final ok = await system.verifyDesktopSystemProxy(
@@ -413,14 +421,31 @@ class SetupAction extends _$SetupAction {
     );
     if (ok) {
       _desktopProxyVerifyFailCount = 0;
+      _systemProxyHijackWarned = false;
       return;
     }
     _desktopProxyVerifyFailCount++;
     if (_desktopProxyVerifyFailCount < 3) return;
     _desktopProxyVerifyFailCount = 0;
+
+    // TUN 仲喺度接管紧 = 用户实际上网冇问题,只係兼容模式被人抢咗。
+    // 呢种情况**唔可以断开**(旧实现 handleStop() 会连好地地嘅 TUN 一齐杀),
+    // 只提示一次就够,唔好每 9 秒烦一次。
+    if (ref.read(realTunEnableProvider)) {
+      if (_systemProxyHijackWarned) return;
+      _systemProxyHijackWarned = true;
+      globalState.showNotifier(
+        '「系统代理（兼容模式）」已被其他代理程序接管，易联的兼容模式当前不生效。'
+        '设备流量仍由易联的虚拟网卡承载，上网不受影响；'
+        '如需易联接管系统代理，请先退出其他代理软件再重新连接。',
+      );
+      return;
+    }
+
+    // TUN 都冇喺度 = 真係一条通路都冇,先至值得断开重来。
     await handleStop();
     ref.read(runTimeProvider.notifier).value = null;
-    globalState.showNotifier('系统代理未能接管流量，请检查系统代理权限后重试');
+    globalState.showNotifier('系统代理未能接管流量，可能被其他代理软件占用；请退出其他代理软件后重试');
   }
 
   Future _updateStartTime() async {

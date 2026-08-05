@@ -61,6 +61,9 @@ const double dialogCommonWidth = 300;
 // 原版 FlClash——完全错嘅方向,而且 api.github.com 喺国内冇 VPN 好大机会连唔到)。
 // 改用自己域名(cp 面板同 host,登录/订阅都靠佢,已确认国内可达)。
 const vogueslyVersionCheckUrl = 'https://cp.samseah.qzz.io/downloads/version.json';
+// ⚠️ 保持 9090 唔改:呢个係「外部控制器」开关(ExternalControllerStatus 默认
+// close,要用户主动开先监听),撞端口嘅机会远低过 mixed-port;而佢嘅
+// @JsonValue 就係 '127.0.0.1:9090',改咗会令旧配置反序列化唔返 —— 风险大过收益。
 const defaultExternalController = '127.0.0.1:9090';
 const maxMobileWidth = 600;
 const maxLaptopWidth = 840;
