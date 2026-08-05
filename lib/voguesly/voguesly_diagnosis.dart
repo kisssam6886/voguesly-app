@@ -63,6 +63,9 @@ const _knownThirdParty = <String, String>{
   'clash for windows': 'Clash for Windows',
   'clashx': 'ClashX',
   'mihomo-party': 'Mihomo Party',
+  // 裸 mihomo 内核(自己命令行跑嘅)一样会绑端口。⚠️ 易联自己个核心叫 FlClashCore,
+  // 唔叫 mihomo,所以呢条唔会误伤自己。
+  'mihomo': 'mihomo 内核',
   'flclash': 'FlClash(原版)',
   'shadowrocket': 'Shadowrocket(小火箭)',
   'macpackettunnel': 'Shadowrocket(小火箭)',
