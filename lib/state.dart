@@ -164,6 +164,21 @@ class GlobalState {
         // 得到非 CN 的港 IP → geoip-CN fallback-filter 当被污染 → 转去问被封的海外 DoT
         // (tls://8.8.4.4 / 1.1.1.1)→ 解析超时 → 站完全打不开。同 Apple/reddit 一样钉 doh.pub。
         '+.zonefoundry.dev': 'https://doh.pub/dns-query',
+        // ⚠️⚠️ 易联自己嘅域名(2026-08-07 实测,同一个坑第 6 次)。
+        // 之前钉过 Apple / reddit / zonefoundry,**独独漏咗自己**。
+        // 实测五个自家 Web 域名全部解析到非 CN,即係全部会中 geoip-CN 陷阱:
+        //   ylink.im→104.21.x(US) · dl.ylink.im→161.118.x(SG) · voguesly.com→172.67.x(US)
+        //   cp.samseah.qzz.io→104.21.x(US) · cs-sg.syk.ccwu.cc→104.21.x(US)
+        // 症状极隐蔽:核心日志只讲 "dns resolve failed: context deadline exceeded",
+        // 而绕过 TUN 走物理网卡完全正常 → 好易误判成「域名被墙」(我就误判过)。
+        // 触发条件 = 客户端重启令 DNS 缓存清空;缓存未过期时一切正常,所以会「突然」出事。
+        // ⚠️ 影响面 = 面板 / 下载站 / 客服,即係用户注册、装客户端、求助嘅必经入口。
+        // ⚠️ 节点域名唔使钉:佢哋由 proxy-server-nameserver 独立解析,唔经 fallback-filter。
+        '+.ylink.im': 'https://doh.pub/dns-query',
+        '+.voguesly.com': 'https://doh.pub/dns-query',
+        '+.samseah.qzz.io': 'https://doh.pub/dns-query',
+        '+.syk.ccwu.cc': 'https://doh.pub/dns-query',
+        '+.ccwu.cc': 'https://doh.pub/dns-query',
       };
       final dns = config.patchClashConfig.dns;
       final mergedPolicy = {...dns.nameserverPolicy, ...appleDohPolicy};
