@@ -182,9 +182,19 @@ class GlobalState {
       };
       final dns = config.patchClashConfig.dns;
       final mergedPolicy = {...dns.nameserverPolicy, ...appleDohPolicy};
+      // ⚠️⚠️ 根修:清空 fallback。旧版本持久化落嚟嘅係 [tls://8.8.4.4, tls://1.1.1.1],
+      // 呢两个境外 DoT 喺国内被封 —— 配合 fallback-filter 嘅 geoip-code: CN,
+      // 凡係「解析出非 CN IP 且走 DIRECT」嘅域名都会喺复核嗰步挂死,整个解析超时。
+      // 上面逐个钉 nameserver-policy 只係打地鼠(已经踩咗七次),呢度先係总闸。
+      // @Default 只喺字段缺失时生效,老用户嘅旧值要喺呢度强制冚咗佢先会生效。
+      // 我哋 nameserver 本身係 DoH,唔存在明文污染,唔需要呢层复核。
+      final needDropFallback = dns.fallback.isNotEmpty;
       config = config.copyWith(
         patchClashConfig: config.patchClashConfig.copyWith(
-          dns: dns.copyWith(nameserverPolicy: mergedPolicy),
+          dns: dns.copyWith(
+            nameserverPolicy: mergedPolicy,
+            fallback: needDropFallback ? const [] : dns.fallback,
+          ),
         ),
       );
     }

@@ -305,7 +305,26 @@ abstract class Dns with _$Dns {
     Map<String, String> nameserverPolicy,
     @Default(['https://doh.pub/dns-query', 'https://dns.alidns.com/dns-query'])
     List<String> nameserver,
-    @Default(['tls://8.8.4.4', 'tls://1.1.1.1']) List<String> fallback,
+    // ⚠️⚠️ fallback 必须留空 —— 呢个係「域名喺 app 打唔开」呢个 bug 家族嘅总根。
+    //
+    // 原本係 ['tls://8.8.4.4', 'tls://1.1.1.1'],配合下面 fallbackFilter 嘅
+    // geoip-code: CN,机制係:国内 nameserver 解析出嚟嘅 IP 如果唔係 CN,就当
+    // 可能被污染,改去问 fallback 复核。但呢两个境外 DoT 喺国内**本身就被封**,
+    // 复核请求挂死 → 整个解析超时 → 该域名完全打唔开。
+    //
+    // 中招条件 = 「解析出非 CN IP」+「路由规则走 DIRECT」。行代理组嘅域名由
+    // proxy-server-nameserver / 远端解析,唔受影响 —— 所以症状係「代理明明通、
+    // 速度正常,偏偏某几个网站死」,极难联想到 DNS。
+    //
+    // 呢个坑前后踩咗七次(Apple/iCloud、reddit、zonefoundry、sonos、whoer 等 68 个
+    // IP 检测站、易联自己嘅面板/下载站/客服、Azure blob),每次都係逐个域名钉
+    // nameserver-policy 去绕 —— 打地鼠,治标唔治本。
+    //
+    // 根修 = 留空 fallback。我哋 nameserver 本身就係 DoH(doh.pub / alidns),
+    // 走 HTTPS 加密,根本唔存在 UDP 53 明文污染 —— fallback-filter 呢套防污染
+    // 机制对 DoH 嚟讲係多余嘅,净係剩返挂死风险。
+    // 真係需要境外解析嘅域名(IP 检测站等)行代理组,由远端解析,唔靠呢条路。
+    @Default([]) List<String> fallback,
     @Default(['https://doh.pub/dns-query'])
     @JsonKey(name: 'proxy-server-nameserver')
     List<String> proxyServerNameserver,
