@@ -51,7 +51,7 @@ class _StartButtonState extends ConsumerState<StartButton> {
     final runTime = ref.watch(runTimeProvider);
     final label = suspend
         ? appLocalizations.suspended
-        : (isStart ? utils.getTimeText(runTime) : '点击连接');
+        : (isStart ? utils.getTimeText(runTime) : currentAppLocalizations.vgTapToConnect);
     return RepaintBoundary(
       child: FloatingActionButton.extended(
         heroTag: null,

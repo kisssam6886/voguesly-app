@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:fl_clash/common/app_localizations.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -130,7 +131,7 @@ class VogueslyAuthNotifier extends Notifier<VogueslyAuthState> {
       if (bundle.status == 401 || bundle.status == 403) {
         state = state.copyWith(
           status: VogueslyAuthStatus.loggedOut,
-          error: '登录已失效,请重新登录',
+          error: currentAppLocalizations.vgSessionExpiredSignInAgain,
         );
         return false;
       }

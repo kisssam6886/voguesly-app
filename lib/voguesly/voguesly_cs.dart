@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:fl_clash/common/app_localizations.dart';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -46,10 +47,10 @@ Future<void> _launchCsExternal(ProviderContainer container) async {
       mode: LaunchMode.externalApplication,
     );
     if (!ok) {
-      globalState.showNotifier('打不开客服,请手动访问客服页');
+      globalState.showNotifier(currentAppLocalizations.vgCannotOpenSupportManually);
     }
   } catch (_) {
-    globalState.showNotifier('打开客服失败,请稍后重试');
+    globalState.showNotifier(currentAppLocalizations.vgOpenSupportFailedRetry);
   }
 }
 
@@ -191,7 +192,7 @@ class _VogueslyCsPanelState extends ConsumerState<VogueslyCsPanel> {
                 const Icon(Icons.support_agent_outlined, size: 40),
                 const SizedBox(height: 12),
                 Text(
-                  _csUseWindowsWebview ? '在线客服暂时打不开,可用浏览器打开' : '在线客服已在浏览器中打开',
+                  _csUseWindowsWebview ? currentAppLocalizations.vgLiveChatUnavailableUseBrowser : currentAppLocalizations.vgLiveChatOpenedInBrowser,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
@@ -200,7 +201,7 @@ class _VogueslyCsPanelState extends ConsumerState<VogueslyCsPanel> {
                     ProviderScope.containerOf(context, listen: false),
                   ),
                   icon: const Icon(Icons.open_in_new, size: 18),
-                  label: const Text('用浏览器打开客服'),
+                  label: Text(currentAppLocalizations.vgOpenSupportInBrowser),
                 ),
               ],
             ),

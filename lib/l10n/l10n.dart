@@ -284,10 +284,10 @@ class AppLocalizations {
     return Intl.message('TUN', name: 'tun', desc: '', args: []);
   }
 
-  /// `only effective in administrator mode`
+  /// `Enable so Telegram, some games and apps work (password required the first time); otherwise only apps like browsers get through`
   String get tunDesc {
     return Intl.message(
-      'only effective in administrator mode',
+      'Enable so Telegram, some games and apps work (password required the first time); otherwise only apps like browsers get through',
       name: 'tunDesc',
       desc: '',
       args: [],
@@ -4439,6 +4439,4056 @@ class AppLocalizations {
     return Intl.message(
       'Choose avatar',
       name: 'vogChooseAvatar',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Network is unstable. Check your connection and try again.`
+  String get vgNetUnstableRetry {
+    return Intl.message(
+      'Network is unstable. Check your connection and try again.',
+      name: 'vgNetUnstableRetry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connection timed out. Please try again later.`
+  String get vgConnectTimeoutRetry {
+    return Intl.message(
+      'Connection timed out. Please try again later.',
+      name: 'vgConnectTimeoutRetry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Could not read the configuration. Update your subscription or contact support.`
+  String get vgConfigParseFailed {
+    return Intl.message(
+      'Could not read the configuration. Update your subscription or contact support.',
+      name: 'vgConfigParseFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Something went wrong. Please try again later.`
+  String get vgActionFailedRetry {
+    return Intl.message(
+      'Something went wrong. Please try again later.',
+      name: 'vgActionFailedRetry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Network error, cannot check for updates right now. Check your connection and try again.`
+  String get vgUpdateCheckNetworkError {
+    return Intl.message(
+      'Network error, cannot check for updates right now. Check your connection and try again.',
+      name: 'vgUpdateCheckNetworkError',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The VPN could not be established (permission denied or blocked by the system). Please reconnect.`
+  String get vgVpnCouldNotConnect {
+    return Intl.message(
+      'The VPN could not be established (permission denied or blocked by the system). Please reconnect.',
+      name: 'vgVpnCouldNotConnect',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `TUN failed to take over system traffic after two attempts.`
+  String get vgTunTwiceNoTakeover {
+    return Intl.message(
+      'TUN failed to take over system traffic after two attempts.',
+      name: 'vgTunTwiceNoTakeover',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{p0}; traffic is still carried by System Proxy (compatibility mode).`
+  String vgKeptSystemProxyCarrying(Object p0) {
+    return Intl.message(
+      '$p0; traffic is still carried by System Proxy (compatibility mode).',
+      name: 'vgKeptSystemProxyCarrying',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `{p0}; System Proxy (compatibility mode) has been enabled temporarily to keep you online.`
+  String vgTempEnabledSystemProxy(Object p0) {
+    return Intl.message(
+      '$p0; System Proxy (compatibility mode) has been enabled temporarily to keep you online.',
+      name: 'vgTempEnabledSystemProxy',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Note: compatibility mode only covers apps that honour the system proxy; Telegram and similar apps may still not connect;`
+  String get vgCompatModeOnlyProxyAware {
+    return Intl.message(
+      'Note: compatibility mode only covers apps that honour the system proxy; Telegram and similar apps may still not connect;',
+      name: 'vgCompatModeOnlyProxyAware',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Once permissions are fixed you can turn Virtual NIC (device-wide) back on from the dashboard.`
+  String get vgReopenTunAfterPermission {
+    return Intl.message(
+      'Once permissions are fixed you can turn Virtual NIC (device-wide) back on from the dashboard.',
+      name: 'vgReopenTunAfterPermission',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `System Proxy (compatibility mode) has been taken over by another proxy app, so Voguesly's compatibility mode is not active.`
+  String get vgCompatModeTakenOver {
+    return Intl.message(
+      'System Proxy (compatibility mode) has been taken over by another proxy app, so Voguesly\'s compatibility mode is not active.',
+      name: 'vgCompatModeTakenOver',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your traffic is still carried by Voguesly's virtual NIC, so browsing is unaffected;`
+  String get vgTrafficStillOnTun {
+    return Intl.message(
+      'Your traffic is still carried by Voguesly\'s virtual NIC, so browsing is unaffected;',
+      name: 'vgTrafficStillOnTun',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `To let Voguesly own the system proxy, quit the other proxy app and reconnect.`
+  String get vgQuitOtherProxyToTakeOver {
+    return Intl.message(
+      'To let Voguesly own the system proxy, quit the other proxy app and reconnect.',
+      name: 'vgQuitOtherProxyToTakeOver',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `System Proxy could not take over traffic — it may be occupied by another proxy app. Quit it and try again.`
+  String get vgSystemProxyOccupied {
+    return Intl.message(
+      'System Proxy could not take over traffic — it may be occupied by another proxy app. Quit it and try again.',
+      name: 'vgSystemProxyOccupied',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Another proxy is running ({p0}). Close it before connecting Voguesly.`
+  String vgOtherProxyRunningCloseFirst(Object p0) {
+    return Intl.message(
+      'Another proxy is running ($p0). Close it before connecting Voguesly.',
+      name: 'vgOtherProxyRunningCloseFirst',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Another proxy is running ({p0}). Voguesly's TUN will stay off this time.`
+  String vgOtherProxyRunningSkipTun(Object p0) {
+    return Intl.message(
+      'Another proxy is running ($p0). Voguesly\'s TUN will stay off this time.',
+      name: 'vgOtherProxyRunningSkipTun',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `TUN was not authorised, so device-wide traffic cannot be taken over for now.`
+  String get vgTunNotAuthorized {
+    return Intl.message(
+      'TUN was not authorised, so device-wide traffic cannot be taken over for now.',
+      name: 'vgTunNotAuthorized',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No endpoint is reachable`
+  String get vgAllEndpointsUnreachable {
+    return Intl.message(
+      'No endpoint is reachable',
+      name: 'vgAllEndpointsUnreachable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Wrong email or password`
+  String get vgWrongEmailOrPassword {
+    return Intl.message(
+      'Wrong email or password',
+      name: 'vgWrongEmailOrPassword',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sign-up failed`
+  String get vgSignUpFailed {
+    return Intl.message(
+      'Sign-up failed',
+      name: 'vgSignUpFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Empty response, please try again`
+  String get vgEmptyResponseRetry {
+    return Intl.message(
+      'Empty response, please try again',
+      name: 'vgEmptyResponseRetry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Network error: {p0}`
+  String vgNetworkErrorWith(Object p0) {
+    return Intl.message(
+      'Network error: $p0',
+      name: 'vgNetworkErrorWith',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `One-tap trial in app`
+  String get vgOneTapTrialInApp {
+    return Intl.message(
+      'One-tap trial in app',
+      name: 'vgOneTapTrialInApp',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Free trial activated`
+  String get vgFreeTrialActivated {
+    return Intl.message(
+      'Free trial activated',
+      name: 'vgFreeTrialActivated',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Activation failed, please try again later`
+  String get vgActivateFailedRetry {
+    return Intl.message(
+      'Activation failed, please try again later',
+      name: 'vgActivateFailedRetry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Activation failed: {p0}`
+  String vgActivateFailedWith(Object p0) {
+    return Intl.message(
+      'Activation failed: $p0',
+      name: 'vgActivateFailedWith',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Could not place the order, please try again later`
+  String get vgOrderFailedRetry {
+    return Intl.message(
+      'Could not place the order, please try again later',
+      name: 'vgOrderFailedRetry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Could not place the order: {p0}`
+  String vgOrderFailedWith(Object p0) {
+    return Intl.message(
+      'Could not place the order: $p0',
+      name: 'vgOrderFailedWith',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Could not start the payment`
+  String get vgPaymentStartFailed {
+    return Intl.message(
+      'Could not start the payment',
+      name: 'vgPaymentStartFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Could not start the payment: {p0}`
+  String vgPaymentStartFailedWith(Object p0) {
+    return Intl.message(
+      'Could not start the payment: $p0',
+      name: 'vgPaymentStartFailedWith',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Subscription reset. Fetching new nodes…`
+  String get vgSubscriptionResetFetching {
+    return Intl.message(
+      'Subscription reset. Fetching new nodes…',
+      name: 'vgSubscriptionResetFetching',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reset failed`
+  String get vgResetFailed {
+    return Intl.message(
+      'Reset failed',
+      name: 'vgResetFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Password changed`
+  String get vgPasswordChanged {
+    return Intl.message(
+      'Password changed',
+      name: 'vgPasswordChanged',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Change failed (check your current password)`
+  String get vgChangeFailedCheckOldPassword {
+    return Intl.message(
+      'Change failed (check your current password)',
+      name: 'vgChangeFailedCheckOldPassword',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Transferred to balance`
+  String get vgTransferredToBalance {
+    return Intl.message(
+      'Transferred to balance',
+      name: 'vgTransferredToBalance',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Transfer failed`
+  String get vgTransferFailed {
+    return Intl.message(
+      'Transfer failed',
+      name: 'vgTransferFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Withdrawal request submitted. Support will process it shortly.`
+  String get vgWithdrawSubmitted {
+    return Intl.message(
+      'Withdrawal request submitted. Support will process it shortly.',
+      name: 'vgWithdrawSubmitted',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Withdrawal failed`
+  String get vgWithdrawFailed {
+    return Intl.message(
+      'Withdrawal failed',
+      name: 'vgWithdrawFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `App feedback / logs`
+  String get vgAppFeedbackLogs {
+    return Intl.message(
+      'App feedback / logs',
+      name: 'vgAppFeedbackLogs',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Submitted. Support will follow up shortly.`
+  String get vgSubmittedSupportWillFollowUp {
+    return Intl.message(
+      'Submitted. Support will follow up shortly.',
+      name: 'vgSubmittedSupportWillFollowUp',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Submission failed, please try again later`
+  String get vgSubmitFailedRetry {
+    return Intl.message(
+      'Submission failed, please try again later',
+      name: 'vgSubmitFailedRetry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Submission failed: {p0}`
+  String vgSubmitFailedWith(Object p0) {
+    return Intl.message(
+      'Submission failed: $p0',
+      name: 'vgSubmitFailedWith',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Sent`
+  String get vgSent {
+    return Intl.message('Sent', name: 'vgSent', desc: '', args: []);
+  }
+
+  /// `Sending failed, please try again later`
+  String get vgSendFailedRetryComma {
+    return Intl.message(
+      'Sending failed, please try again later',
+      name: 'vgSendFailedRetryComma',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sending failed: {p0}`
+  String vgSendFailedWith(Object p0) {
+    return Intl.message(
+      'Sending failed: $p0',
+      name: 'vgSendFailedWith',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `One-time`
+  String get vgOneTime {
+    return Intl.message('One-time', name: 'vgOneTime', desc: '', args: []);
+  }
+
+  /// `1 year`
+  String get vgOneYear {
+    return Intl.message('1 year', name: 'vgOneYear', desc: '', args: []);
+  }
+
+  /// `{p0} years`
+  String vgNYears(Object p0) {
+    return Intl.message('$p0 years', name: 'vgNYears', desc: '', args: [p0]);
+  }
+
+  /// `{p0} months`
+  String vgNMonths(Object p0) {
+    return Intl.message('$p0 months', name: 'vgNMonths', desc: '', args: [p0]);
+  }
+
+  /// `{p0} days`
+  String vgNDays(Object p0) {
+    return Intl.message('$p0 days', name: 'vgNDays', desc: '', args: [p0]);
+  }
+
+  /// `From {p0}`
+  String vgFromPrice(Object p0) {
+    return Intl.message('From $p0', name: 'vgFromPrice', desc: '', args: [p0]);
+  }
+
+  /// `Monthly`
+  String get vgMonthly {
+    return Intl.message('Monthly', name: 'vgMonthly', desc: '', args: []);
+  }
+
+  /// `Quarterly`
+  String get vgQuarterly {
+    return Intl.message('Quarterly', name: 'vgQuarterly', desc: '', args: []);
+  }
+
+  /// `Every 6 months`
+  String get vgHalfYearly {
+    return Intl.message(
+      'Every 6 months',
+      name: 'vgHalfYearly',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Yearly`
+  String get vgYearly {
+    return Intl.message('Yearly', name: 'vgYearly', desc: '', args: []);
+  }
+
+  /// `Every 2 years`
+  String get vgTwoYearly {
+    return Intl.message(
+      'Every 2 years',
+      name: 'vgTwoYearly',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Every 3 years`
+  String get vgThreeYearly {
+    return Intl.message(
+      'Every 3 years',
+      name: 'vgThreeYearly',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Plan`
+  String get vgPlan {
+    return Intl.message('Plan', name: 'vgPlan', desc: '', args: []);
+  }
+
+  /// `Awaiting payment`
+  String get vgOrderPendingPayment {
+    return Intl.message(
+      'Awaiting payment',
+      name: 'vgOrderPendingPayment',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Activating`
+  String get vgOrderActivating {
+    return Intl.message(
+      'Activating',
+      name: 'vgOrderActivating',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Cancelled`
+  String get vgOrderCancelled {
+    return Intl.message(
+      'Cancelled',
+      name: 'vgOrderCancelled',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Completed`
+  String get vgOrderCompleted {
+    return Intl.message(
+      'Completed',
+      name: 'vgOrderCompleted',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Refunded`
+  String get vgOrderRefunded {
+    return Intl.message(
+      'Refunded',
+      name: 'vgOrderRefunded',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unknown`
+  String get vgUnknown {
+    return Intl.message('Unknown', name: 'vgUnknown', desc: '', args: []);
+  }
+
+  /// `Online payment`
+  String get vgOnlinePayment {
+    return Intl.message(
+      'Online payment',
+      name: 'vgOnlinePayment',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Download failed, please try again later`
+  String get vgDownloadFailedRetry {
+    return Intl.message(
+      'Download failed, please try again later',
+      name: 'vgDownloadFailedRetry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Version: {p0}`
+  String vgVersionNumber(Object p0) {
+    return Intl.message(
+      'Version: $p0',
+      name: 'vgVersionNumber',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Installing the update needs the "install unknown apps" permission. Grant it in Settings and come back — installation continues automatically.`
+  String get vgNeedUnknownSourcesPermission {
+    return Intl.message(
+      'Installing the update needs the "install unknown apps" permission. Grant it in Settings and come back — installation continues automatically.',
+      name: 'vgNeedUnknownSourcesPermission',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Open Settings to grant`
+  String get vgOpenSettingsToGrant {
+    return Intl.message(
+      'Open Settings to grant',
+      name: 'vgOpenSettingsToGrant',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Something went wrong, please try again later`
+  String get vgSomethingWentWrongRetry {
+    return Intl.message(
+      'Something went wrong, please try again later',
+      name: 'vgSomethingWentWrongRetry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Retry`
+  String get vgRetry {
+    return Intl.message('Retry', name: 'vgRetry', desc: '', args: []);
+  }
+
+  /// `Downloading update`
+  String get vgDownloadingUpdate {
+    return Intl.message(
+      'Downloading update',
+      name: 'vgDownloadingUpdate',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Install permission required`
+  String get vgInstallPermissionNeeded {
+    return Intl.message(
+      'Install permission required',
+      name: 'vgInstallPermissionNeeded',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Opening the installer…`
+  String get vgOpeningInstaller {
+    return Intl.message(
+      'Opening the installer…',
+      name: 'vgOpeningInstaller',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Download failed`
+  String get vgDownloadFailed {
+    return Intl.message(
+      'Download failed',
+      name: 'vgDownloadFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your session expired. Please sign in again.`
+  String get vgSessionExpiredSignInAgain {
+    return Intl.message(
+      'Your session expired. Please sign in again.',
+      name: 'vgSessionExpiredSignInAgain',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Support could not be opened. Please visit the support page manually.`
+  String get vgCannotOpenSupportManually {
+    return Intl.message(
+      'Support could not be opened. Please visit the support page manually.',
+      name: 'vgCannotOpenSupportManually',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Could not open support, please try again later`
+  String get vgOpenSupportFailedRetry {
+    return Intl.message(
+      'Could not open support, please try again later',
+      name: 'vgOpenSupportFailedRetry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Live chat is unavailable right now — you can open it in your browser`
+  String get vgLiveChatUnavailableUseBrowser {
+    return Intl.message(
+      'Live chat is unavailable right now — you can open it in your browser',
+      name: 'vgLiveChatUnavailableUseBrowser',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Live chat opened in your browser`
+  String get vgLiveChatOpenedInBrowser {
+    return Intl.message(
+      'Live chat opened in your browser',
+      name: 'vgLiveChatOpenedInBrowser',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Open support in browser`
+  String get vgOpenSupportInBrowser {
+    return Intl.message(
+      'Open support in browser',
+      name: 'vgOpenSupportInBrowser',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Not available in this region`
+  String get vgRegionNotSupported {
+    return Intl.message(
+      'Not available in this region',
+      name: 'vgRegionNotSupported',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Region restricted`
+  String get vgRegionRestricted {
+    return Intl.message(
+      'Region restricted',
+      name: 'vgRegionRestricted',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Check failed`
+  String get vgCheckFailed {
+    return Intl.message(
+      'Check failed',
+      name: 'vgCheckFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Originals only`
+  String get vgOriginalsOnly {
+    return Intl.message(
+      'Originals only',
+      name: 'vgOriginalsOnly',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Region blocked`
+  String get vgRegionBlocked {
+    return Intl.message(
+      'Region blocked',
+      name: 'vgRegionBlocked',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Bilibili (Mainland)`
+  String get vgBiliMainland {
+    return Intl.message(
+      'Bilibili (Mainland)',
+      name: 'vgBiliMainland',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Bilibili (HK/MO/TW)`
+  String get vgBiliHkMoTw {
+    return Intl.message(
+      'Bilibili (HK/MO/TW)',
+      name: 'vgBiliHkMoTw',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Bilibili`
+  String get vgBilibili {
+    return Intl.message('Bilibili', name: 'vgBilibili', desc: '', args: []);
+  }
+
+  /// `Baidu`
+  String get vgBaidu {
+    return Intl.message('Baidu', name: 'vgBaidu', desc: '', args: []);
+  }
+
+  /// `Taobao`
+  String get vgTaobao {
+    return Intl.message('Taobao', name: 'vgTaobao', desc: '', args: []);
+  }
+
+  /// `WeChat`
+  String get vgWeChat {
+    return Intl.message('WeChat', name: 'vgWeChat', desc: '', args: []);
+  }
+
+  /// `Douyin`
+  String get vgDouyin {
+    return Intl.message('Douyin', name: 'vgDouyin', desc: '', args: []);
+  }
+
+  /// `Check`
+  String get vgCheckItem {
+    return Intl.message('Check', name: 'vgCheckItem', desc: '', args: []);
+  }
+
+  /// `Check`
+  String get vgCheck {
+    return Intl.message('Check', name: 'vgCheck', desc: '', args: []);
+  }
+
+  /// `Check all`
+  String get vgCheckAll {
+    return Intl.message('Check all', name: 'vgCheckAll', desc: '', args: []);
+  }
+
+  /// `Local environment`
+  String get vgLocalEnvironment {
+    return Intl.message(
+      'Local environment',
+      name: 'vgLocalEnvironment',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Check again`
+  String get vgRecheck {
+    return Intl.message('Check again', name: 'vgRecheck', desc: '', args: []);
+  }
+
+  /// `Running other proxy apps? This shows which path is actually carrying traffic and what is holding what.`
+  String get vgLocalEnvHint {
+    return Intl.message(
+      'Running other proxy apps? This shows which path is actually carrying traffic and what is holding what.',
+      name: 'vgLocalEnvHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Streaming unlock`
+  String get vgUnlockCheck {
+    return Intl.message(
+      'Streaming unlock',
+      name: 'vgUnlockCheck',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Latency test`
+  String get vgLatencyTest {
+    return Intl.message(
+      'Latency test',
+      name: 'vgLatencyTest',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Domestic sites should connect directly (fast); international ones go through a node. Lower is better.`
+  String get vgLatencyHint {
+    return Intl.message(
+      'Domestic sites should connect directly (fast); international ones go through a node. Lower is better.',
+      name: 'vgLatencyHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Domestic`
+  String get vgDomestic {
+    return Intl.message('Domestic', name: 'vgDomestic', desc: '', args: []);
+  }
+
+  /// `International`
+  String get vgInternational {
+    return Intl.message(
+      'International',
+      name: 'vgInternational',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Split-routing test`
+  String get vgSplitRouteTest {
+    return Intl.message(
+      'Split-routing test',
+      name: 'vgSplitRouteTest',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `International services exit abroad, domestic services stay local — smart routing verified live.`
+  String get vgSplitRouteHint {
+    return Intl.message(
+      'International services exit abroad, domestic services stay local — smart routing verified live.',
+      name: 'vgSplitRouteHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Checking local environment…`
+  String get vgCheckingLocalEnv {
+    return Intl.message(
+      'Checking local environment…',
+      name: 'vgCheckingLocalEnv',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Not checked`
+  String get vgNotChecked {
+    return Intl.message(
+      'Not checked',
+      name: 'vgNotChecked',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reset Voguesly's system proxy`
+  String get vgResetVogueslySystemProxy {
+    return Intl.message(
+      'Reset Voguesly\'s system proxy',
+      name: 'vgResetVogueslySystemProxy',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `This only rewrites Voguesly's own settings. It will not close or modify your other proxy apps.`
+  String get vgResetProxyHint {
+    return Intl.message(
+      'This only rewrites Voguesly\'s own settings. It will not close or modify your other proxy apps.',
+      name: 'vgResetProxyHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Testing…`
+  String get vgTesting {
+    return Intl.message('Testing…', name: 'vgTesting', desc: '', args: []);
+  }
+
+  /// `Timeout`
+  String get vgTimeout {
+    return Intl.message('Timeout', name: 'vgTimeout', desc: '', args: []);
+  }
+
+  /// `Check failed. Connect first, then try again.`
+  String get vgCheckFailedConnectFirst {
+    return Intl.message(
+      'Check failed. Connect first, then try again.',
+      name: 'vgCheckFailedConnectFirst',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `IP address`
+  String get vgIpAddress {
+    return Intl.message('IP address', name: 'vgIpAddress', desc: '', args: []);
+  }
+
+  /// `Country / region`
+  String get vgCountryRegion {
+    return Intl.message(
+      'Country / region',
+      name: 'vgCountryRegion',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `City`
+  String get vgCity {
+    return Intl.message('City', name: 'vgCity', desc: '', args: []);
+  }
+
+  /// `mihomo core`
+  String get vgMihomoCore {
+    return Intl.message(
+      'mihomo core',
+      name: 'vgMihomoCore',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `FlClash (original)`
+  String get vgFlClashOriginal {
+    return Intl.message(
+      'FlClash (original)',
+      name: 'vgFlClashOriginal',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Shadowrocket`
+  String get vgShadowrocket {
+    return Intl.message(
+      'Shadowrocket',
+      name: 'vgShadowrocket',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `V2Ray-family client`
+  String get vgV2RayFamilyClient {
+    return Intl.message(
+      'V2Ray-family client',
+      name: 'vgV2RayFamilyClient',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Voguesly is not connected. Tap the big circle on the home screen first, then come back to run the check.`
+  String get vgNotConnectedTapCircle {
+    return Intl.message(
+      'Voguesly is not connected. Tap the big circle on the home screen first, then come back to run the check.',
+      name: 'vgNotConnectedTapCircle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Virtual NIC (VPN)`
+  String get vgVirtualNicVpn {
+    return Intl.message(
+      'Virtual NIC (VPN)',
+      name: 'vgVirtualNicVpn',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Voguesly in control`
+  String get vgVogueslyInControl {
+    return Intl.message(
+      'Voguesly in control',
+      name: 'vgVogueslyInControl',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Android allows only one VPN at a time. When you start Voguesly the system stops the other VPN`
+  String get vgAndroidOneVpnHint {
+    return Intl.message(
+      'Android allows only one VPN at a time. When you start Voguesly the system stops the other VPN',
+      name: 'vgAndroidOneVpnHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `and asks you to confirm — so there is never a silent conflict where both think they are running.`
+  String get vgAndroidOneVpnHint2 {
+    return Intl.message(
+      'and asks you to confirm — so there is never a silent conflict where both think they are running.',
+      name: 'vgAndroidOneVpnHint2',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Local port {p0}`
+  String vgLocalPortNum(Object p0) {
+    return Intl.message(
+      'Local port $p0',
+      name: 'vgLocalPortNum',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Listening`
+  String get vgListening {
+    return Intl.message('Listening', name: 'vgListening', desc: '', args: []);
+  }
+
+  /// `Not listening`
+  String get vgNotListening {
+    return Intl.message(
+      'Not listening',
+      name: 'vgNotListening',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The port may be taken by another proxy app. On Android this does not affect browsing (Voguesly uses the VPN tunnel),`
+  String get vgPortMaybeTakenAndroid {
+    return Intl.message(
+      'The port may be taken by another proxy app. On Android this does not affect browsing (Voguesly uses the VPN tunnel),',
+      name: 'vgPortMaybeTakenAndroid',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `but the unlock and latency checks on this page will not be able to measure anything.`
+  String get vgPortMaybeTakenAndroid2 {
+    return Intl.message(
+      'but the unlock and latency checks on this page will not be able to measure anything.',
+      name: 'vgPortMaybeTakenAndroid2',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Local environment is healthy.`
+  String get vgLocalEnvOk {
+    return Intl.message(
+      'Local environment is healthy.',
+      name: 'vgLocalEnvOk',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Browsing works; the check features may be affected by the port being occupied.`
+  String get vgOnlineButChecksAffected {
+    return Intl.message(
+      'Browsing works; the check features may be affected by the port being occupied.',
+      name: 'vgOnlineButChecksAffected',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Local environment diagnostics is not supported on this platform.`
+  String get vgPlatformNoLocalDiag {
+    return Intl.message(
+      'Local environment diagnostics is not supported on this platform.',
+      name: 'vgPlatformNoLocalDiag',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Virtual NIC (TUN)`
+  String get vgVirtualNicTun {
+    return Intl.message(
+      'Virtual NIC (TUN)',
+      name: 'vgVirtualNicTun',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Voguesly in control · {p0}`
+  String vgVogueslyInControlWith(Object p0) {
+    return Intl.message(
+      'Voguesly in control · $p0',
+      name: 'vgVogueslyInControlWith',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Not in control`
+  String get vgNotInControl {
+    return Intl.message(
+      'Not in control',
+      name: 'vgNotInControl',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Off`
+  String get vgNotEnabled {
+    return Intl.message('Off', name: 'vgNotEnabled', desc: '', args: []);
+  }
+
+  /// `Public traffic is going through Voguesly's virtual NIC. This is the main path and does not rely on the system proxy.`
+  String get vgPublicTrafficOnOurTun {
+    return Intl.message(
+      'Public traffic is going through Voguesly\'s virtual NIC. This is the main path and does not rely on the system proxy.',
+      name: 'vgPublicTrafficOnOurTun',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Public traffic is going through {p0}, which is not Voguesly's virtual NIC — `
+  String vgPublicTrafficOnOtherTun(Object p0) {
+    return Intl.message(
+      'Public traffic is going through $p0, which is not Voguesly\'s virtual NIC — ',
+      name: 'vgPublicTrafficOnOtherTun',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `another VPN has most likely taken the default route.`
+  String get vgLikelyAnotherVpnTookRoute {
+    return Intl.message(
+      'another VPN has most likely taken the default route.',
+      name: 'vgLikelyAnotherVpnTookRoute',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Virtual NIC is enabled in settings, but public traffic is not going through utun. Authorisation may be incomplete.`
+  String get vgTunOnButNoUtun {
+    return Intl.message(
+      'Virtual NIC is enabled in settings, but public traffic is not going through utun. Authorisation may be incomplete.',
+      name: 'vgTunOnButNoUtun',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Virtual NIC is off; you are currently on System Proxy compatibility mode.`
+  String get vgTunOffUsingCompatMode {
+    return Intl.message(
+      'Virtual NIC is off; you are currently on System Proxy compatibility mode.',
+      name: 'vgTunOffUsingCompatMode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The routing table shows Voguesly's virtual NIC. This is the main path and does not rely on the system proxy.`
+  String get vgRouteTableSeesOurTun {
+    return Intl.message(
+      'The routing table shows Voguesly\'s virtual NIC. This is the main path and does not rely on the system proxy.',
+      name: 'vgRouteTableSeesOurTun',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Virtual NIC is enabled in settings but is missing from the routing table. The background service may not be installed.`
+  String get vgTunOnButNotInRouteTable {
+    return Intl.message(
+      'Virtual NIC is enabled in settings but is missing from the routing table. The background service may not be installed.',
+      name: 'vgTunOnButNotInRouteTable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `System proxy`
+  String get vgSystemProxy {
+    return Intl.message(
+      'System proxy',
+      name: 'vgSystemProxy',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Points to Voguesly · {p0}`
+  String vgPointsToVogueslyWith(Object p0) {
+    return Intl.message(
+      'Points to Voguesly · $p0',
+      name: 'vgPointsToVogueslyWith',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Taken by another app · {p0}`
+  String vgTakenByOtherAppWith(Object p0) {
+    return Intl.message(
+      'Taken by another app · $p0',
+      name: 'vgTakenByOtherAppWith',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `A machine has only one system proxy setting and the last writer wins — right now it points to {p0}, not Voguesly's {p1}.`
+  String vgSystemProxySingleSlot(Object p0, Object p1) {
+    return Intl.message(
+      'A machine has only one system proxy setting and the last writer wins — right now it points to $p0, not Voguesly\'s $p1.',
+      name: 'vgSystemProxySingleSlot',
+      desc: '',
+      args: [p0, p1],
+    );
+  }
+
+  /// `Voguesly is listening`
+  String get vgVogueslyListening {
+    return Intl.message(
+      'Voguesly is listening',
+      name: 'vgVogueslyListening',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Occupied by another process · {p0}`
+  String vgTakenByOtherProcessWith(Object p0) {
+    return Intl.message(
+      'Occupied by another process · $p0',
+      name: 'vgTakenByOtherProcessWith',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `The Voguesly core failed to bind its port.`
+  String get vgCoreFailedToBindPort {
+    return Intl.message(
+      'The Voguesly core failed to bind its port.',
+      name: 'vgCoreFailedToBindPort',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{p0} is holding {p1}, so the Voguesly core cannot bind — this is exactly the "shows connected but no internet"`
+  String vgPortHeldByOther(Object p0, Object p1) {
+    return Intl.message(
+      '$p0 is holding $p1, so the Voguesly core cannot bind — this is exactly the "shows connected but no internet"',
+      name: 'vgPortHeldByOther',
+      desc: '',
+      args: [p0, p1],
+    );
+  }
+
+  /// `kind of failure, the hardest one to track down. You can pick an unused port under Settings → Network.`
+  String get vgPortHeldByOther2 {
+    return Intl.message(
+      'kind of failure, the hardest one to track down. You can pick an unused port under Settings → Network.',
+      name: 'vgPortHeldByOther2',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Running alongside`
+  String get vgRunningAlongside {
+    return Intl.message(
+      'Running alongside',
+      name: 'vgRunningAlongside',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No other proxy app detected`
+  String get vgNoOtherProxyDetected {
+    return Intl.message(
+      'No other proxy app detected',
+      name: 'vgNoOtherProxyDetected',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Voguesly will not touch them (some may be your corporate network tunnel). As long as the three items above are fine, coexisting is not a problem.`
+  String get vgCoexistFine {
+    return Intl.message(
+      'Voguesly will not touch them (some may be your corporate network tunnel). As long as the three items above are fine, coexisting is not a problem.',
+      name: 'vgCoexistFine',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The local port is held by {p0}, so the Voguesly core may fail to bind — consider switching to another port.`
+  String vgLocalPortHeldSuggestChange(Object p0) {
+    return Intl.message(
+      'The local port is held by $p0, so the Voguesly core may fail to bind — consider switching to another port.',
+      name: 'vgLocalPortHeldSuggestChange',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `No path is carrying traffic right now, so you are probably offline. Try reconnecting.`
+  String get vgNoPathCarryingTraffic {
+    return Intl.message(
+      'No path is carrying traffic right now, so you are probably offline. Try reconnecting.',
+      name: 'vgNoPathCarryingTraffic',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Browsing works — Voguesly is on the virtual NIC. The system proxy is held by another app, but that does not affect you.`
+  String get vgOnlineViaTunProxyTaken {
+    return Intl.message(
+      'Browsing works — Voguesly is on the virtual NIC. The system proxy is held by another app, but that does not affect you.',
+      name: 'vgOnlineViaTunProxyTaken',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Local environment is healthy; Voguesly is in control via {p0}.`
+  String vgLocalEnvOkInControl(Object p0) {
+    return Intl.message(
+      'Local environment is healthy; Voguesly is in control via $p0.',
+      name: 'vgLocalEnvOkInControl',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Not signed in`
+  String get vgNotSignedIn {
+    return Intl.message(
+      'Not signed in',
+      name: 'vgNotSignedIn',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Loading failed, pull down to retry`
+  String get vgLoadFailedPullToRetry {
+    return Intl.message(
+      'Loading failed, pull down to retry',
+      name: 'vgLoadFailedPullToRetry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{p0} copied`
+  String vgCopiedSuffix(Object p0) {
+    return Intl.message(
+      '$p0 copied',
+      name: 'vgCopiedSuffix',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Transfer to balance`
+  String get vgTransferToBalance {
+    return Intl.message(
+      'Transfer to balance',
+      name: 'vgTransferToBalance',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Available commission: {p0}`
+  String vgAvailableCommissionWith(Object p0) {
+    return Intl.message(
+      'Available commission: $p0',
+      name: 'vgAvailableCommissionWith',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Transfer amount (CNY)`
+  String get vgTransferAmountYuan {
+    return Intl.message(
+      'Transfer amount (CNY)',
+      name: 'vgTransferAmountYuan',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Cancel`
+  String get vgCancel {
+    return Intl.message('Cancel', name: 'vgCancel', desc: '', args: []);
+  }
+
+  /// `Transfer`
+  String get vgTransfer {
+    return Intl.message('Transfer', name: 'vgTransfer', desc: '', args: []);
+  }
+
+  /// `Invalid amount`
+  String get vgInvalidAmount {
+    return Intl.message(
+      'Invalid amount',
+      name: 'vgInvalidAmount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Alipay`
+  String get vgAlipay {
+    return Intl.message('Alipay', name: 'vgAlipay', desc: '', args: []);
+  }
+
+  /// `Withdrawal request`
+  String get vgWithdrawRequest {
+    return Intl.message(
+      'Withdrawal request',
+      name: 'vgWithdrawRequest',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Withdrawal method (Alipay / WeChat / USDT)`
+  String get vgWithdrawMethod {
+    return Intl.message(
+      'Withdrawal method (Alipay / WeChat / USDT)',
+      name: 'vgWithdrawMethod',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Payout account`
+  String get vgPayoutAccount {
+    return Intl.message(
+      'Payout account',
+      name: 'vgPayoutAccount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Submit`
+  String get vgSubmit {
+    return Intl.message('Submit', name: 'vgSubmit', desc: '', args: []);
+  }
+
+  /// `Please enter your payout account`
+  String get vgEnterPayoutAccount {
+    return Intl.message(
+      'Please enter your payout account',
+      name: 'vgEnterPayoutAccount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Referral rewards`
+  String get vgReferralRewards {
+    return Intl.message(
+      'Referral rewards',
+      name: 'vgReferralRewards',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Refresh`
+  String get vgRefresh {
+    return Intl.message('Refresh', name: 'vgRefresh', desc: '', args: []);
+  }
+
+  /// `Available commission`
+  String get vgAvailableCommission {
+    return Intl.message(
+      'Available commission',
+      name: 'vgAvailableCommission',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invited`
+  String get vgInvited {
+    return Intl.message('Invited', name: 'vgInvited', desc: '', args: []);
+  }
+
+  /// `{p0} people`
+  String vgNPeople(Object p0) {
+    return Intl.message('$p0 people', name: 'vgNPeople', desc: '', args: [p0]);
+  }
+
+  /// `Withdraw`
+  String get vgWithdraw {
+    return Intl.message('Withdraw', name: 'vgWithdraw', desc: '', args: []);
+  }
+
+  /// `My referral code`
+  String get vgMyReferralCode {
+    return Intl.message(
+      'My referral code',
+      name: 'vgMyReferralCode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Referral code`
+  String get vgReferralCode {
+    return Intl.message(
+      'Referral code',
+      name: 'vgReferralCode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Copy`
+  String get vgCopy {
+    return Intl.message('Copy', name: 'vgCopy', desc: '', args: []);
+  }
+
+  /// `Referral link`
+  String get vgReferralLink {
+    return Intl.message(
+      'Referral link',
+      name: 'vgReferralLink',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Copy referral link`
+  String get vgCopyReferralLink {
+    return Intl.message(
+      'Copy referral link',
+      name: 'vgCopyReferralLink',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `When a friend signs up through your link and buys a plan, you earn a commission. Commission can be used towards renewals.`
+  String get vgReferralExplain {
+    return Intl.message(
+      'When a friend signs up through your link and buys a plan, you earn a commission. Commission can be used towards renewals.',
+      name: 'vgReferralExplain',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `<div><h2 style="margin:0 0 8px;font-weight:600">Signed in</h2>`
+  String get vgOauthSuccessHtmlHead {
+    return Intl.message(
+      '<div><h2 style="margin:0 0 8px;font-weight:600">Signed in</h2>',
+      name: 'vgOauthSuccessHtmlHead',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `<p style="opacity:.7;margin:0">Return to the Voguesly app to continue</p></div>`
+  String get vgOauthSuccessHtmlBody {
+    return Intl.message(
+      '<p style="opacity:.7;margin:0">Return to the Voguesly app to continue</p></div>',
+      name: 'vgOauthSuccessHtmlBody',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter a valid email first`
+  String get vgEnterValidEmailFirst {
+    return Intl.message(
+      'Please enter a valid email first',
+      name: 'vgEnterValidEmailFirst',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Verification code sent`
+  String get vgCodeSent {
+    return Intl.message(
+      'Verification code sent',
+      name: 'vgCodeSent',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sending failed, please try again later`
+  String get vgSendFailedRetry {
+    return Intl.message(
+      'Sending failed, please try again later',
+      name: 'vgSendFailedRetry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Network unavailable. Check your connection and try again.`
+  String get vgNetworkUnavailableRetry {
+    return Intl.message(
+      'Network unavailable. Check your connection and try again.',
+      name: 'vgNetworkUnavailableRetry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sign-in failed`
+  String get vgSignInFailed {
+    return Intl.message(
+      'Sign-in failed',
+      name: 'vgSignInFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Google sign-in failed, please try again`
+  String get vgGoogleSignInFailedRetry {
+    return Intl.message(
+      'Google sign-in failed, please try again',
+      name: 'vgGoogleSignInFailedRetry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Google sign-in failed. Check your connection and try again.`
+  String get vgGoogleSignInFailedNetwork {
+    return Intl.message(
+      'Google sign-in failed. Check your connection and try again.',
+      name: 'vgGoogleSignInFailedNetwork',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Cannot open the browser`
+  String get vgCannotOpenBrowser {
+    return Intl.message(
+      'Cannot open the browser',
+      name: 'vgCannotOpenBrowser',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Create account`
+  String get vgCreateAccount {
+    return Intl.message(
+      'Create account',
+      name: 'vgCreateAccount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sign in`
+  String get vgSignInAccount {
+    return Intl.message('Sign in', name: 'vgSignInAccount', desc: '', args: []);
+  }
+
+  /// `Sign up and connect automatically`
+  String get vgSignUpAutoConnect {
+    return Intl.message(
+      'Sign up and connect automatically',
+      name: 'vgSignUpAutoConnect',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter your credentials to continue`
+  String get vgEnterCredentials {
+    return Intl.message(
+      'Enter your credentials to continue',
+      name: 'vgEnterCredentials',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Email`
+  String get vgEmail {
+    return Intl.message('Email', name: 'vgEmail', desc: '', args: []);
+  }
+
+  /// `Please enter a valid email`
+  String get vgEnterValidEmail {
+    return Intl.message(
+      'Please enter a valid email',
+      name: 'vgEnterValidEmail',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Email verification code`
+  String get vgEmailCode {
+    return Intl.message(
+      'Email verification code',
+      name: 'vgEmailCode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `6-digit code`
+  String get vgSixDigitCode {
+    return Intl.message(
+      '6-digit code',
+      name: 'vgSixDigitCode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter the verification code`
+  String get vgEnterCode {
+    return Intl.message(
+      'Please enter the verification code',
+      name: 'vgEnterCode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Send`
+  String get vgSend {
+    return Intl.message('Send', name: 'vgSend', desc: '', args: []);
+  }
+
+  /// `Password`
+  String get vgPassword {
+    return Intl.message('Password', name: 'vgPassword', desc: '', args: []);
+  }
+
+  /// `Please enter your password`
+  String get vgEnterPassword {
+    return Intl.message(
+      'Please enter your password',
+      name: 'vgEnterPassword',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Referral code (optional)`
+  String get vgReferralCodeOptional {
+    return Intl.message(
+      'Referral code (optional)',
+      name: 'vgReferralCodeOptional',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sign up with a referral code for a discount`
+  String get vgReferralCodeDiscount {
+    return Intl.message(
+      'Sign up with a referral code for a discount',
+      name: 'vgReferralCodeDiscount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Remember me`
+  String get vgRememberMe {
+    return Intl.message(
+      'Remember me',
+      name: 'vgRememberMe',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Forgot password?`
+  String get vgForgotPassword {
+    return Intl.message(
+      'Forgot password?',
+      name: 'vgForgotPassword',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sign up`
+  String get vgSignUp {
+    return Intl.message('Sign up', name: 'vgSignUp', desc: '', args: []);
+  }
+
+  /// `Sign in`
+  String get vgSignIn {
+    return Intl.message('Sign in', name: 'vgSignIn', desc: '', args: []);
+  }
+
+  /// `or`
+  String get vgOr {
+    return Intl.message('or', name: 'vgOr', desc: '', args: []);
+  }
+
+  /// `Sign up with Google`
+  String get vgSignUpWithGoogle {
+    return Intl.message(
+      'Sign up with Google',
+      name: 'vgSignUpWithGoogle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sign in with Google`
+  String get vgSignInWithGoogle {
+    return Intl.message(
+      'Sign in with Google',
+      name: 'vgSignInWithGoogle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Already have an account?`
+  String get vgAlreadyHaveAccount {
+    return Intl.message(
+      'Already have an account?',
+      name: 'vgAlreadyHaveAccount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Don't have an account?`
+  String get vgNoAccountYet {
+    return Intl.message(
+      'Don\'t have an account?',
+      name: 'vgNoAccountYet',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sign in`
+  String get vgGoSignIn {
+    return Intl.message('Sign in', name: 'vgGoSignIn', desc: '', args: []);
+  }
+
+  /// `The installer file is incomplete`
+  String get vgInstallerFileIncomplete {
+    return Intl.message(
+      'The installer file is incomplete',
+      name: 'vgInstallerFileIncomplete',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Download failed, please try again later`
+  String get vgDownloadFailedRetryFull {
+    return Intl.message(
+      'Download failed, please try again later',
+      name: 'vgDownloadFailedRetryFull',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The PKG installer is open and Voguesly is quitting safely. Follow the system prompts to authorise; the installer will replace the old version in Applications.`
+  String get vgPkgOpenedQuitting {
+    return Intl.message(
+      'The PKG installer is open and Voguesly is quitting safely. Follow the system prompts to authorise; the installer will replace the old version in Applications.',
+      name: 'vgPkgOpenedQuitting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The DMG is open and Voguesly is quitting safely. Drag the new version into Applications to replace the old one.`
+  String get vgDmgOpenedQuitting {
+    return Intl.message(
+      'The DMG is open and Voguesly is quitting safely. Drag the new version into Applications to replace the old one.',
+      name: 'vgDmgOpenedQuitting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Preparing to install…`
+  String get vgPreparingInstall {
+    return Intl.message(
+      'Preparing to install…',
+      name: 'vgPreparingInstall',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Announcements`
+  String get vgAnnouncements {
+    return Intl.message(
+      'Announcements',
+      name: 'vgAnnouncements',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No announcements`
+  String get vgNoAnnouncements {
+    return Intl.message(
+      'No announcements',
+      name: 'vgNoAnnouncements',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Collapse`
+  String get vgCollapse {
+    return Intl.message('Collapse', name: 'vgCollapse', desc: '', args: []);
+  }
+
+  /// `Read more`
+  String get vgExpandFullText {
+    return Intl.message(
+      'Read more',
+      name: 'vgExpandFullText',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Start your test`
+  String get vgStartYourTest {
+    return Intl.message(
+      'Start your test',
+      name: 'vgStartYourTest',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Already have`
+  String get vgAlreadyHave {
+    return Intl.message(
+      'Already have',
+      name: 'vgAlreadyHave',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `✅ Activated — tap the centre circle to connect`
+  String get vgActivatedTapCircle {
+    return Intl.message(
+      '✅ Activated — tap the centre circle to connect',
+      name: 'vgActivatedTapCircle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Activated, but the subscription import failed (possibly a brief network drop). Tap "Retry import" below.`
+  String get vgActivatedImportFailed {
+    return Intl.message(
+      'Activated, but the subscription import failed (possibly a brief network drop). Tap "Retry import" below.',
+      name: 'vgActivatedImportFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Subscription import failed, please try again later.`
+  String get vgSubscriptionImportFailedRetry {
+    return Intl.message(
+      'Subscription import failed, please try again later.',
+      name: 'vgSubscriptionImportFailedRetry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Free trial activated — import nodes to connect`
+  String get vgFreeTrialImportToConnect {
+    return Intl.message(
+      'Free trial activated — import nodes to connect',
+      name: 'vgFreeTrialImportToConnect',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Network is unstable; plan details are unavailable right now`
+  String get vgNetworkUnstableNoPlanInfo {
+    return Intl.message(
+      'Network is unstable; plan details are unavailable right now',
+      name: 'vgNetworkUnstableNoPlanInfo',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `You already have a plan`
+  String get vgYouAlreadyHavePlan {
+    return Intl.message(
+      'You already have a plan',
+      name: 'vgYouAlreadyHavePlan',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Try it free, or buy the starter pack for a full test`
+  String get vgTryFreeOrBuyStarter {
+    return Intl.message(
+      'Try it free, or buy the starter pack for a full test',
+      name: 'vgTryFreeOrBuyStarter',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Buy the starter pack for a full test`
+  String get vgBuyStarterForFullTest {
+    return Intl.message(
+      'Buy the starter pack for a full test',
+      name: 'vgBuyStarterForFullTest',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Retry subscription import`
+  String get vgRetryImportSubscription {
+    return Intl.message(
+      'Retry subscription import',
+      name: 'vgRetryImportSubscription',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Network is unstable — tap to retry`
+  String get vgNetworkUnstableTapRetry {
+    return Intl.message(
+      'Network is unstable — tap to retry',
+      name: 'vgNetworkUnstableTapRetry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Fetch your plan and free-trial eligibility again`
+  String get vgRefetchPlanAndTrial {
+    return Intl.message(
+      'Fetch your plan and free-trial eligibility again',
+      name: 'vgRefetchPlanAndTrial',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Subscribe now`
+  String get vgSubscribeNow {
+    return Intl.message(
+      'Subscribe now',
+      name: 'vgSubscribeNow',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Import your plan's nodes and get started`
+  String get vgImportPlanNodesStart {
+    return Intl.message(
+      'Import your plan\'s nodes and get started',
+      name: 'vgImportPlanNodesStart',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Activate the free trial now`
+  String get vgActivateFreeTrialNow {
+    return Intl.message(
+      'Activate the free trial now',
+      name: 'vgActivateFreeTrialNow',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `6 hours / 500 MB — good for a quick connectivity check`
+  String get vgTrialSpecs {
+    return Intl.message(
+      '6 hours / 500 MB — good for a quick connectivity check',
+      name: 'vgTrialSpecs',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Already claimed? Buy the ¥3.9 starter pack · 3 GB, no time limit`
+  String get vgAlreadyClaimedBuyStarter {
+    return Intl.message(
+      'Already claimed? Buy the ¥3.9 starter pack · 3 GB, no time limit',
+      name: 'vgAlreadyClaimedBuyStarter',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Buy the ¥3.9 starter pack`
+  String get vgBuyStarterPack {
+    return Intl.message(
+      'Buy the ¥3.9 starter pack',
+      name: 'vgBuyStarterPack',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `3 GB with no time limit — enough to fully test ChatGPT, Claude and similar services`
+  String get vgStarterPackSpecs {
+    return Intl.message(
+      '3 GB with no time limit — enough to fully test ChatGPT, Claude and similar services',
+      name: 'vgStarterPackSpecs',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Already bought? Refresh subscription`
+  String get vgAlreadyBoughtRefresh {
+    return Intl.message(
+      'Already bought? Refresh subscription',
+      name: 'vgAlreadyBoughtRefresh',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Activating...`
+  String get vgActivatingEllipsis {
+    return Intl.message(
+      'Activating...',
+      name: 'vgActivatingEllipsis',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Encrypted`
+  String get vgEncrypted {
+    return Intl.message('Encrypted', name: 'vgEncrypted', desc: '', args: []);
+  }
+
+  /// `Credit card`
+  String get vgCreditCard {
+    return Intl.message(
+      'Credit card',
+      name: 'vgCreditCard',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Choose a payment method`
+  String get vgChoosePaymentMethod {
+    return Intl.message(
+      'Choose a payment method',
+      name: 'vgChoosePaymentMethod',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Current balance: {p0}`
+  String vgCurrentBalanceWith(Object p0) {
+    return Intl.message(
+      'Current balance: $p0',
+      name: 'vgCurrentBalanceWith',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Pay with balance`
+  String get vgPayWithBalance {
+    return Intl.message(
+      'Pay with balance',
+      name: 'vgPayWithBalance',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Insufficient balance`
+  String get vgInsufficientBalance {
+    return Intl.message(
+      'Insufficient balance',
+      name: 'vgInsufficientBalance',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Balance`
+  String get vgBalance {
+    return Intl.message('Balance', name: 'vgBalance', desc: '', args: []);
+  }
+
+  /// `Charging…`
+  String get vgChargingEllipsis {
+    return Intl.message(
+      'Charging…',
+      name: 'vgChargingEllipsis',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Starting payment…`
+  String get vgStartingPaymentEllipsis {
+    return Intl.message(
+      'Starting payment…',
+      name: 'vgStartingPaymentEllipsis',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Purchase complete, your plan is active`
+  String get vgPurchaseSuccessActivated {
+    return Intl.message(
+      'Purchase complete, your plan is active',
+      name: 'vgPurchaseSuccessActivated',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Payment complete, your plan is active`
+  String get vgPaymentSuccessActivated {
+    return Intl.message(
+      'Payment complete, your plan is active',
+      name: 'vgPaymentSuccessActivated',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Scan to pay`
+  String get vgScanToPay {
+    return Intl.message('Scan to pay', name: 'vgScanToPay', desc: '', args: []);
+  }
+
+  /// `Waiting for payment`
+  String get vgWaitingForPayment {
+    return Intl.message(
+      'Waiting for payment',
+      name: 'vgWaitingForPayment',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Tap "Open payment" below to pay on this device,\nor scan with another device. It is credited automatically once done.`
+  String get vgPayHereOrScanHint {
+    return Intl.message(
+      'Tap "Open payment" below to pay on this device,\\nor scan with another device. It is credited automatically once done.',
+      name: 'vgPayHereOrScanHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Scan with Alipay or WeChat on your phone.\nThis page updates automatically once payment completes.`
+  String get vgScanWithPhoneHint {
+    return Intl.message(
+      'Scan with Alipay or WeChat on your phone.\\nThis page updates automatically once payment completes.',
+      name: 'vgScanWithPhoneHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The payment page is open in your browser.\nThis page updates automatically once payment completes.`
+  String get vgPaymentOpenedInBrowserHint {
+    return Intl.message(
+      'The payment page is open in your browser.\\nThis page updates automatically once payment completes.',
+      name: 'vgPaymentOpenedInBrowserHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Open payment`
+  String get vgOpenPayment {
+    return Intl.message(
+      'Open payment',
+      name: 'vgOpenPayment',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reopen payment`
+  String get vgReopenPayment {
+    return Intl.message(
+      'Reopen payment',
+      name: 'vgReopenPayment',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `I'm done / close`
+  String get vgDoneOrClose {
+    return Intl.message(
+      'I\'m done / close',
+      name: 'vgDoneOrClose',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Not signed in — please sign in first`
+  String get vgNotSignedInPleaseSignIn {
+    return Intl.message(
+      'Not signed in — please sign in first',
+      name: 'vgNotSignedInPleaseSignIn',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No plans available, or a network issue. Pull down to retry.`
+  String get vgNoPlansAvailable {
+    return Intl.message(
+      'No plans available, or a network issue. Pull down to retry.',
+      name: 'vgNoPlansAvailable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Loading failed: {p0}`
+  String vgLoadFailedWith(Object p0) {
+    return Intl.message(
+      'Loading failed: $p0',
+      name: 'vgLoadFailedWith',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Store`
+  String get vgStore {
+    return Intl.message('Store', name: 'vgStore', desc: '', args: []);
+  }
+
+  /// `Account balance`
+  String get vgAccountBalance {
+    return Intl.message(
+      'Account balance',
+      name: 'vgAccountBalance',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Manage balance and plans`
+  String get vgManageBalanceAndPlan {
+    return Intl.message(
+      'Manage balance and plans',
+      name: 'vgManageBalanceAndPlan',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `My orders`
+  String get vgMyOrders {
+    return Intl.message('My orders', name: 'vgMyOrders', desc: '', args: []);
+  }
+
+  /// `View orders · resume unfinished payments`
+  String get vgViewOrdersResumePayment {
+    return Intl.message(
+      'View orders · resume unfinished payments',
+      name: 'vgViewOrdersResumePayment',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{p0} billing cycles available`
+  String vgNBillingCycles(Object p0) {
+    return Intl.message(
+      '$p0 billing cycles available',
+      name: 'vgNBillingCycles',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Data {p0} GB`
+  String vgTrafficNGb(Object p0) {
+    return Intl.message(
+      'Data $p0 GB',
+      name: 'vgTrafficNGb',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Speed limit {p0} Mbps`
+  String vgSpeedLimitNMbps(Object p0) {
+    return Intl.message(
+      'Speed limit $p0 Mbps',
+      name: 'vgSpeedLimitNMbps',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Duration {p0}`
+  String vgDurationWith(Object p0) {
+    return Intl.message(
+      'Duration $p0',
+      name: 'vgDurationWith',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Buy now`
+  String get vgBuyNow {
+    return Intl.message('Buy now', name: 'vgBuyNow', desc: '', args: []);
+  }
+
+  /// `Choose a billing cycle`
+  String get vgChooseBillingCycle {
+    return Intl.message(
+      'Choose a billing cycle',
+      name: 'vgChooseBillingCycle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Buy now {p0}`
+  String vgBuyNowWith(Object p0) {
+    return Intl.message(
+      'Buy now $p0',
+      name: 'vgBuyNowWith',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Placing order…`
+  String get vgPlacingOrder {
+    return Intl.message(
+      'Placing order…',
+      name: 'vgPlacingOrder',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Order failed`
+  String get vgOrderFailed {
+    return Intl.message(
+      'Order failed',
+      name: 'vgOrderFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Data usage`
+  String get vgDataUsage {
+    return Intl.message('Data usage', name: 'vgDataUsage', desc: '', args: []);
+  }
+
+  /// `Total upload`
+  String get vgTotalUpload {
+    return Intl.message(
+      'Total upload',
+      name: 'vgTotalUpload',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Total download`
+  String get vgTotalDownload {
+    return Intl.message(
+      'Total download',
+      name: 'vgTotalDownload',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Total`
+  String get vgTotal {
+    return Intl.message('Total', name: 'vgTotal', desc: '', args: []);
+  }
+
+  /// `Daily usage this month`
+  String get vgDailyUsageThisMonth {
+    return Intl.message(
+      'Daily usage this month',
+      name: 'vgDailyUsageThisMonth',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No usage records this month`
+  String get vgNoUsageThisMonth {
+    return Intl.message(
+      'No usage records this month',
+      name: 'vgNoUsageThisMonth',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Voguesly Residential IP`
+  String get vgResidentialIpProfile {
+    return Intl.message(
+      'Voguesly Residential IP',
+      name: 'vgResidentialIpProfile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `My tickets`
+  String get vgMyTickets {
+    return Intl.message('My tickets', name: 'vgMyTickets', desc: '', args: []);
+  }
+
+  /// `No tickets yet\nHaving a problem? Submit it under "Report an issue / upload logs"`
+  String get vgNoTicketsHint {
+    return Intl.message(
+      'No tickets yet\\nHaving a problem? Submit it under "Report an issue / upload logs"',
+      name: 'vgNoTicketsHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Ticket #{p0}`
+  String vgTicketNumber(Object p0) {
+    return Intl.message(
+      'Ticket #$p0',
+      name: 'vgTicketNumber',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Closed`
+  String get vgTicketClosed {
+    return Intl.message('Closed', name: 'vgTicketClosed', desc: '', args: []);
+  }
+
+  /// `Awaiting reply`
+  String get vgTicketAwaitingReply {
+    return Intl.message(
+      'Awaiting reply',
+      name: 'vgTicketAwaitingReply',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Support replied`
+  String get vgTicketSupportReplied {
+    return Intl.message(
+      'Support replied',
+      name: 'vgTicketSupportReplied',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Close ticket`
+  String get vgCloseTicket {
+    return Intl.message(
+      'Close ticket',
+      name: 'vgCloseTicket',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Once closed you cannot reply again. Is the issue resolved?`
+  String get vgCloseTicketConfirm {
+    return Intl.message(
+      'Once closed you cannot reply again. Is the issue resolved?',
+      name: 'vgCloseTicketConfirm',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Could not close, please try again later`
+  String get vgCloseFailedRetry {
+    return Intl.message(
+      'Could not close, please try again later',
+      name: 'vgCloseFailedRetry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No messages`
+  String get vgNoMessages {
+    return Intl.message(
+      'No messages',
+      name: 'vgNoMessages',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Ticket closed`
+  String get vgTicketIsClosed {
+    return Intl.message(
+      'Ticket closed',
+      name: 'vgTicketIsClosed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reply to support…`
+  String get vgReplyToSupport {
+    return Intl.message(
+      'Reply to support…',
+      name: 'vgReplyToSupport',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No expiry`
+  String get vgNoExpiry {
+    return Intl.message('No expiry', name: 'vgNoExpiry', desc: '', args: []);
+  }
+
+  /// `Reset subscription`
+  String get vgResetSubscription {
+    return Intl.message(
+      'Reset subscription',
+      name: 'vgResetSubscription',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The old subscription link stops working immediately. Anything already exported to other clients must be imported again. Reset?`
+  String get vgResetSubscriptionConfirm {
+    return Intl.message(
+      'The old subscription link stops working immediately. Anything already exported to other clients must be imported again. Reset?',
+      name: 'vgResetSubscriptionConfirm',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Reset`
+  String get vgReset {
+    return Intl.message('Reset', name: 'vgReset', desc: '', args: []);
+  }
+
+  /// `Change password`
+  String get vgChangePassword {
+    return Intl.message(
+      'Change password',
+      name: 'vgChangePassword',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Current password`
+  String get vgCurrentPassword {
+    return Intl.message(
+      'Current password',
+      name: 'vgCurrentPassword',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `New password (at least 8 characters)`
+  String get vgNewPasswordMin8 {
+    return Intl.message(
+      'New password (at least 8 characters)',
+      name: 'vgNewPasswordMin8',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Confirm new password`
+  String get vgConfirmNewPassword {
+    return Intl.message(
+      'Confirm new password',
+      name: 'vgConfirmNewPassword',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Confirm change`
+  String get vgConfirmChange {
+    return Intl.message(
+      'Confirm change',
+      name: 'vgConfirmChange',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `New password must be at least 8 characters`
+  String get vgNewPasswordTooShort {
+    return Intl.message(
+      'New password must be at least 8 characters',
+      name: 'vgNewPasswordTooShort',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The two new passwords do not match`
+  String get vgPasswordsDoNotMatch {
+    return Intl.message(
+      'The two new passwords do not match',
+      name: 'vgPasswordsDoNotMatch',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sign out`
+  String get vgSignOut {
+    return Intl.message('Sign out', name: 'vgSignOut', desc: '', args: []);
+  }
+
+  /// `Sign out of this account?`
+  String get vgSignOutConfirm {
+    return Intl.message(
+      'Sign out of this account?',
+      name: 'vgSignOutConfirm',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Exit`
+  String get vgExit {
+    return Intl.message('Exit', name: 'vgExit', desc: '', args: []);
+  }
+
+  /// `Account`
+  String get vgUserCenter {
+    return Intl.message('Account', name: 'vgUserCenter', desc: '', args: []);
+  }
+
+  /// `No plan yet`
+  String get vgNoPlan {
+    return Intl.message('No plan yet', name: 'vgNoPlan', desc: '', args: []);
+  }
+
+  /// `Current plan: {p0}`
+  String vgCurrentPlanWith(Object p0) {
+    return Intl.message(
+      'Current plan: $p0',
+      name: 'vgCurrentPlanWith',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Data left`
+  String get vgRemainingData {
+    return Intl.message(
+      'Data left',
+      name: 'vgRemainingData',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Expires`
+  String get vgExpiryDate {
+    return Intl.message('Expires', name: 'vgExpiryDate', desc: '', args: []);
+  }
+
+  /// `Buy / renew a plan`
+  String get vgBuyOrRenewPlan {
+    return Intl.message(
+      'Buy / renew a plan',
+      name: 'vgBuyOrRenewPlan',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Cancel order`
+  String get vgCancelOrder {
+    return Intl.message(
+      'Cancel order',
+      name: 'vgCancelOrder',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Cancel the order "{p0}"?`
+  String vgCancelOrderConfirm(Object p0) {
+    return Intl.message(
+      'Cancel the order "$p0"?',
+      name: 'vgCancelOrderConfirm',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Back`
+  String get vgBack {
+    return Intl.message('Back', name: 'vgBack', desc: '', args: []);
+  }
+
+  /// `Order cancelled`
+  String get vgOrderCancelledToast {
+    return Intl.message(
+      'Order cancelled',
+      name: 'vgOrderCancelledToast',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Could not cancel, please try again later`
+  String get vgCancelFailedRetry {
+    return Intl.message(
+      'Could not cancel, please try again later',
+      name: 'vgCancelFailedRetry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No orders yet`
+  String get vgNoOrders {
+    return Intl.message(
+      'No orders yet',
+      name: 'vgNoOrders',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Order no.: {p0}`
+  String vgOrderNoWith(Object p0) {
+    return Intl.message(
+      'Order no.: $p0',
+      name: 'vgOrderNoWith',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Continue payment`
+  String get vgContinuePayment {
+    return Intl.message(
+      'Continue payment',
+      name: 'vgContinuePayment',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Loading failed: {p0} (code {p1})`
+  String vgLoadFailedWithCode(Object p0, Object p1) {
+    return Intl.message(
+      'Loading failed: $p0 (code $p1)',
+      name: 'vgLoadFailedWithCode',
+      desc: '',
+      args: [p0, p1],
+    );
+  }
+
+  /// `WebView failed to initialise: {p0}`
+  String vgWebViewInitFailed(Object p0) {
+    return Intl.message(
+      'WebView failed to initialise: $p0',
+      name: 'vgWebViewInitFailed',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `The installer has started. Follow the prompts to finish — it replaces the old version automatically.`
+  String get vgInstallerStartedHint {
+    return Intl.message(
+      'The installer has started. Follow the prompts to finish — it replaces the old version automatically.',
+      name: 'vgInstallerStartedHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Subscription updated`
+  String get vgSubscriptionUpdated {
+    return Intl.message(
+      'Subscription updated',
+      name: 'vgSubscriptionUpdated',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Update failed, please try again later`
+  String get vgUpdateFailedRetry {
+    return Intl.message(
+      'Update failed, please try again later',
+      name: 'vgUpdateFailedRetry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sign out of this account?`
+  String get vgSignOutConfirmShort {
+    return Intl.message(
+      'Sign out of this account?',
+      name: 'vgSignOutConfirmShort',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Update subscription`
+  String get vgUpdateSubscription {
+    return Intl.message(
+      'Update subscription',
+      name: 'vgUpdateSubscription',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Live chat`
+  String get vgLiveChat {
+    return Intl.message('Live chat', name: 'vgLiveChat', desc: '', args: []);
+  }
+
+  /// `Version {p0} available`
+  String vgNewVersionAvailable(Object p0) {
+    return Intl.message(
+      'Version $p0 available',
+      name: 'vgNewVersionAvailable',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Check for updates`
+  String get vgCheckForUpdate {
+    return Intl.message(
+      'Check for updates',
+      name: 'vgCheckForUpdate',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Log out`
+  String get vgLogOut {
+    return Intl.message('Log out', name: 'vgLogOut', desc: '', args: []);
+  }
+
+  /// `Voguesly is running directly from the DMG disk image. Drag Voguesly into Applications first,`
+  String get vgRunningFromDmgHint {
+    return Intl.message(
+      'Voguesly is running directly from the DMG disk image. Drag Voguesly into Applications first,',
+      name: 'vgRunningFromDmgHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `then open it from Applications — running from the DMG cannot start the TUN background service.`
+  String get vgRunningFromDmgHint2 {
+    return Intl.message(
+      'then open it from Applications — running from the DMG cannot start the TUN background service.',
+      name: 'vgRunningFromDmgHint2',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Got it`
+  String get vgGotIt {
+    return Intl.message('Got it', name: 'vgGotIt', desc: '', args: []);
+  }
+
+  /// `Allow Voguesly's background item under System Settings → General → Login Items & Extensions,`
+  String get vgAllowLoginItemHint {
+    return Intl.message(
+      'Allow Voguesly\'s background item under System Settings → General → Login Items & Extensions,',
+      name: 'vgAllowLoginItemHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `then come back to Voguesly and tap TUN once more — no password needed afterwards.`
+  String get vgAllowLoginItemHint2 {
+    return Intl.message(
+      'then come back to Voguesly and tap TUN once more — no password needed afterwards.',
+      name: 'vgAllowLoginItemHint2',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Open System Settings`
+  String get vgOpenSystemSettings {
+    return Intl.message(
+      'Open System Settings',
+      name: 'vgOpenSystemSettings',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Voguesly's background TUN service is not enabled. Allow the background item in System Settings and try again.`
+  String get vgTunServiceNotEnabled {
+    return Intl.message(
+      'Voguesly\'s background TUN service is not enabled. Allow the background item in System Settings and try again.',
+      name: 'vgTunServiceNotEnabled',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Voguesly's background TUN service needs to be authorised again. Under System Settings → General → Login Items & Extensions,`
+  String get vgTunServiceNeedsReauth {
+    return Intl.message(
+      'Voguesly\'s background TUN service needs to be authorised again. Under System Settings → General → Login Items & Extensions,',
+      name: 'vgTunServiceNeedsReauth',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `allow Voguesly's background item, then return to Voguesly and tap connect once more.`
+  String get vgTunServiceNeedsReauth2 {
+    return Intl.message(
+      'allow Voguesly\'s background item, then return to Voguesly and tap connect once more.',
+      name: 'vgTunServiceNeedsReauth2',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Telegram support`
+  String get vgTelegramSupport {
+    return Intl.message(
+      'Telegram support',
+      name: 'vgTelegramSupport',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Website`
+  String get vgOfficialSite {
+    return Intl.message('Website', name: 'vgOfficialSite', desc: '', args: []);
+  }
+
+  /// `Voguesly · US residential IP proxy\nStable access to ChatGPT, Claude, OKX and other global services`
+  String get vgAboutTagline {
+    return Intl.message(
+      'Voguesly · US residential IP proxy\\nStable access to ChatGPT, Claude, OKX and other global services',
+      name: 'vgAboutTagline',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Version`
+  String get vgVersionLabel {
+    return Intl.message('Version', name: 'vgVersionLabel', desc: '', args: []);
+  }
+
+  /// `v{p0} · tap to check for updates`
+  String vgVersionTapToCheck(Object p0) {
+    return Intl.message(
+      'v$p0 · tap to check for updates',
+      name: 'vgVersionTapToCheck',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Buy / renew`
+  String get vgBuyOrRenew {
+    return Intl.message(
+      'Buy / renew',
+      name: 'vgBuyOrRenew',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Contact support`
+  String get vgContactSupport {
+    return Intl.message(
+      'Contact support',
+      name: 'vgContactSupport',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Global · everything uses the selected route; your IP follows that route`
+  String get vgGlobalModeSummary {
+    return Intl.message(
+      'Global · everything uses the selected route; your IP follows that route',
+      name: 'vgGlobalModeSummary',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `⚠️ Direct · not accelerated, traffic does not use any node (not private)`
+  String get vgDirectModeSummary {
+    return Intl.message(
+      '⚠️ Direct · not accelerated, traffic does not use any node (not private)',
+      name: 'vgDirectModeSummary',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Smart routing · AI and banking use residential, domestic sites go direct (recommended)`
+  String get vgRuleModeSummary {
+    return Intl.message(
+      'Smart routing · AI and banking use residential, domestic sites go direct (recommended)',
+      name: 'vgRuleModeSummary',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Acceleration mode`
+  String get vgAccelerationMode {
+    return Intl.message(
+      'Acceleration mode',
+      name: 'vgAccelerationMode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Smart routing (recommended)`
+  String get vgSmartRoutingRecommended {
+    return Intl.message(
+      'Smart routing (recommended)',
+      name: 'vgSmartRoutingRecommended',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `AI, banking and payments automatically use a US residential IP; domestic sites connect directly for speed,`
+  String get vgSmartRoutingDesc1 {
+    return Intl.message(
+      'AI, banking and payments automatically use a US residential IP; domestic sites connect directly for speed,',
+      name: 'vgSmartRoutingDesc1',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `while streaming and downloads use datacentre nodes to save residential data. IP checks will show a residential IP.`
+  String get vgSmartRoutingDesc2 {
+    return Intl.message(
+      'while streaming and downloads use datacentre nodes to save residential data. IP checks will show a residential IP.',
+      name: 'vgSmartRoutingDesc2',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Global acceleration`
+  String get vgGlobalAcceleration {
+    return Intl.message(
+      'Global acceleration',
+      name: 'vgGlobalAcceleration',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `All traffic uses the single route you picked; nothing is split automatically.`
+  String get vgGlobalAccelDesc1 {
+    return Intl.message(
+      'All traffic uses the single route you picked; nothing is split automatically.',
+      name: 'vgGlobalAccelDesc1',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `If you pick a datacentre route, IP checks will show a datacentre IP;`
+  String get vgGlobalAccelDesc2 {
+    return Intl.message(
+      'If you pick a datacentre route, IP checks will show a datacentre IP;',
+      name: 'vgGlobalAccelDesc2',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `for a residential IP, pick a residential node under "Routes", or use smart routing.`
+  String get vgGlobalAccelDesc3 {
+    return Intl.message(
+      'for a residential IP, pick a residential node under "Routes", or use smart routing.',
+      name: 'vgGlobalAccelDesc3',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Report an issue / upload logs`
+  String get vgReportIssueUploadLogs {
+    return Intl.message(
+      'Report an issue / upload logs',
+      name: 'vgReportIssueUploadLogs',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Balance, orders, reset subscription, change password`
+  String get vgUserCenterSubtitle {
+    return Intl.message(
+      'Balance, orders, reset subscription, change password',
+      name: 'vgUserCenterSubtitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invite friends, view commission, withdraw`
+  String get vgReferralSubtitle {
+    return Intl.message(
+      'Invite friends, view commission, withdraw',
+      name: 'vgReferralSubtitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Latest announcements and maintenance notices`
+  String get vgAnnouncementsSubtitle {
+    return Intl.message(
+      'Latest announcements and maintenance notices',
+      name: 'vgAnnouncementsSubtitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Day-by-day data usage`
+  String get vgDataUsageSubtitle {
+    return Intl.message(
+      'Day-by-day data usage',
+      name: 'vgDataUsageSubtitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Send your logs to support in one tap so they can pinpoint the issue`
+  String get vgReportIssueSubtitle {
+    return Intl.message(
+      'Send your logs to support in one tap so they can pinpoint the issue',
+      name: 'vgReportIssueSubtitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Read support replies and follow up`
+  String get vgMyTicketsSubtitle {
+    return Intl.message(
+      'Read support replies and follow up',
+      name: 'vgMyTicketsSubtitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `View logs`
+  String get vgViewLogs {
+    return Intl.message('View logs', name: 'vgViewLogs', desc: '', args: []);
+  }
+
+  /// `Live connection logs, for troubleshooting`
+  String get vgViewLogsSubtitle {
+    return Intl.message(
+      'Live connection logs, for troubleshooting',
+      name: 'vgViewLogsSubtitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Version: {p0}+{p1}`
+  String vgVersionBuildWith(Object p0, Object p1) {
+    return Intl.message(
+      'Version: $p0+$p1',
+      name: 'vgVersionBuildWith',
+      desc: '',
+      args: [p0, p1],
+    );
+  }
+
+  /// `Device: {p0} {p1} · Android {p2}`
+  String vgDeviceInfoWith(Object p0, Object p1, Object p2) {
+    return Intl.message(
+      'Device: $p0 $p1 · Android $p2',
+      name: 'vgDeviceInfoWith',
+      desc: '',
+      args: [p0, p1, p2],
+    );
+  }
+
+  /// `--- recent logs ---`
+  String get vgRecentLogsHeader {
+    return Intl.message(
+      '--- recent logs ---',
+      name: 'vgRecentLogsHeader',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please sign in before sending feedback`
+  String get vgSignInBeforeFeedback {
+    return Intl.message(
+      'Please sign in before sending feedback',
+      name: 'vgSignInBeforeFeedback',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{p0}\n\n=== Diagnostics (attached automatically) ===\n{p1}`
+  String vgFeedbackBodyWith(Object p0, Object p1) {
+    return Intl.message(
+      '$p0\\n\\n=== Diagnostics (attached automatically) ===\\n$p1',
+      name: 'vgFeedbackBodyWith',
+      desc: '',
+      args: [p0, p1],
+    );
+  }
+
+  /// `Describe the problem you ran into. We attach your device info and recent logs automatically to help pinpoint it.`
+  String get vgFeedbackHint {
+    return Intl.message(
+      'Describe the problem you ran into. We attach your device info and recent logs automatically to help pinpoint it.',
+      name: 'vgFeedbackHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `For example: pages won't load after connecting / a node won't connect…`
+  String get vgFeedbackPlaceholder {
+    return Intl.message(
+      'For example: pages won\'t load after connecting / a node won\'t connect…',
+      name: 'vgFeedbackPlaceholder',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Submitting…`
+  String get vgSubmitting {
+    return Intl.message(
+      'Submitting…',
+      name: 'vgSubmitting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Send to support`
+  String get vgSubmitToSupport {
+    return Intl.message(
+      'Send to support',
+      name: 'vgSubmitToSupport',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Signed in · loading your plan…`
+  String get vgSignedInLoadingPlan {
+    return Intl.message(
+      'Signed in · loading your plan…',
+      name: 'vgSignedInLoadingPlan',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your plan allows {p0} simultaneous devices;`
+  String vgPlanDeviceLimitWith(Object p0) {
+    return Intl.message(
+      'Your plan allows $p0 simultaneous devices;',
+      name: 'vgPlanDeviceLimitWith',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `if you see a connection-limit message, fully quit the other clients and reconnect`
+  String get vgDeviceLimitHint {
+    return Intl.message(
+      'if you see a connection-limit message, fully quit the other clients and reconnect',
+      name: 'vgDeviceLimitHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Tap the button below to fetch the latest nodes`
+  String get vgTapBelowToFetchNodes {
+    return Intl.message(
+      'Tap the button below to fetch the latest nodes',
+      name: 'vgTapBelowToFetchNodes',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Last updated · today {p0}`
+  String vgLastUpdatedTodayWith(Object p0) {
+    return Intl.message(
+      'Last updated · today $p0',
+      name: 'vgLastUpdatedTodayWith',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Last updated · {p0} {p1}`
+  String vgLastUpdatedWith(Object p0, Object p1) {
+    return Intl.message(
+      'Last updated · $p0 $p1',
+      name: 'vgLastUpdatedWith',
+      desc: '',
+      args: [p0, p1],
+    );
+  }
+
+  /// `My subscription`
+  String get vgMySubscription {
+    return Intl.message(
+      'My subscription',
+      name: 'vgMySubscription',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No subscription imported · open the management page to import`
+  String get vgNoSubscriptionImported {
+    return Intl.message(
+      'No subscription imported · open the management page to import',
+      name: 'vgNoSubscriptionImported',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Updating…`
+  String get vgUpdating {
+    return Intl.message('Updating…', name: 'vgUpdating', desc: '', args: []);
+  }
+
+  /// `Manage subscription`
+  String get vgManageSubscription {
+    return Intl.message(
+      'Manage subscription',
+      name: 'vgManageSubscription',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{p0} (device-wide)`
+  String vgTunDeviceWide(Object p0) {
+    return Intl.message(
+      '$p0 (device-wide)',
+      name: 'vgTunDeviceWide',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Takes over traffic for the whole device; other VPNs must be off and system permission granted`
+  String get vgTunDeviceWideDesc {
+    return Intl.message(
+      'Takes over traffic for the whole device; other VPNs must be off and system permission granted',
+      name: 'vgTunDeviceWideDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{p0} (compatibility)`
+  String vgSystemProxyCompat(Object p0) {
+    return Intl.message(
+      '$p0 (compatibility)',
+      name: 'vgSystemProxyCompat',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Only covers apps that support the system proxy; apps like Telegram may still need TUN`
+  String get vgSystemProxyCompatDesc {
+    return Intl.message(
+      'Only covers apps that support the system proxy; apps like Telegram may still need TUN',
+      name: 'vgSystemProxyCompatDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Voguesly's DNS is added temporarily only while macOS TUN is running, and restored on disconnect or exit; System Proxy mode does not touch DNS`
+  String get vgMacDnsHintDesc {
+    return Intl.message(
+      'Voguesly\'s DNS is added temporarily only while macOS TUN is running, and restored on disconnect or exit; System Proxy mode does not touch DNS',
+      name: 'vgMacDnsHintDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connection timed out. Check your network, or pick another route under "Current route".`
+  String get vgConnectTimeoutTryAnotherRoute {
+    return Intl.message(
+      'Connection timed out. Check your network, or pick another route under "Current route".',
+      name: 'vgConnectTimeoutTryAnotherRoute',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Loading subscription…`
+  String get vgLoadingSubscription {
+    return Intl.message(
+      'Loading subscription…',
+      name: 'vgLoadingSubscription',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Loading failed · tap to retry`
+  String get vgLoadFailedTapRetry {
+    return Intl.message(
+      'Loading failed · tap to retry',
+      name: 'vgLoadFailedTapRetry',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Tap to activate`
+  String get vgTapToActivate {
+    return Intl.message(
+      'Tap to activate',
+      name: 'vgTapToActivate',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Acceleration skipped`
+  String get vgAccelerationSkipped {
+    return Intl.message(
+      'Acceleration skipped',
+      name: 'vgAccelerationSkipped',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connected`
+  String get vgConnected {
+    return Intl.message('Connected', name: 'vgConnected', desc: '', args: []);
+  }
+
+  /// `Starting`
+  String get vgStarting {
+    return Intl.message('Starting', name: 'vgStarting', desc: '', args: []);
+  }
+
+  /// `Turn on Voguesly`
+  String get vgTurnOnVoguesly {
+    return Intl.message(
+      'Turn on Voguesly',
+      name: 'vgTurnOnVoguesly',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `TUN + system proxy`
+  String get vgTunPlusSystemProxy {
+    return Intl.message(
+      'TUN + system proxy',
+      name: 'vgTunPlusSystemProxy',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Acceleration skipped on this network · going direct`
+  String get vgNetworkSkippedDirect {
+    return Intl.message(
+      'Acceleration skipped on this network · going direct',
+      name: 'vgNetworkSkippedDirect',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Tap to disconnect  ·  {p0}`
+  String vgTapToDisconnectWith(Object p0) {
+    return Intl.message(
+      'Tap to disconnect  ·  $p0',
+      name: 'vgTapToDisconnectWith',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Selecting automatically…`
+  String get vgAutoSelecting {
+    return Intl.message(
+      'Selecting automatically…',
+      name: 'vgAutoSelecting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Not selected · pick a route`
+  String get vgNoRouteSelected {
+    return Intl.message(
+      'Not selected · pick a route',
+      name: 'vgNoRouteSelected',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Current route`
+  String get vgCurrentRoute {
+    return Intl.message(
+      'Current route',
+      name: 'vgCurrentRoute',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Switched to global acceleration`
+  String get vgSwitchedToGlobal {
+    return Intl.message(
+      'Switched to global acceleration',
+      name: 'vgSwitchedToGlobal',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `In global mode all traffic uses the single route you picked under "Routes", instead of splitting by AI / banking /`
+  String get vgGlobalModeDialog1 {
+    return Intl.message(
+      'In global mode all traffic uses the single route you picked under "Routes", instead of splitting by AI / banking /',
+      name: 'vgGlobalModeDialog1',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `domestic sites automatically.\n\n`
+  String get vgGlobalModeDialog2 {
+    return Intl.message(
+      'domestic sites automatically.\\n\\n',
+      name: 'vgGlobalModeDialog2',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `If you picked a datacentre route, IP-check sites will show a datacentre IP. For a US residential IP,`
+  String get vgGlobalModeDialog3 {
+    return Intl.message(
+      'If you picked a datacentre route, IP-check sites will show a datacentre IP. For a US residential IP,',
+      name: 'vgGlobalModeDialog3',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `pick a residential node under "Routes", or switch back to smart routing.`
+  String get vgGlobalModeDialog4 {
+    return Intl.message(
+      'pick a residential node under "Routes", or switch back to smart routing.',
+      name: 'vgGlobalModeDialog4',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Tap to connect`
+  String get vgTapToConnect {
+    return Intl.message(
+      'Tap to connect',
+      name: 'vgTapToConnect',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Current plan: {p0} · `
+  String vgCurrentPlanPrefixWith(Object p0) {
+    return Intl.message(
+      'Current plan: $p0 · ',
+      name: 'vgCurrentPlanPrefixWith',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Loading account…`
+  String get vgLoadingAccount {
+    return Intl.message(
+      'Loading account…',
+      name: 'vgLoadingAccount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{p0} expired`
+  String vgExpiredSuffix(Object p0) {
+    return Intl.message(
+      '$p0 expired',
+      name: 'vgExpiredSuffix',
+      desc: '',
+      args: [p0],
+    );
+  }
+
+  /// `Expired · please renew`
+  String get vgExpiredRenew {
+    return Intl.message(
+      'Expired · please renew',
+      name: 'vgExpiredRenew',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Data used up · please renew`
+  String get vgDataExhaustedRenew {
+    return Intl.message(
+      'Data used up · please renew',
+      name: 'vgDataExhaustedRenew',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Buy / renew`
+  String get vgBuyRenewShort {
+    return Intl.message(
+      'Buy / renew',
+      name: 'vgBuyRenewShort',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Loading plan…`
+  String get vgLoadingPlan {
+    return Intl.message(
+      'Loading plan…',
+      name: 'vgLoadingPlan',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sign out`
+  String get vgSignOutAccount {
+    return Intl.message(
+      'Sign out',
+      name: 'vgSignOutAccount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sign out of this account? You will need to sign in again.`
+  String get vgSignOutAccountConfirm {
+    return Intl.message(
+      'Sign out of this account? You will need to sign in again.',
+      name: 'vgSignOutAccountConfirm',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Could not update the subscription, please try again later`
+  String get vgUpdateSubscriptionFailed {
+    return Intl.message(
+      'Could not update the subscription, please try again later',
+      name: 'vgUpdateSubscriptionFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your internet access is **unaffected** because Voguesly is on the virtual NIC.`
+  String get vgTunUnaffectedNote {
+    return Intl.message(
+      'Your internet access is **unaffected** because Voguesly is on the virtual NIC.',
+      name: 'vgTunUnaffectedNote',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The virtual NIC is not in control either, so you may genuinely be offline right now.`
+  String get vgTunAlsoNotInControlNote {
+    return Intl.message(
+      'The virtual NIC is not in control either, so you may genuinely be offline right now.',
+      name: 'vgTunAlsoNotInControlNote',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `the virtual NIC`
+  String get vgVirtualNic {
+    return Intl.message(
+      'the virtual NIC',
+      name: 'vgVirtualNic',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Me`
+  String get vgMe {
+    return Intl.message('Me', name: 'vgMe', desc: '', args: []);
+  }
+
+  /// `Support`
+  String get vgSupport {
+    return Intl.message('Support', name: 'vgSupport', desc: '', args: []);
+  }
+
+  /// `Loading…`
+  String get vgLoadingEllipsis {
+    return Intl.message(
+      'Loading…',
+      name: 'vgLoadingEllipsis',
       desc: '',
       args: [],
     );

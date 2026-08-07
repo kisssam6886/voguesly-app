@@ -82,9 +82,9 @@ class WinInstaller {
       );
     } catch (_) {
       onState(
-        const WinInstallState(
+        WinInstallState(
           stage: WinInstallStage.error,
-          errorMessage: '下载失败,请稍后重试',
+          errorMessage: currentAppLocalizations.vgDownloadFailedRetry,
         ),
       );
     }
@@ -136,7 +136,7 @@ class _WinUpdateSheetState extends State<WinUpdateSheet> {
             Text(_title, style: context.textTheme.titleMedium),
             const SizedBox(height: 6),
             Text(
-              '版本号: ${widget.version}',
+              currentAppLocalizations.vgVersionNumber(widget.version),
               style: context.textTheme.bodyMedium
                   ?.copyWith(color: cs.onSurfaceVariant),
             ),
@@ -159,13 +159,13 @@ class _WinUpdateSheetState extends State<WinUpdateSheet> {
             ],
             if (_state.stage == WinInstallStage.launching) ...[
               Text(
-                '安装程序已启动,请按提示完成安装(会自动替换旧版本)。',
+                currentAppLocalizations.vgInstallerStartedHint,
                 style: context.textTheme.bodyMedium,
               ),
             ],
             if (_state.stage == WinInstallStage.error) ...[
               Text(
-                _state.errorMessage ?? '出错了,请稍后重试',
+                _state.errorMessage ?? currentAppLocalizations.vgSomethingWentWrongRetry,
                 style: context.textTheme.bodyMedium
                     ?.copyWith(color: const Color(0xFFEF4444)),
               ),
@@ -179,7 +179,7 @@ class _WinUpdateSheetState extends State<WinUpdateSheet> {
                   );
                   _start();
                 },
-                child: const Text('重试'),
+                child: Text(currentAppLocalizations.vgRetry),
               ),
             ],
           ],
@@ -191,11 +191,11 @@ class _WinUpdateSheetState extends State<WinUpdateSheet> {
   String get _title {
     switch (_state.stage) {
       case WinInstallStage.downloading:
-        return '正在下载更新';
+        return currentAppLocalizations.vgDownloadingUpdate;
       case WinInstallStage.launching:
-        return '正在打开安装程序…';
+        return currentAppLocalizations.vgOpeningInstaller;
       case WinInstallStage.error:
-        return '下载失败';
+        return currentAppLocalizations.vgDownloadFailed;
     }
   }
 }

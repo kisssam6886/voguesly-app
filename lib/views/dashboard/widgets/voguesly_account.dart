@@ -24,7 +24,7 @@ class VogueslyAccount extends StatelessWidget {
 
   // 明确标签「当前套餐: Plus · 到期: …」;无套餐名则唔加个标签。
   String _planPrefix(String? name) =>
-      (name == null || name.isEmpty) ? '' : '当前套餐: $name · ';
+      (name == null || name.isEmpty) ? '' : currentAppLocalizations.vgCurrentPlanPrefixWith(name);
 
   String _expiry(int? expiredAt, String permanent) {
     if (expiredAt == null || expiredAt == 0) return permanent;
@@ -148,15 +148,15 @@ class VogueslyAccount extends StatelessWidget {
                             children: [
                               Text(
                                 user?.email ??
-                                    (loggedIn ? '正在载入账号…' : l.vogMyAccount),
+                                    (loggedIn ? currentAppLocalizations.vgLoadingAccount : l.vogMyAccount),
                                 overflow: TextOverflow.ellipsis,
                                 style: context.textTheme.titleSmall,
                               ),
               Text(
                                 user == null
-                                    ? '${l.vogExpiry}: ${loggedIn ? '载入中…' : '—'}'
+                                    ? '${l.vogExpiry}: ${loggedIn ? currentAppLocalizations.vgLoadingEllipsis : '—'}'
                                     : expired
-                                        ? '${_planPrefix(user.planName)}已过期'
+                                        ? currentAppLocalizations.vgExpiredSuffix(_planPrefix(user.planName))
                                         : '${_planPrefix(user.planName)}${l.vogExpiry}: ${_expiry(user.expiredAt, l.vogPermanent)}',
                                 overflow: TextOverflow.ellipsis,
                                 style: context.textTheme.bodySmall?.copyWith(
@@ -193,9 +193,9 @@ class VogueslyAccount extends StatelessWidget {
                             padding: const EdgeInsets.only(bottom: 3),
                             child: Text(
                               expired
-                                  ? '已过期 · 请续费'
+                                  ? currentAppLocalizations.vgExpiredRenew
                                   : exhausted
-                                      ? '流量已用尽 · 请续费'
+                                      ? currentAppLocalizations.vgDataExhaustedRenew
                                       : '${l.vogRemainTotal} ${_gb(user.transferEnable)}',
                               style: context.textTheme.bodySmall?.copyWith(
                                 color: warn ? warnColor : subColor,
@@ -221,7 +221,7 @@ class VogueslyAccount extends StatelessWidget {
                                   vertical: 6,
                                 ),
                                 child: Text(
-                                  '购买/续费',
+                                  currentAppLocalizations.vgBuyRenewShort,
                                   style: context.textTheme.labelSmall?.copyWith(
                                     color: warn
                                         ? warnColor
@@ -248,7 +248,7 @@ class VogueslyAccount extends StatelessWidget {
                       ),
                     ] else
                       Text(
-                        loggedIn ? '正在载入套餐…' : l.vogNotLoggedIn,
+                        loggedIn ? currentAppLocalizations.vgLoadingPlan : l.vogNotLoggedIn,
                         style: context.textTheme.bodyMedium?.copyWith(
                           color: subColor,
                         ),

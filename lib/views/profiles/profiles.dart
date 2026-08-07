@@ -88,7 +88,7 @@ class _ProfilesViewState extends State<ProfilesView> {
     return profiles.isNotEmpty
         ? [
             IconButton(
-              tooltip: '更新订阅',
+              tooltip: currentAppLocalizations.vgUpdateSubscription,
               onPressed: () {
                 _updateProfiles(profiles);
               },
@@ -109,8 +109,8 @@ class _ProfilesViewState extends State<ProfilesView> {
 
   Future<void> _handleLogout(WidgetRef ref) async {
     final res = await globalState.showMessage(
-      title: '登出账号',
-      message: const TextSpan(text: '确定登出当前账号？登出后需要重新登录。'),
+      title: currentAppLocalizations.vgSignOutAccount,
+      message: TextSpan(text: currentAppLocalizations.vgSignOutAccountConfirm),
     );
     if (res != true) return;
     // 清走当前账号导入的订阅(含 corelane/octolink 镜像域),避免登出后或换账号仍用旧订阅。
@@ -130,7 +130,7 @@ class _ProfilesViewState extends State<ProfilesView> {
         final spacing = 14.mAp;
         return CommonScaffold(
           isLoading: isLoading,
-          title: '我的订阅',
+          title: currentAppLocalizations.vgMySubscription,
           // 消费者版:唔畀手动「添加配置」(订阅登录后自动导入),隐藏 FAB。
           floatingActionButton: null,
           actions: [
@@ -138,7 +138,7 @@ class _ProfilesViewState extends State<ProfilesView> {
             IconButton(
               onPressed: () => _handleLogout(ref),
               icon: const Icon(Icons.logout),
-              tooltip: '登出账号',
+              tooltip: currentAppLocalizations.vgSignOutAccount,
             ),
           ],
           body: state.profiles.isEmpty
@@ -224,7 +224,7 @@ class ProfileItem extends StatelessWidget {
           .read(profilesActionProvider.notifier)
           .refreshVogueslyProfile(profile, showLoading: true);
       if (!ok) {
-        globalState.showNotifier('更新订阅失败,请稍后重试');
+        globalState.showNotifier(currentAppLocalizations.vgUpdateSubscriptionFailed);
       }
     }, tag: LoadingTag.profiles);
   }

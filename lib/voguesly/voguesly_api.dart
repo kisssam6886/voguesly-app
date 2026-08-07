@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:fl_clash/common/app_localizations.dart';
 
 import 'package:dio/dio.dart';
 
@@ -80,7 +81,7 @@ class VogueslyApi {
     if (soft401 != null && lastError == null) return soft401;
     if (lastError != null) throw lastError;
     if (soft401 != null) return soft401;
-    throw Exception('所有入口均不可达');
+    throw Exception(currentAppLocalizations.vgAllEndpointsUnreachable);
   }
 
   /// 登录, 成功返回 auth_data 令牌。
@@ -88,7 +89,7 @@ class VogueslyApi {
     required String email,
     required String password,
   }) =>
-      _postAuth('/passport/auth/login', email, password, '邮箱或密码错误');
+      _postAuth('/passport/auth/login', email, password, currentAppLocalizations.vgWrongEmailOrPassword);
 
   /// 注册(XBoard 注册即自动登录, 同样返 auth_data)。
   /// emailCode: 后台 email_verify 开时必填(邮箱验证码)。
@@ -109,7 +110,7 @@ class VogueslyApi {
       '/passport/auth/register',
       email,
       password,
-      '注册失败',
+      currentAppLocalizations.vgSignUpFailed,
       extra: extra.isEmpty ? null : extra,
       idempotent: false, // 注册创建账号:已发出唔轮镜像重发,免重复注册/竞态
     );
@@ -164,7 +165,7 @@ class VogueslyApi {
         final d = json!['data'] as Map<String, dynamic>;
         final auth = (d['auth_data'] ?? d['token'])?.toString();
         if (auth == null || auth.isEmpty) {
-          return VogueslyAuthResult.error('返回为空, 请重试');
+          return VogueslyAuthResult.error(currentAppLocalizations.vgEmptyResponseRetry);
         }
         return VogueslyAuthResult.success(auth);
       }
@@ -172,7 +173,7 @@ class VogueslyApi {
         json?['message']?.toString() ?? failMsg,
       );
     } on DioException catch (e) {
-      return VogueslyAuthResult.error('网络异常: ${e.message ?? e.type.name}');
+      return VogueslyAuthResult.error(currentAppLocalizations.vgNetworkErrorWith(e.message ?? e.type.name));
     } catch (e) {
       return VogueslyAuthResult.error('$failMsg: $e');
     }
@@ -298,8 +299,9 @@ class VogueslyApi {
   Future<({bool ok, String message})> applyTrial(
     String token, {
     String source = 'android_app',
-    String goal = 'app内一键体验',
+    String? goal,
   }) async {
+    goal ??= currentAppLocalizations.vgOneTapTrialInApp;
     try {
       final resp = await _try(
         '/user/trial/apply',
@@ -313,17 +315,17 @@ class VogueslyApi {
         final d = json!['data'];
         final msg = (d is Map<String, dynamic> ? d['message'] : null)
                 ?.toString() ??
-            '免费测试已开通';
+            currentAppLocalizations.vgFreeTrialActivated;
         return (ok: true, message: msg);
       }
       return (
         ok: false,
-        message: json?['message']?.toString() ?? '开通失败,请稍后再试',
+        message: json?['message']?.toString() ?? currentAppLocalizations.vgActivateFailedRetry,
       );
     } on DioException catch (e) {
-      return (ok: false, message: '网络异常: ${e.message ?? e.type.name}');
+      return (ok: false, message: currentAppLocalizations.vgNetworkErrorWith(e.message ?? e.type.name));
     } catch (e) {
-      return (ok: false, message: '开通失败: $e');
+      return (ok: false, message: currentAppLocalizations.vgActivateFailedWith(e));
     }
   }
 
@@ -409,12 +411,12 @@ class VogueslyApi {
       }
       return (
         tradeNo: null,
-        error: json?['message']?.toString() ?? '下单失败,请稍后再试',
+        error: json?['message']?.toString() ?? currentAppLocalizations.vgOrderFailedRetry,
       );
     } on DioException catch (e) {
-      return (tradeNo: null, error: '网络异常: ${e.message ?? e.type.name}');
+      return (tradeNo: null, error: currentAppLocalizations.vgNetworkErrorWith(e.message ?? e.type.name));
     } catch (e) {
-      return (tradeNo: null, error: '下单失败: $e');
+      return (tradeNo: null, error: currentAppLocalizations.vgOrderFailedWith(e));
     }
   }
 
@@ -440,7 +442,7 @@ class VogueslyApi {
       final json = resp.data as Map<String, dynamic>?;
       if (resp.statusCode != 200) {
         return VogueslyCheckoutResult.error(
-            json?['message']?.toString() ?? '支付发起失败');
+            json?['message']?.toString() ?? currentAppLocalizations.vgPaymentStartFailed);
       }
       final data = json?['data'];
       if (data == true) return VogueslyCheckoutResult.balance();
@@ -462,12 +464,12 @@ class VogueslyApi {
         }
       }
       return VogueslyCheckoutResult.error(
-          json?['message']?.toString() ?? '支付发起失败');
+          json?['message']?.toString() ?? currentAppLocalizations.vgPaymentStartFailed);
     } on DioException catch (e) {
       return VogueslyCheckoutResult.error(
-          '网络异常: ${e.message ?? e.type.name}');
+          currentAppLocalizations.vgNetworkErrorWith(e.message ?? e.type.name));
     } catch (e) {
-      return VogueslyCheckoutResult.error('支付发起失败: $e');
+      return VogueslyCheckoutResult.error(currentAppLocalizations.vgPaymentStartFailedWith(e));
     }
   }
 
@@ -602,11 +604,11 @@ class VogueslyApi {
           headers: {'Authorization': token});
       final json = resp.data as Map<String, dynamic>?;
       if (resp.statusCode == 200 && json?['data'] != null) {
-        return (ok: true, message: '订阅已重置,正在拉取新节点…');
+        return (ok: true, message: currentAppLocalizations.vgSubscriptionResetFetching);
       }
-      return (ok: false, message: json?['message']?.toString() ?? '重置失败');
+      return (ok: false, message: json?['message']?.toString() ?? currentAppLocalizations.vgResetFailed);
     } catch (e) {
-      return (ok: false, message: '网络异常: $e');
+      return (ok: false, message: currentAppLocalizations.vgNetworkErrorWith(e));
     }
   }
 
@@ -626,14 +628,14 @@ class VogueslyApi {
       );
       final json = resp.data as Map<String, dynamic>?;
       if (resp.statusCode == 200 && json?['data'] == true) {
-        return (ok: true, message: '密码已修改');
+        return (ok: true, message: currentAppLocalizations.vgPasswordChanged);
       }
       return (
         ok: false,
-        message: json?['message']?.toString() ?? '修改失败(检查旧密码)'
+        message: json?['message']?.toString() ?? currentAppLocalizations.vgChangeFailedCheckOldPassword
       );
     } catch (e) {
-      return (ok: false, message: '网络异常: $e');
+      return (ok: false, message: currentAppLocalizations.vgNetworkErrorWith(e));
     }
   }
 
@@ -650,11 +652,11 @@ class VogueslyApi {
       );
       final json = resp.data as Map<String, dynamic>?;
       if (resp.statusCode == 200 && json?['data'] == true) {
-        return (ok: true, message: '已划转到余额');
+        return (ok: true, message: currentAppLocalizations.vgTransferredToBalance);
       }
-      return (ok: false, message: json?['message']?.toString() ?? '划转失败');
+      return (ok: false, message: json?['message']?.toString() ?? currentAppLocalizations.vgTransferFailed);
     } catch (e) {
-      return (ok: false, message: '网络异常: $e');
+      return (ok: false, message: currentAppLocalizations.vgNetworkErrorWith(e));
     }
   }
 
@@ -674,11 +676,11 @@ class VogueslyApi {
       );
       final json = resp.data as Map<String, dynamic>?;
       if (resp.statusCode == 200 && json?['data'] == true) {
-        return (ok: true, message: '提现申请已提交,客服会尽快处理');
+        return (ok: true, message: currentAppLocalizations.vgWithdrawSubmitted);
       }
-      return (ok: false, message: json?['message']?.toString() ?? '提现失败');
+      return (ok: false, message: json?['message']?.toString() ?? currentAppLocalizations.vgWithdrawFailed);
     } catch (e) {
-      return (ok: false, message: '网络异常: $e');
+      return (ok: false, message: currentAppLocalizations.vgNetworkErrorWith(e));
     }
   }
 
@@ -723,8 +725,9 @@ class VogueslyApi {
   Future<({bool ok, String message})> submitFeedback(
     String token, {
     required String message,
-    String subject = 'App 反馈 / 日志',
+    String? subject,
   }) async {
+    subject ??= currentAppLocalizations.vgAppFeedbackLogs;
     try {
       final resp = await _try(
         '/user/ticket/save',
@@ -735,16 +738,16 @@ class VogueslyApi {
       );
       final json = resp.data as Map<String, dynamic>?;
       if (resp.statusCode == 200 && json?['data'] != null) {
-        return (ok: true, message: '已提交，客服会尽快跟进');
+        return (ok: true, message: currentAppLocalizations.vgSubmittedSupportWillFollowUp);
       }
       return (
         ok: false,
-        message: json?['message']?.toString() ?? '提交失败，请稍后再试',
+        message: json?['message']?.toString() ?? currentAppLocalizations.vgSubmitFailedRetry,
       );
     } on DioException catch (e) {
-      return (ok: false, message: '网络异常: ${e.message ?? e.type.name}');
+      return (ok: false, message: currentAppLocalizations.vgNetworkErrorWith(e.message ?? e.type.name));
     } catch (e) {
-      return (ok: false, message: '提交失败: $e');
+      return (ok: false, message: currentAppLocalizations.vgSubmitFailedWith(e));
     }
   }
 
@@ -795,16 +798,16 @@ class VogueslyApi {
       );
       final json = resp.data as Map<String, dynamic>?;
       if (resp.statusCode == 200 && json?['data'] != null) {
-        return (ok: true, message: '已发送');
+        return (ok: true, message: currentAppLocalizations.vgSent);
       }
       return (
         ok: false,
-        message: json?['message']?.toString() ?? '发送失败，请稍后再试',
+        message: json?['message']?.toString() ?? currentAppLocalizations.vgSendFailedRetryComma,
       );
     } on DioException catch (e) {
-      return (ok: false, message: '网络异常: ${e.message ?? e.type.name}');
+      return (ok: false, message: currentAppLocalizations.vgNetworkErrorWith(e.message ?? e.type.name));
     } catch (e) {
-      return (ok: false, message: '发送失败: $e');
+      return (ok: false, message: currentAppLocalizations.vgSendFailedWith(e));
     }
   }
 
@@ -1002,12 +1005,12 @@ class VogueslyPlanPeriod {
       : '¥${price.toStringAsFixed(2)}';
   // 时长文案:0 天当「一次性」,否则「N 天」(30/90/180… 亦顺带标月数)。
   String get durationText {
-    if (days <= 0) return '一次性';
+    if (days <= 0) return currentAppLocalizations.vgOneTime;
     if (days % 30 == 0 && days <= 1095) {
       final m = days ~/ 30;
-      return m == 12 ? '1 年' : (m % 12 == 0 ? '${m ~/ 12} 年' : '$m 个月');
+      return m == 12 ? currentAppLocalizations.vgOneYear : (m % 12 == 0 ? currentAppLocalizations.vgNYears(m ~/ 12) : currentAppLocalizations.vgNMonths(m));
     }
-    return '$days 天';
+    return currentAppLocalizations.vgNDays(days);
   }
 }
 
@@ -1039,18 +1042,19 @@ class VogueslyPlan {
     if (periods.length == 1 || minPriceCents == maxPriceCents) {
       return lo.priceText;
     }
-    return '${lo.priceText} 起';
+    return currentAppLocalizations.vgFromPrice(lo.priceText);
   }
 
-  // 周期键 → (中文标签, 天数)。onetime 时长唔固定(按套餐)故 days=0 交由 UI 处理。
-  static const _periodMeta = <String, (String, int)>{
-    'month_price': ('月付', 30),
-    'quarter_price': ('季付', 90),
-    'half_year_price': ('半年付', 180),
-    'year_price': ('年付', 365),
-    'two_year_price': ('两年付', 730),
-    'three_year_price': ('三年付', 1095),
-    'onetime_price': ('一次性', 0),
+  // 周期键 → (本地化标签, 天数)。onetime 时长唔固定(按套餐)故 days=0 交由 UI 处理。
+  // ⚠️ 唔可以係 const:标签要跟当前语言变,const 会喺编译期钉死。
+  static Map<String, (String, int)> get _periodMeta => <String, (String, int)>{
+    'month_price': (currentAppLocalizations.vgMonthly, 30),
+    'quarter_price': (currentAppLocalizations.vgQuarterly, 90),
+    'half_year_price': (currentAppLocalizations.vgHalfYearly, 180),
+    'year_price': (currentAppLocalizations.vgYearly, 365),
+    'two_year_price': (currentAppLocalizations.vgTwoYearly, 730),
+    'three_year_price': (currentAppLocalizations.vgThreeYearly, 1095),
+    'onetime_price': (currentAppLocalizations.vgOneTime, 0),
   };
 
   factory VogueslyPlan.fromJson(Map<String, dynamic> j) {
@@ -1079,7 +1083,7 @@ class VogueslyPlan {
     final speed = j['speed_limit'];
     return VogueslyPlan(
       id: VogueslyApi._intOf(j['id']),
-      name: j['name']?.toString() ?? '套餐',
+      name: j['name']?.toString() ?? currentAppLocalizations.vgPlan,
       transferEnableGb:
           transfer is num ? transfer.toInt() : int.tryParse('$transfer') ?? 0,
       speedLimit: speed == null
@@ -1170,12 +1174,12 @@ class VogueslyOrder {
   final int createdAt; // 秒级时间戳
 
   String get statusText => switch (status) {
-        0 => '待支付',
-        1 => '开通中',
-        2 => '已取消',
-        3 => '已完成',
-        4 => '已退款',
-        _ => '未知',
+        0 => currentAppLocalizations.vgOrderPendingPayment,
+        1 => currentAppLocalizations.vgOrderActivating,
+        2 => currentAppLocalizations.vgOrderCancelled,
+        3 => currentAppLocalizations.vgOrderCompleted,
+        4 => currentAppLocalizations.vgOrderRefunded,
+        _ => currentAppLocalizations.vgUnknown,
       };
 
   String get amountText => '¥${(totalCents / 100).toStringAsFixed(2)}';
@@ -1183,8 +1187,8 @@ class VogueslyOrder {
   factory VogueslyOrder.fromJson(Map<String, dynamic> j) => VogueslyOrder(
         tradeNo: j['trade_no']?.toString() ?? '',
         planName: (j['plan'] is Map)
-            ? ((j['plan'] as Map)['name']?.toString() ?? '套餐')
-            : (j['plan_name']?.toString() ?? '套餐'),
+            ? ((j['plan'] as Map)['name']?.toString() ?? currentAppLocalizations.vgPlan)
+            : (j['plan_name']?.toString() ?? currentAppLocalizations.vgPlan),
         totalCents: VogueslyApi._intOf(j['total_amount']),
         status: VogueslyApi._intOf(j['status']),
         createdAt: VogueslyApi._intOf(j['created_at']),
@@ -1267,7 +1271,7 @@ class VogueslyPayMethod {
   factory VogueslyPayMethod.fromJson(Map<String, dynamic> j) =>
       VogueslyPayMethod(
         id: VogueslyApi._intOf(j['id']),
-        name: j['name']?.toString() ?? '在线支付',
+        name: j['name']?.toString() ?? currentAppLocalizations.vgOnlinePayment,
         icon: j['icon']?.toString(),
       );
 }

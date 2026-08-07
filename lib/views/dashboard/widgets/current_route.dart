@@ -25,7 +25,7 @@ class CurrentRoute extends ConsumerWidget {
     );
     final routeText = selected.isNotEmpty
         ? selected
-        : (hasProfile ? '自动选择中…' : '未选择 · 去选线路');
+        : (hasProfile ? currentAppLocalizations.vgAutoSelecting : currentAppLocalizations.vgNoRouteSelected);
     return SizedBox(
       width: double.infinity,
       child: CommonCard(
@@ -45,7 +45,7 @@ class CurrentRoute extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '当前线路',
+                      currentAppLocalizations.vgCurrentRoute,
                       style: context.textTheme.bodySmall?.copyWith(
                         color: cs.onSurfaceVariant,
                       ),

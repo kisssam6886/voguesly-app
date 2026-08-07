@@ -91,7 +91,7 @@ class CommonAction extends _$CommonAction {
       if (isUser) {
         globalState.showMessage(
           title: currentAppLocalizations.checkUpdate,
-          message: const TextSpan(text: '网络异常,暂时检查唔到更新,请检查网络后重试'),
+          message: TextSpan(text: currentAppLocalizations.vgUpdateCheckNetworkError),
         );
       }
       return;
@@ -279,7 +279,7 @@ class SetupAction extends _$SetupAction {
     _updateTimer = null;
     _nativeVerifyFailCount = 0;
     ref.read(runTimeProvider.notifier).value = null;
-    globalState.showNotifier('VPN 未能建立连接(可能权限被拒或系统限制),请重新连接');
+    globalState.showNotifier(currentAppLocalizations.vgVpnCouldNotConnect);
   }
 
   Future<void> _verifyDesktopTunConnected() async {
@@ -357,7 +357,7 @@ class SetupAction extends _$SetupAction {
     // 让流量仍然走得通,同时如实告诉用户当前不是整机接管。
     _desktopTunProvenBroken = true;
     ref.read(realTunEnableProvider.notifier).value = false;
-    _ensureFallbackTransport('TUN 连续两次启动仍未能接管系统流量');
+    _ensureFallbackTransport(currentAppLocalizations.vgTunTwiceNoTakeover);
     // 带 TUN 配置的核心已经处于不确定状态,重启一次让它干净地以「无 TUN + mixed-port」
     // 起来;此时 _requestAdmin 会看到 _desktopTunProvenBroken 而不再重复索要授权。
     try {
@@ -386,7 +386,7 @@ class SetupAction extends _$SetupAction {
   void _ensureFallbackTransport(String reason) {
     final network = ref.read(networkSettingProvider);
     if (network.systemProxy) {
-      globalState.showNotifier('$reason；已保持「系统代理（兼容模式）」承载流量');
+      globalState.showNotifier(currentAppLocalizations.vgKeptSystemProxyCarrying(reason));
       return;
     }
     ref
@@ -397,9 +397,9 @@ class SetupAction extends _$SetupAction {
       logLevel: LogLevel.warning,
     );
     globalState.showNotifier(
-      '$reason；已临时启用「系统代理（兼容模式）」保证上网。'
-      '注意:兼容模式只接管遵循系统代理的应用,Telegram 等可能仍不通;'
-      '修好权限后可在仪表盘重新打开「虚拟网卡（设备接管）」。',
+      currentAppLocalizations.vgTempEnabledSystemProxy(reason) +
+      currentAppLocalizations.vgCompatModeOnlyProxyAware +
+      currentAppLocalizations.vgReopenTunAfterPermission,
     );
   }
 
@@ -435,9 +435,9 @@ class SetupAction extends _$SetupAction {
       if (_systemProxyHijackWarned) return;
       _systemProxyHijackWarned = true;
       globalState.showNotifier(
-        '「系统代理（兼容模式）」已被其他代理程序接管，易联的兼容模式当前不生效。'
-        '设备流量仍由易联的虚拟网卡承载，上网不受影响；'
-        '如需易联接管系统代理，请先退出其他代理软件再重新连接。',
+        currentAppLocalizations.vgCompatModeTakenOver +
+        currentAppLocalizations.vgTrafficStillOnTun +
+        currentAppLocalizations.vgQuitOtherProxyToTakeOver,
       );
       return;
     }
@@ -445,7 +445,7 @@ class SetupAction extends _$SetupAction {
     // TUN 都冇喺度 = 真係一条通路都冇,先至值得断开重来。
     await handleStop();
     ref.read(runTimeProvider.notifier).value = null;
-    globalState.showNotifier('系统代理未能接管流量，可能被其他代理软件占用；请退出其他代理软件后重试');
+    globalState.showNotifier(currentAppLocalizations.vgSystemProxyOccupied);
   }
 
   Future _updateStartTime() async {
@@ -496,7 +496,7 @@ class SetupAction extends _$SetupAction {
             '[TUN-DIAG] third-party tunnel conflict=$conflict',
             logLevel: LogLevel.warning,
           );
-          globalState.showNotifier('检测到其他代理正在运行($conflict)，请先关闭后再连接易联');
+          globalState.showNotifier(currentAppLocalizations.vgOtherProxyRunningCloseFirst(conflict));
           return;
         }
       }
@@ -776,7 +776,7 @@ class SetupAction extends _$SetupAction {
         // TUN 偏好已经系 false,永远唔会自动恢复,提示文案变成骗人。
         _desktopTunProvenBroken = true;
         ref.read(realTunEnableProvider.notifier).value = false;
-        _ensureFallbackTransport('检测到其他代理正在运行($conflict)，本次暂不启用易联 TUN');
+        _ensureFallbackTransport(currentAppLocalizations.vgOtherProxyRunningSkipTun(conflict));
         return Result.success(false);
       }
     }
@@ -805,7 +805,7 @@ class SetupAction extends _$SetupAction {
           ref.read(realTunEnableProvider.notifier).value = false;
           // 授权失败唔好落盘关 TUN(旧实现落咗盘 → 加上迁移强制关咗系统代理 = 断网)。
           // 保住用户嘅 TUN 意图,同时即刻拉起兼容模式顶住,重连/重开 App 会再试 TUN。
-          _ensureFallbackTransport('TUN 授权未通过，暂时无法接管整机流量');
+          _ensureFallbackTransport(currentAppLocalizations.vgTunNotAuthorized);
           break;
       }
     }

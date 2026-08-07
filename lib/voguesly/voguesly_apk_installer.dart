@@ -84,9 +84,9 @@ class ApkInstaller {
       }
     } catch (_) {
       onState(
-        const ApkInstallState(
+        ApkInstallState(
           stage: ApkInstallStage.error,
-          errorMessage: '下载失败,请稍后重试',
+          errorMessage: currentAppLocalizations.vgDownloadFailedRetry,
         ),
       );
     }
@@ -179,7 +179,7 @@ class _ApkUpdateSheetState extends State<ApkUpdateSheet>
             ),
             const SizedBox(height: 6),
             Text(
-              '版本号: ${widget.version}',
+              currentAppLocalizations.vgVersionNumber(widget.version),
               style: context.textTheme.bodyMedium
                   ?.copyWith(color: cs.onSurfaceVariant),
             ),
@@ -202,18 +202,18 @@ class _ApkUpdateSheetState extends State<ApkUpdateSheet>
             ],
             if (_state.stage == ApkInstallStage.needPermission) ...[
               Text(
-                '安装更新需要「允许安装未知来源应用」权限,请去设置开启后返回,会自动继续安装。',
+                currentAppLocalizations.vgNeedUnknownSourcesPermission,
                 style: context.textTheme.bodyMedium,
               ),
               const SizedBox(height: 16),
               FilledButton(
                 onPressed: () => ApkInstaller.requestPermission(),
-                child: const Text('去设置开启权限'),
+                child: Text(currentAppLocalizations.vgOpenSettingsToGrant),
               ),
             ],
             if (_state.stage == ApkInstallStage.error) ...[
               Text(
-                _state.errorMessage ?? '出错了,请稍后重试',
+                _state.errorMessage ?? currentAppLocalizations.vgSomethingWentWrongRetry,
                 style: context.textTheme.bodyMedium
                     ?.copyWith(color: const Color(0xFFEF4444)),
               ),
@@ -227,7 +227,7 @@ class _ApkUpdateSheetState extends State<ApkUpdateSheet>
                   );
                   _start();
                 },
-                child: const Text('重试'),
+                child: Text(currentAppLocalizations.vgRetry),
               ),
             ],
           ],
@@ -239,13 +239,13 @@ class _ApkUpdateSheetState extends State<ApkUpdateSheet>
   String get _title {
     switch (_state.stage) {
       case ApkInstallStage.downloading:
-        return '正在下载更新';
+        return currentAppLocalizations.vgDownloadingUpdate;
       case ApkInstallStage.needPermission:
-        return '需要安装权限';
+        return currentAppLocalizations.vgInstallPermissionNeeded;
       case ApkInstallStage.installing:
-        return '正在打开安装程序…';
+        return currentAppLocalizations.vgOpeningInstaller;
       case ApkInstallStage.error:
-        return '下载失败';
+        return currentAppLocalizations.vgDownloadFailed;
     }
   }
 }

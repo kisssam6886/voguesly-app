@@ -108,7 +108,7 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
       if (mounted && _attempting && !isStart) {
         _attempting = false;
         if (_connecting) setState(() => _connecting = false);
-        globalState.showNotifier('连接超时，请检查网络，或在「当前线路」换一条线路再试');
+        globalState.showNotifier(currentAppLocalizations.vgConnectTimeoutTryAnotherRoute);
       }
     });
   }
@@ -175,17 +175,17 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
     }
     final title = !hasProfile
         ? (importing
-              ? '正在载入订阅…'
+              ? currentAppLocalizations.vgLoadingSubscription
               : importFailed
-              ? '载入失败·点我重试'
-              : '点我开通')
+              ? currentAppLocalizations.vgLoadFailedTapRetry
+              : currentAppLocalizations.vgTapToActivate)
         : bypassed
-        ? '已跳过加速' // 唔用 l10n「挂起中...」(OS黑话),同副标题「已跳过加速」口径一致
+        ? currentAppLocalizations.vgAccelerationSkipped // 唔用 l10n「挂起中...」(OS黑话),同副标题「已跳过加速」口径一致
         : isStart
-        ? '已连接'
+        ? currentAppLocalizations.vgConnected
         : connecting
-        ? '正在开启'
-        : '开启易联';
+        ? currentAppLocalizations.vgStarting
+        : currentAppLocalizations.vgTurnOnVoguesly;
 
     // 桌面已连接时,承载方式(TUN / 系统代理)拆做圆内第二行小字。
     // 旧实现塞成一行「已连接 · TUN + 系统代理」,喺 150 直径嘅圆入面必然溢出圆外
@@ -193,10 +193,10 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
     // 长短文案都唔会冲出圆边。
     final modeLabel = (isStart && !bypassed && system.isDesktop)
         ? (realTunEnable && systemProxy
-              ? 'TUN + 系统代理'
+              ? currentAppLocalizations.vgTunPlusSystemProxy
               : realTunEnable
               ? 'TUN'
-              : '系统代理')
+              : currentAppLocalizations.vgSystemProxy)
         : null;
 
     return Column(
@@ -326,7 +326,7 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
               ? null
               : bypassed
               ? Text(
-                  '当前网络已跳过加速 · 走直连',
+                  currentAppLocalizations.vgNetworkSkippedDirect,
                   style: context.textTheme.bodySmall?.copyWith(color: _amber),
                 )
               : Consumer(
@@ -337,7 +337,7 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
                       ),
                     );
                     return Text(
-                      '轻触断开  ·  ${t.speedText}',
+                      currentAppLocalizations.vgTapToDisconnectWith(t.speedText),
                       style: context.textTheme.bodySmall?.copyWith(
                         color: cs.onSurfaceVariant,
                       ),

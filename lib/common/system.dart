@@ -246,12 +246,12 @@ class System {
       if (system.isMacRunningFromInstaller) {
         await globalState.showMessage(
           title: currentAppLocalizations.tip,
-          message: const TextSpan(
+          message: TextSpan(
             text:
-                '当前是从 DMG 磁盘映像直接运行易联。请先把易联拖入 Applications，'
-                '再从 Applications 打开；从 DMG 直接运行无法启用 TUN 后台服务。',
+                currentAppLocalizations.vgRunningFromDmgHint +
+                currentAppLocalizations.vgRunningFromDmgHint2,
           ),
-          confirmText: '知道了',
+          confirmText: currentAppLocalizations.vgGotIt,
         );
         return AuthorizeCode.error;
       }
@@ -260,12 +260,12 @@ class System {
       if (status == 'requiresApproval') {
         final openSettings = await globalState.showMessage(
           title: currentAppLocalizations.tip,
-          message: const TextSpan(
+          message: TextSpan(
             text:
-                '需要在「系统设置 → 通用 → 登录项与扩展」允许「易联」的后台项目,'
-                '开启后返回易联再点一次 TUN 即可，之后免密码。',
+                currentAppLocalizations.vgAllowLoginItemHint +
+                currentAppLocalizations.vgAllowLoginItemHint2,
           ),
-          confirmText: '打开系统设置',
+          confirmText: currentAppLocalizations.vgOpenSystemSettings,
         );
         if (openSettings == true) await system.openMacTunSettings();
         return AuthorizeCode.error;
@@ -283,8 +283,8 @@ class System {
         );
         final openSettings = await globalState.showMessage(
           title: currentAppLocalizations.tip,
-          message: const TextSpan(text: '易联后台 TUN 服务未启用，请在系统设置允许易联后台项目后重试。'),
-          confirmText: '打开系统设置',
+          message: TextSpan(text: currentAppLocalizations.vgTunServiceNotEnabled),
+          confirmText: currentAppLocalizations.vgOpenSystemSettings,
         );
         if (openSettings == true) await system.openMacTunSettings();
         return AuthorizeCode.error;
@@ -314,12 +314,12 @@ class System {
         if (migrated == 'requiresApproval') {
           final openSettings = await globalState.showMessage(
             title: currentAppLocalizations.tip,
-            message: const TextSpan(
+            message: TextSpan(
               text:
-                  '易联的后台 TUN 服务需要重新授权。请在「系统设置 → 通用 → 登录项与扩展」'
-                  '中允许「易联」的后台项目，然后回到易联再点一次连接。',
+                  currentAppLocalizations.vgTunServiceNeedsReauth +
+                  currentAppLocalizations.vgTunServiceNeedsReauth2,
             ),
-            confirmText: '打开系统设置',
+            confirmText: currentAppLocalizations.vgOpenSystemSettings,
           );
           if (openSettings == true) await system.openMacTunSettings();
         }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fl_clash/common/app_localizations.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 /// 易联 · 内嵌网页页(商城/邀请返利/在线客服等,面板页嵌 app 内,非外部浏览器)。
@@ -47,7 +48,7 @@ class _VogueslyWebViewState extends State<VogueslyWebView> {
                 setState(() {
                   _loading = false;
                   if (e.isForMainFrame ?? true) {
-                    _error = '加载失败:${e.description}(code ${e.errorCode})';
+                    _error = currentAppLocalizations.vgLoadFailedWithCode(e.description, e.errorCode);
                   }
                 });
               }
@@ -56,7 +57,7 @@ class _VogueslyWebViewState extends State<VogueslyWebView> {
         )
         ..loadRequest(Uri.parse(widget.url));
     } catch (e) {
-      _error = 'WebView 初始化失败:$e';
+      _error = currentAppLocalizations.vgWebViewInitFailed(e);
     }
   }
 
@@ -67,7 +68,7 @@ class _VogueslyWebViewState extends State<VogueslyWebView> {
         title: Text(widget.title),
         actions: [
           IconButton(
-            tooltip: '刷新',
+            tooltip: currentAppLocalizations.vgRefresh,
             icon: const Icon(Icons.refresh),
             onPressed: () {
               setState(() => _error = null);
@@ -95,7 +96,7 @@ class _VogueslyWebViewState extends State<VogueslyWebView> {
                         });
                         _controller?.loadRequest(Uri.parse(widget.url));
                       },
-                      child: const Text('重试'),
+                      child: Text(currentAppLocalizations.vgRetry),
                     ),
                   ],
                 ),

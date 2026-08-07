@@ -29,18 +29,18 @@ String _friendlyError(Object e) {
       s.contains('connection') ||
       s.contains('handshake') ||
       s.contains('network is unreachable')) {
-    return '网络不稳定，请检查网络后重试';
+    return currentAppLocalizations.vgNetUnstableRetry;
   }
   if (s.contains('timeout') || s.contains('timed out')) {
-    return '连接超时，请稍后重试';
+    return currentAppLocalizations.vgConnectTimeoutRetry;
   }
   if (s.contains('format') ||
       s.contains('validate') ||
       s.contains('yaml') ||
       s.contains('parse')) {
-    return '配置解析失败，请更新订阅或联系客服';
+    return currentAppLocalizations.vgConfigParseFailed;
   }
-  return '操作失败，请稍后重试';
+  return currentAppLocalizations.vgActionFailedRetry;
 }
 
 class GlobalState {

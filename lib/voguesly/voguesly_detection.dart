@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:fl_clash/common/app_localizations.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -160,11 +161,11 @@ class DetectionService {
     final c = await _probe(
         'https://api.openai.com/compliance/cookie_requirements');
     if (c.status != null && c.body.toLowerCase().contains('unsupported_country')) {
-      return UnlockResult('ChatGPT', status: UnlockStatus.no, region: loc, note: '地区不支持');
+      return UnlockResult('ChatGPT', status: UnlockStatus.no, region: loc, note: currentAppLocalizations.vgRegionNotSupported);
     }
     // 端点拿唔到就退回黑名单兜底。
     if (loc.isNotEmpty && _blockedForOpenAI.contains(loc)) {
-      return UnlockResult('ChatGPT', status: UnlockStatus.no, region: loc, note: '地区不支持');
+      return UnlockResult('ChatGPT', status: UnlockStatus.no, region: loc, note: currentAppLocalizations.vgRegionNotSupported);
     }
     return UnlockResult('ChatGPT', status: UnlockStatus.yes, region: loc);
   }
@@ -179,7 +180,7 @@ class DetectionService {
     if (r.status == 200) {
       final loc = RegExp(r'loc=([A-Z]{2})').firstMatch(r.body)?.group(1) ?? '';
       if (loc.isNotEmpty && _blockedForClaude.contains(loc)) {
-        return UnlockResult('Claude', status: UnlockStatus.no, region: loc, note: '地区限制');
+        return UnlockResult('Claude', status: UnlockStatus.no, region: loc, note: currentAppLocalizations.vgRegionRestricted);
       }
       return UnlockResult('Claude', status: UnlockStatus.yes, region: loc);
     }
@@ -210,13 +211,13 @@ class DetectionService {
         final s = buf.toString();
         // 否定信号(喺页头就有):中国版 / 地区不支持。
         if (s.contains('www.google.cn')) {
-          return const UnlockResult('YouTube Premium',
-              status: UnlockStatus.no, region: 'CN', note: '地区不支持');
+          return UnlockResult('YouTube Premium',
+              status: UnlockStatus.no, region: 'CN', note: currentAppLocalizations.vgRegionNotSupported);
         }
         if (s.contains('Premium is not available') ||
             s.contains('not available in your country')) {
-          return const UnlockResult('YouTube Premium',
-              status: UnlockStatus.no, note: '地区不支持');
+          return UnlockResult('YouTube Premium',
+              status: UnlockStatus.no, note: currentAppLocalizations.vgRegionNotSupported);
         }
         // 地区码(~49KB 就有):拎到即判 Yes 中止(唔使下 637KB 嘅 ad-free)。
         region = RegExp(r'"INNERTUBE_CONTEXT_GL"\s*:\s*"([A-Z]{2})"')
@@ -231,11 +232,11 @@ class DetectionService {
         if (buf.length > 120000) break;
       }
       // 读完/中断仍无地区码 → 检测失败。
-      return const UnlockResult('YouTube Premium',
-          status: UnlockStatus.error, note: '检测失败');
+      return UnlockResult('YouTube Premium',
+          status: UnlockStatus.error, note: currentAppLocalizations.vgCheckFailed);
     } catch (_) {
-      return const UnlockResult('YouTube Premium',
-          status: UnlockStatus.error, note: '检测失败');
+      return UnlockResult('YouTube Premium',
+          status: UnlockStatus.error, note: currentAppLocalizations.vgCheckFailed);
     }
   }
 
@@ -261,10 +262,10 @@ class DetectionService {
     }
     if (r.status == 404) {
       // 只自制剧(Netflix Originals)→ 部分解锁,标明。
-      return UnlockResult('Netflix', status: UnlockStatus.yes, region: region, note: '仅自制剧');
+      return UnlockResult('Netflix', status: UnlockStatus.yes, region: region, note: currentAppLocalizations.vgOriginalsOnly);
     }
     if (r.status == 403) {
-      return const UnlockResult('Netflix', status: UnlockStatus.no, note: '地区封禁');
+      return UnlockResult('Netflix', status: UnlockStatus.no, note: currentAppLocalizations.vgRegionBlocked);
     }
     return const UnlockResult('Netflix', status: UnlockStatus.no);
   }
@@ -288,15 +289,15 @@ class DetectionService {
         return const UnlockResult('Disney+', status: UnlockStatus.yes);
       }
       if (code >= 300 && code < 400 && loc.contains('unavailable')) {
-        return const UnlockResult('Disney+',
-            status: UnlockStatus.no, note: '地区限制');
+        return UnlockResult('Disney+',
+            status: UnlockStatus.no, note: currentAppLocalizations.vgRegionRestricted);
       }
       // 3xx 到别处(如登录/地区选择) / 403(Akamai 机器人拦) → 唔当地区限制,标检测失败。
-      return const UnlockResult('Disney+',
-          status: UnlockStatus.error, note: '检测失败');
+      return UnlockResult('Disney+',
+          status: UnlockStatus.error, note: currentAppLocalizations.vgCheckFailed);
     } catch (_) {
-      return const UnlockResult('Disney+',
-          status: UnlockStatus.error, note: '检测失败');
+      return UnlockResult('Disney+',
+          status: UnlockStatus.error, note: currentAppLocalizations.vgCheckFailed);
     }
   }
 
@@ -305,7 +306,7 @@ class DetectionService {
     final r = await _probe(
         'https://www.spotify.com/api/content/v1/country-selector?platform=web&format=json');
     if (r.status == 403 || r.status == 451) {
-      return const UnlockResult('Spotify', status: UnlockStatus.no, note: '地区限制');
+      return UnlockResult('Spotify', status: UnlockStatus.no, note: currentAppLocalizations.vgRegionRestricted);
     }
     if (r.status != null && r.status! >= 200 && r.status! < 400) {
       final cc = RegExp(r'"countryCode"\s*:\s*"([A-Z]{2})"').firstMatch(r.body)?.group(1) ?? '';
@@ -336,18 +337,18 @@ class DetectionService {
       return UnlockResult(name, status: UnlockStatus.yes);
     }
     if (code == '-10403') {
-      return UnlockResult(name, status: UnlockStatus.no, note: '地区限制');
+      return UnlockResult(name, status: UnlockStatus.no, note: currentAppLocalizations.vgRegionRestricted);
     }
     // -404 死 ID / null 超时 / 其余 → 检测失败(唔好伪装成地区限制)。
-    return UnlockResult(name, status: UnlockStatus.error, note: '检测失败');
+    return UnlockResult(name, status: UnlockStatus.error, note: currentAppLocalizations.vgCheckFailed);
   }
 
   // ⚠️ep_id 会随授权到期失效,需定期对照 lmc999 刷新。已用 D Band(国内)/9929(美国)/HK relay(香港)三地铁证:
   // 大陆专属 ep_id=307247:国内 code:0(能睇)、美国/香港 -10403 → 大陆区解锁。
   // 港澳台专属 ep_id=183799:香港 code:0(能睇!)、大陆/美国 -10403 → 真·港澳台区解锁。
   //   (⚠️268176 系台湾专属,香港都 -10403,唔啱做港澳台检测)。
-  Future<UnlockResult> biliMainland() => _bili('哔哩哔哩大陆', '307247');
-  Future<UnlockResult> biliHkMoTw() => _bili('哔哩哔哩港澳台', '183799');
+  Future<UnlockResult> biliMainland() => _bili(currentAppLocalizations.vgBiliMainland, '307247');
+  Future<UnlockResult> biliHkMoTw() => _bili(currentAppLocalizations.vgBiliHkMoTw, '183799');
 
   List<Future<UnlockResult> Function()> get all => [
     youtubePremium,
@@ -440,11 +441,11 @@ class DetectionService {
       final ip = RegExp(r'"addr"\s*:\s*"([0-9.]+)"').firstMatch(r.body)?.group(1) ?? '';
       final isCn = country.contains('中国') || country.contains('China');
       return SplitRouteResult(
-          name: '哔哩哔哩', domestic: true, ip: ip,
+          name: currentAppLocalizations.vgBilibili, domestic: true, ip: ip,
           countryCode: isCn ? 'CN' : (country.isEmpty ? '' : 'XX'),
           ok: isCn); // 中国=分流正确(绿);美国=走咗代理(红,提示分流问题)
     }
-    return const SplitRouteResult(name: '哔哩哔哩', domestic: true);
+    return SplitRouteResult(name: currentAppLocalizations.vgBilibili, domestic: true);
   }
 
   Future<List<SplitRouteResult>> splitTest() async {
@@ -487,18 +488,18 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
   bool _diagLoading = false;
   bool _resettingProxy = false;
 
-  static const _names = [
+  static List<String> get _names => [
     'YouTube Premium', 'Netflix', 'Disney+', 'ChatGPT', 'Claude',
-    'Spotify', 'TikTok', '哔哩哔哩大陆', '哔哩哔哩港澳台',
+    'Spotify', 'TikTok', currentAppLocalizations.vgBiliMainland, currentAppLocalizations.vgBiliHkMoTw,
   ];
 
   // 延迟测试目标(轻量资源)。国内=期望直连快(绿);国际=经节点(橙)。
-  static const _domesticTargets = {
-    '百度': 'https://www.baidu.com/favicon.ico',
-    '淘宝': 'https://www.taobao.com/favicon.ico',
-    '哔哩哔哩': 'https://www.bilibili.com/favicon.ico',
-    '微信': 'https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico',
-    '抖音': 'https://www.douyin.com/favicon.ico',
+  static Map<String, String> get _domesticTargets => {
+    currentAppLocalizations.vgBaidu: 'https://www.baidu.com/favicon.ico',
+    currentAppLocalizations.vgTaobao: 'https://www.taobao.com/favicon.ico',
+    currentAppLocalizations.vgBilibili: 'https://www.bilibili.com/favicon.ico',
+    currentAppLocalizations.vgWeChat: 'https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico',
+    currentAppLocalizations.vgDouyin: 'https://www.douyin.com/favicon.ico',
   };
   // ⚠️ 用就近 CDN 边缘轻端点(几十字节、边缘命中),量到接近真实 RTT;
   // 唔好用主站根域(google.com/github.com 要完整 TLS 到源站数据中心 → 虚高)。
@@ -578,7 +579,7 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
         checks.length,
         // 防御:将来 all/_names 数量失配唔会 RangeError 崩检测页。
         (i) => UnlockResult(
-          i < _names.length ? _names[i] : '检测项',
+          i < _names.length ? _names[i] : currentAppLocalizations.vgCheckItem,
           status: UnlockStatus.loading,
         ),
       );
@@ -651,7 +652,7 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('检测'),
+        title: Text(currentAppLocalizations.vgCheck),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -662,7 +663,7 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
                       width: 16, height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2))
                   : const Icon(Icons.refresh, size: 18),
-              label: const Text('全部检测'),
+              label: Text(currentAppLocalizations.vgCheckAll),
             ),
           ),
         ],
@@ -676,7 +677,7 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
             // 而唔係 Netflix 解唔解锁。而且呢一段纯本地,网络断咗一样出到结果。
             Row(
               children: [
-                Text('本机环境',
+                Text(currentAppLocalizations.vgLocalEnvironment,
                     style: Theme.of(context).textTheme.titleMedium
                         ?.copyWith(fontWeight: FontWeight.w700)),
                 const SizedBox(width: 8),
@@ -688,12 +689,12 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
                 TextButton.icon(
                   onPressed: _diagLoading ? null : _runDiag,
                   icon: const Icon(Icons.refresh, size: 16),
-                  label: const Text('重新检测'),
+                  label: Text(currentAppLocalizations.vgRecheck),
                 ),
               ],
             ),
             const SizedBox(height: 4),
-            Text('装咗其他代理软件?呢度讲清楚而家边条通路喺度行、边个占咗乜。',
+            Text(currentAppLocalizations.vgLocalEnvHint,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: cs.onSurfaceVariant.withValues(alpha: 0.7))),
             const SizedBox(height: 10),
@@ -705,7 +706,7 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
               onReset: _resetOwnSystemProxy,
             ),
             const SizedBox(height: 24),
-            Text('解锁检测',
+            Text(currentAppLocalizations.vgUnlockCheck,
                 style: Theme.of(context).textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 12),
@@ -727,22 +728,22 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
               );
             }),
             const SizedBox(height: 24),
-            Text('延迟测试',
+            Text(currentAppLocalizations.vgLatencyTest,
                 style: Theme.of(context).textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 4),
-            Text('国内应直连(快),国际经节点。数值越低越好。',
+            Text(currentAppLocalizations.vgLatencyHint,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: cs.onSurfaceVariant.withValues(alpha: 0.7))),
             const SizedBox(height: 12),
             LayoutBuilder(builder: (_, c) {
               final twoCol = c.maxWidth > 640;
               final domestic = _LatencyGroup(
-                  title: '国内',
+                  title: currentAppLocalizations.vgDomestic,
                   accent: const Color(0xFF16A34A), // 绿
                   results: _domestic);
               final intl = _LatencyGroup(
-                  title: '国际',
+                  title: currentAppLocalizations.vgInternational,
                   accent: const Color(0xFFF59E0B), // 橙
                   results: _intl);
               if (twoCol) {
@@ -760,12 +761,12 @@ class _VogueslyDetectionViewState extends ConsumerState<VogueslyDetectionView> {
               );
             }),
             const SizedBox(height: 24),
-            Text('IP 分流测试',
+            Text(currentAppLocalizations.vgSplitRouteTest,
                 style: Theme.of(context).textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.w700)),
             Padding(
               padding: const EdgeInsets.only(top: 2, bottom: 10),
-              child: Text('国际服务走外国出口、国内服务走本地 —— 智能分流实时验证',
+              child: Text(currentAppLocalizations.vgSplitRouteHint,
                   style: TextStyle(fontSize: 12.5, color: cs.onSurfaceVariant)),
             ),
             _IpCard(ip: _ip, loading: _ipLoading, cs: cs),
@@ -835,7 +836,7 @@ class _DiagCard extends StatelessWidget {
                       : null,
                 ),
                 const SizedBox(width: 10),
-                Text(loading ? '正在检测本机环境…' : '未检测',
+                Text(loading ? currentAppLocalizations.vgCheckingLocalEnv : currentAppLocalizations.vgNotChecked,
                     style: TextStyle(color: cs.onSurfaceVariant)),
               ],
             )
@@ -920,13 +921,13 @@ class _DiagCard extends StatelessWidget {
                               width: 14, height: 14,
                               child: CircularProgressIndicator(strokeWidth: 2))
                           : const Icon(Icons.settings_backup_restore, size: 17),
-                      label: const Text('重设易联的系统代理'),
+                      label: Text(currentAppLocalizations.vgResetVogueslySystemProxy),
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.only(top: 6),
                     child: Text(
-                      '只会重写易联自己的设置,不会关闭或修改你其他的代理软件。',
+                      currentAppLocalizations.vgResetProxyHint,
                       style: TextStyle(
                           fontSize: 11.5,
                           color: cs.onSurfaceVariant.withValues(alpha: 0.75)),
@@ -984,7 +985,7 @@ class _SplitCard extends StatelessWidget {
               color: cs.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(4),
             ),
-            child: Text(s.domestic ? '国内' : '国际',
+            child: Text(s.domestic ? currentAppLocalizations.vgDomestic : currentAppLocalizations.vgInternational,
                 style: TextStyle(fontSize: 10.5, color: cs.onSurfaceVariant)),
           ),
           const Spacer(),
@@ -1045,16 +1046,16 @@ class _LatencyGroup extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             if (results.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
                 child: Row(
                   children: [
-                    SizedBox(
+                    const SizedBox(
                         width: 14,
                         height: 14,
                         child: CircularProgressIndicator(strokeWidth: 2)),
-                    SizedBox(width: 10),
-                    Text('测试中…'),
+                    const SizedBox(width: 10),
+                    Text(currentAppLocalizations.vgTesting),
                   ],
                 ),
               )
@@ -1072,7 +1073,7 @@ class _LatencyGroup extends StatelessWidget {
                               color: _dot(r.ms), shape: BoxShape.circle),
                         ),
                         Text(
-                          r.ms == null ? '超时' : '${r.ms} ms',
+                          r.ms == null ? currentAppLocalizations.vgTimeout : '${r.ms} ms',
                           style: tt.bodyMedium?.copyWith(
                               color: _dot(r.ms), fontWeight: FontWeight.w600),
                         ),
@@ -1137,7 +1138,7 @@ class _UnlockCard extends StatelessWidget {
                             : (ok ? Icons.check_circle : Icons.cancel),
                         size: 14, color: color),
                     const SizedBox(width: 4),
-                    Text(errored ? '检测失败' : (ok ? 'Yes' : 'No'),
+                    Text(errored ? currentAppLocalizations.vgCheckFailed : (ok ? 'Yes' : 'No'),
                         style: TextStyle(
                             color: color, fontWeight: FontWeight.w700, fontSize: 12)),
                   ]),
@@ -1183,15 +1184,15 @@ class _IpCard extends StatelessWidget {
           ? const Center(child: Padding(
               padding: EdgeInsets.all(8), child: CircularProgressIndicator()))
           : ip == null
-              ? Text('检测失败,请先连接后重试',
+              ? Text(currentAppLocalizations.vgCheckFailedConnectFirst,
                   style: TextStyle(color: cs.onSurfaceVariant))
               : Wrap(
                   spacing: 28, runSpacing: 14,
                   children: [
-                    _kv('IP 地址', ip!.ip.isEmpty ? '-' : ip!.ip),
-                    _kv('国家/地区',
+                    _kv(currentAppLocalizations.vgIpAddress, ip!.ip.isEmpty ? '-' : ip!.ip),
+                    _kv(currentAppLocalizations.vgCountryRegion,
                         '${countryCodeToEmoji(ip!.countryCode)} ${ip!.country}'),
-                    _kv('城市', ip!.city.isEmpty ? '-' : ip!.city),
+                    _kv(currentAppLocalizations.vgCity, ip!.city.isEmpty ? '-' : ip!.city),
                     _kv('ISP', ip!.isp.isEmpty ? '-' : ip!.isp),
                   ],
                 ),

@@ -19,9 +19,9 @@ const String _kPlanUrl = 'https://ylink.im/#/shop';
 Future<void> showVogueslyOnboarding(BuildContext context) {
   return showSheet(
     context: context,
-    builder: (_) => const AdaptiveSheetScaffold(
-      body: _OnboardingBody(),
-      title: '开始你的测试',
+    builder: (_) => AdaptiveSheetScaffold(
+      body: const _OnboardingBody(),
+      title: currentAppLocalizations.vgStartYourTest,
     ),
   );
 }
@@ -88,6 +88,7 @@ class _OnboardingBodyState extends ConsumerState<_OnboardingBody> {
       return;
     }
     // 「已有套餐」唔算错 → 直接导入(保持 busy 到 _subscribeAndClose 完)。
+    // ⚠️ 呢度比对嘅係【后端返嚟嘅中文消息】,唔係本地文案 —— 绝对唔可以 i18n。
     if (res.message.contains('已有')) {
       await _subscribeAndClose();
       return;
@@ -117,11 +118,11 @@ class _OnboardingBodyState extends ConsumerState<_OnboardingBody> {
     setState(() => _busy = false);
     if (ok) {
       Navigator.of(context).pop();
-      globalState.showNotifier('✅ 已开通,点中间圆圈即可连接');
+      globalState.showNotifier(currentAppLocalizations.vgActivatedTapCircle);
     } else {
       setState(() => _error = _trialGranted
-          ? '已开通,但订阅导入失败(可能网络瞬断)。点下面「重试导入」即可。'
-          : '订阅导入失败,请稍后重试。');
+          ? currentAppLocalizations.vgActivatedImportFailed
+          : currentAppLocalizations.vgSubscriptionImportFailedRetry);
     }
   }
 
@@ -139,15 +140,15 @@ class _OnboardingBodyState extends ConsumerState<_OnboardingBody> {
 
     final String header;
     if (_trialGranted) {
-      header = '免费测试已开通,导入节点即可连接';
+      header = currentAppLocalizations.vgFreeTrialImportToConnect;
     } else if (_fetchFailed) {
-      header = '网络不稳,暂时取唔到套餐信息';
+      header = currentAppLocalizations.vgNetworkUnstableNoPlanInfo;
     } else if (hasPaid) {
-      header = '你已有套餐';
+      header = currentAppLocalizations.vgYouAlreadyHavePlan;
     } else if (canTrial) {
-      header = '先免费体验,或购买验证包做完整测试';
+      header = currentAppLocalizations.vgTryFreeOrBuyStarter;
     } else {
-      header = '购买验证包开始完整测试';
+      header = currentAppLocalizations.vgBuyStarterForFullTest;
     }
 
     return SingleChildScrollView(
@@ -170,8 +171,8 @@ class _OnboardingBodyState extends ConsumerState<_OnboardingBody> {
             if (_trialGranted)
               _PrimaryOption(
                 icon: Icons.refresh_rounded,
-                title: '重试导入订阅',
-                subtitle: '免费测试已开通,导入节点即可连接',
+                title: currentAppLocalizations.vgRetryImportSubscription,
+                subtitle: currentAppLocalizations.vgFreeTrialImportToConnect,
                 busy: _busy,
                 onTap: _busy ? null : _subscribeAndClose,
               )
@@ -179,8 +180,8 @@ class _OnboardingBodyState extends ConsumerState<_OnboardingBody> {
             else if (_fetchFailed)
               _PrimaryOption(
                 icon: Icons.refresh_rounded,
-                title: '网络不稳,点我重试',
-                subtitle: '重新获取套餐与免费测试资格',
+                title: currentAppLocalizations.vgNetworkUnstableTapRetry,
+                subtitle: currentAppLocalizations.vgRefetchPlanAndTrial,
                 busy: false,
                 onTap: _busy ? null : _fetchStatus,
               )
@@ -188,8 +189,8 @@ class _OnboardingBodyState extends ConsumerState<_OnboardingBody> {
             else if (hasPaid)
               _PrimaryOption(
                 icon: Icons.bolt_rounded,
-                title: '立即一键订阅',
-                subtitle: '把你的套餐节点导入并开始使用',
+                title: currentAppLocalizations.vgSubscribeNow,
+                subtitle: currentAppLocalizations.vgImportPlanNodesStart,
                 busy: _busy,
                 onTap: _busy ? null : _subscribeAndClose,
               )
@@ -197,14 +198,14 @@ class _OnboardingBodyState extends ConsumerState<_OnboardingBody> {
             else if (canTrial) ...[
               _PrimaryOption(
                 icon: Icons.rocket_launch_rounded,
-                title: '立即开通免费测试',
-                subtitle: '6 小时 / 500MB,适合快速验证连通性',
+                title: currentAppLocalizations.vgActivateFreeTrialNow,
+                subtitle: currentAppLocalizations.vgTrialSpecs,
                 busy: _busy,
                 onTap: _busy ? null : _applyTrial,
               ),
               const SizedBox(height: 12),
               _SecondaryOption(
-                label: '已领过?购买 ¥3.9 验证包 · 3GB 不限时',
+                label: currentAppLocalizations.vgAlreadyClaimedBuyStarter,
                 onTap: _busy ? null : _openPlanWeb,
               ),
             ]
@@ -212,14 +213,14 @@ class _OnboardingBodyState extends ConsumerState<_OnboardingBody> {
             else ...[
               _PrimaryOption(
                 icon: Icons.shopping_cart_rounded,
-                title: '购买 ¥3.9 验证包',
-                subtitle: '3GB 不限时,适合完整验证 ChatGPT / Claude 等场景',
+                title: currentAppLocalizations.vgBuyStarterPack,
+                subtitle: currentAppLocalizations.vgStarterPackSpecs,
                 busy: false,
                 onTap: _busy ? null : _openPlanWeb,
               ),
               const SizedBox(height: 12),
               _SecondaryOption(
-                label: '已购买?刷新订阅',
+                label: currentAppLocalizations.vgAlreadyBoughtRefresh,
                 onTap: _busy ? null : _subscribeAndClose,
               ),
             ],
@@ -282,7 +283,7 @@ class _PrimaryOption extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      busy ? '开通中...' : title,
+                      busy ? currentAppLocalizations.vgActivatingEllipsis : title,
                       style: tt.titleMedium?.copyWith(
                         color: cs.onPrimary,
                         fontWeight: FontWeight.w700,

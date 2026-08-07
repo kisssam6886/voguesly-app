@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fl_clash/common/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'voguesly_api.dart';
@@ -48,7 +49,7 @@ class _VogueslyShopPageState extends ConsumerState<VogueslyShopPage> {
     if (token == null || token.isEmpty) {
       setState(() {
         _loading = false;
-        _error = '未登录,请先登录';
+        _error = currentAppLocalizations.vgNotSignedInPleaseSignIn;
       });
       return;
     }
@@ -65,13 +66,13 @@ class _VogueslyShopPageState extends ConsumerState<VogueslyShopPage> {
         _plans = plans;
         _balanceCents = bal ?? 0;
         _loading = false;
-        _error = plans.isEmpty ? '暂无可购买套餐,或网络异常,请下拉重试' : null;
+        _error = plans.isEmpty ? currentAppLocalizations.vgNoPlansAvailable : null;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = '加载失败:$e';
+        _error = currentAppLocalizations.vgLoadFailedWith(e);
       });
     }
   }
@@ -91,10 +92,10 @@ class _VogueslyShopPageState extends ConsumerState<VogueslyShopPage> {
     return Scaffold(
       appBar: vogAppBar(
         context,
-        title: '商城',
+        title: currentAppLocalizations.vgStore,
         actions: [
           IconButton(
-            tooltip: '刷新',
+            tooltip: currentAppLocalizations.vgRefresh,
             icon: const Icon(Icons.refresh),
             onPressed: _loading ? null : _load,
           ),
@@ -119,7 +120,7 @@ class _VogueslyShopPageState extends ConsumerState<VogueslyShopPage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('账户余额',
+                        Text(currentAppLocalizations.vgAccountBalance,
                             style: Theme.of(context).textTheme.bodySmall),
                         const SizedBox(height: 2),
                         Text(_balanceText,
@@ -132,7 +133,7 @@ class _VogueslyShopPageState extends ConsumerState<VogueslyShopPage> {
                       ],
                     ),
                     const Spacer(),
-                    Text('管理余额和套餐',
+                    Text(currentAppLocalizations.vgManageBalanceAndPlan,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: cs.onSurfaceVariant.withValues(alpha: 0.7))),
                   ],
@@ -146,14 +147,14 @@ class _VogueslyShopPageState extends ConsumerState<VogueslyShopPage> {
               color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
               child: ListTile(
                 leading: Icon(Icons.receipt_long_outlined, color: cs.primary),
-                title: const Text('我的订单'),
-                subtitle: const Text('查看订单 · 继续未完成的支付'),
+                title: Text(currentAppLocalizations.vgMyOrders),
+                subtitle: Text(currentAppLocalizations.vgViewOrdersResumePayment),
                 trailing: const Icon(Icons.chevron_right, size: 20),
                 onTap: () => VogueslyOrdersPage.open(context),
               ),
             ),
             const SizedBox(height: 18),
-            Text('套餐',
+            Text(currentAppLocalizations.vgPlan,
                 style: Theme.of(context)
                     .textTheme
                     .titleMedium
@@ -259,7 +260,7 @@ class _VogueslyShopPageState extends ConsumerState<VogueslyShopPage> {
                         color: cs.onSurfaceVariant, height: 1.35)),
               ],
               const SizedBox(height: 6),
-              Text('${p.periods.length} 个周期可选',
+              Text(currentAppLocalizations.vgNBillingCycles(p.periods.length),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: cs.onSurfaceVariant.withValues(alpha: 0.7))),
               const SizedBox(height: 12),
@@ -267,12 +268,12 @@ class _VogueslyShopPageState extends ConsumerState<VogueslyShopPage> {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _tag('流量 ${p.transferEnableGb} GB'),
+                  _tag(currentAppLocalizations.vgTrafficNGb(p.transferEnableGb)),
                   if (p.speedLimit != null && p.speedLimit! > 0)
-                    _tag('限速 ${p.speedLimit} Mbps'),
-                  _tag(p.periods.first.durationText == '一次性'
-                      ? '一次性'
-                      : '时长 ${p.periods.first.durationText}'),
+                    _tag(currentAppLocalizations.vgSpeedLimitNMbps(p.speedLimit ?? 0)),
+                  _tag(p.periods.first.durationText == currentAppLocalizations.vgOneTime
+                      ? currentAppLocalizations.vgOneTime
+                      : currentAppLocalizations.vgDurationWith(p.periods.first.durationText)),
                 ],
               ),
               const SizedBox(height: 14),
@@ -285,7 +286,7 @@ class _VogueslyShopPageState extends ConsumerState<VogueslyShopPage> {
                 child: FilledButton.icon(
                   onPressed: () => _openPlanSheet(p),
                   icon: const Icon(Icons.shopping_cart_outlined, size: 18),
-                  label: const Text('立即购买'),
+                  label: Text(currentAppLocalizations.vgBuyNow),
                 ),
               ),
             ],
@@ -315,7 +316,7 @@ class _VogueslyShopPageState extends ConsumerState<VogueslyShopPage> {
                       .titleLarge
                       ?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 2),
-              Text('选择购买周期',
+              Text(currentAppLocalizations.vgChooseBillingCycle,
                   style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
                       color: cs.onSurfaceVariant.withValues(alpha: 0.7))),
               const SizedBox(height: 14),
@@ -366,10 +367,10 @@ class _VogueslyShopPageState extends ConsumerState<VogueslyShopPage> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                _tag('流量 ${p.transferEnableGb} GB'),
-                if (period.days > 0) _tag('时长 ${period.durationText}'),
+                _tag(currentAppLocalizations.vgTrafficNGb(p.transferEnableGb)),
+                if (period.days > 0) _tag(currentAppLocalizations.vgDurationWith(period.durationText)),
                 if (p.speedLimit != null && p.speedLimit! > 0)
-                  _tag('限速 ${p.speedLimit} Mbps'),
+                  _tag(currentAppLocalizations.vgSpeedLimitNMbps(p.speedLimit ?? 0)),
               ],
             ),
             const SizedBox(height: 12),
@@ -377,7 +378,7 @@ class _VogueslyShopPageState extends ConsumerState<VogueslyShopPage> {
               width: double.infinity,
               child: FilledButton(
                 onPressed: () => _placeOrder(p, period),
-                child: Text('立即购买 ${period.priceText}'),
+                child: Text(currentAppLocalizations.vgBuyNowWith(period.priceText)),
               ),
             ),
           ],
@@ -390,17 +391,17 @@ class _VogueslyShopPageState extends ConsumerState<VogueslyShopPage> {
   Future<void> _placeOrder(VogueslyPlan p, VogueslyPlanPeriod period) async {
     final token = ref.read(vogueslyAuthProvider).token;
     if (token == null || token.isEmpty) {
-      _toast('未登录');
+      _toast(currentAppLocalizations.vgNotSignedIn);
       return;
     }
     Navigator.of(context).pop(); // 关周期弹窗
-    _showBlockingProgress('正在下单…');
+    _showBlockingProgress(currentAppLocalizations.vgPlacingOrder);
     final api = ref.read(vogueslyApiProvider);
     final order = await api.createOrder(token,
         planId: p.id, period: period.key);
     if (mounted) Navigator.of(context, rootNavigator: true).pop(); // 关进度
     if (order.tradeNo == null) {
-      _toast(order.error ?? '下单失败');
+      _toast(order.error ?? currentAppLocalizations.vgOrderFailed);
       return;
     }
     if (!mounted) return;

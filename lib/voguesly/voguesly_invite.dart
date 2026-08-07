@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fl_clash/common/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -40,7 +41,7 @@ class _VogueslyInvitePageState extends ConsumerState<VogueslyInvitePage> {
     if (token == null || token.isEmpty) {
       setState(() {
         _loading = false;
-        _error = '未登录';
+        _error = currentAppLocalizations.vgNotSignedIn;
       });
       return;
     }
@@ -55,7 +56,7 @@ class _VogueslyInvitePageState extends ConsumerState<VogueslyInvitePage> {
     setState(() {
       _data = data;
       _loading = false;
-      _error = data == null ? '加载失败,请下拉重试' : null;
+      _error = data == null ? currentAppLocalizations.vgLoadFailedPullToRetry : null;
     });
   }
 
@@ -68,7 +69,7 @@ class _VogueslyInvitePageState extends ConsumerState<VogueslyInvitePage> {
     Clipboard.setData(ClipboardData(text: text));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$label已复制'), behavior: SnackBarBehavior.floating),
+      SnackBar(content: Text(currentAppLocalizations.vgCopiedSuffix(label)), behavior: SnackBarBehavior.floating),
     );
   }
 
@@ -87,35 +88,35 @@ class _VogueslyInvitePageState extends ConsumerState<VogueslyInvitePage> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (dctx) => AlertDialog(
-        title: const Text('划转到余额'),
+        title: Text(currentAppLocalizations.vgTransferToBalance),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('可用佣金:${_yuan(avail)}'),
+            Text(currentAppLocalizations.vgAvailableCommissionWith(_yuan(avail))),
             const SizedBox(height: 10),
             TextField(
               controller: ctrl,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                  labelText: '划转金额(元)', prefixText: '¥'),
+              decoration: InputDecoration(
+                  labelText: currentAppLocalizations.vgTransferAmountYuan, prefixText: '¥'),
             ),
           ],
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(dctx, false),
-              child: const Text('取消')),
+              child: Text(currentAppLocalizations.vgCancel)),
           FilledButton(
               onPressed: () => Navigator.pop(dctx, true),
-              child: const Text('划转')),
+              child: Text(currentAppLocalizations.vgTransfer)),
         ],
       ),
     );
     if (ok != true) return;
     final cents = ((double.tryParse(ctrl.text) ?? 0) * 100).round();
     if (cents <= 0 || cents > avail) {
-      _toast('金额无效');
+      _toast(currentAppLocalizations.vgInvalidAmount);
       return;
     }
     final token = ref.read(vogueslyAuthProvider).token;
@@ -128,39 +129,39 @@ class _VogueslyInvitePageState extends ConsumerState<VogueslyInvitePage> {
 
   // 提现:选方式 + 填收款账号(建工单,客服处理)。
   Future<void> _withdraw() async {
-    final methodC = TextEditingController(text: '支付宝');
+    final methodC = TextEditingController(text: currentAppLocalizations.vgAlipay);
     final accountC = TextEditingController();
     final ok = await showDialog<bool>(
       context: context,
       builder: (dctx) => AlertDialog(
-        title: const Text('提现申请'),
+        title: Text(currentAppLocalizations.vgWithdrawRequest),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('可用佣金:${_yuan(_data?.commissionCents ?? 0)}'),
+            Text(currentAppLocalizations.vgAvailableCommissionWith(_yuan(_data?.commissionCents ?? 0))),
             const SizedBox(height: 10),
             TextField(
                 controller: methodC,
-                decoration: const InputDecoration(
-                    labelText: '提现方式(支付宝 / 微信 / USDT)')),
+                decoration: InputDecoration(
+                    labelText: currentAppLocalizations.vgWithdrawMethod)),
             TextField(
                 controller: accountC,
-                decoration: const InputDecoration(labelText: '收款账号')),
+                decoration: InputDecoration(labelText: currentAppLocalizations.vgPayoutAccount)),
           ],
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(dctx, false),
-              child: const Text('取消')),
+              child: Text(currentAppLocalizations.vgCancel)),
           FilledButton(
               onPressed: () => Navigator.pop(dctx, true),
-              child: const Text('提交')),
+              child: Text(currentAppLocalizations.vgSubmit)),
         ],
       ),
     );
     if (ok != true) return;
     if (accountC.text.trim().isEmpty) {
-      _toast('请填写收款账号');
+      _toast(currentAppLocalizations.vgEnterPayoutAccount);
       return;
     }
     final token = ref.read(vogueslyAuthProvider).token;
@@ -178,10 +179,10 @@ class _VogueslyInvitePageState extends ConsumerState<VogueslyInvitePage> {
     return Scaffold(
       appBar: vogAppBar(
         context,
-        title: '邀请返利',
+        title: currentAppLocalizations.vgReferralRewards,
         actions: [
           IconButton(
-            tooltip: '刷新',
+            tooltip: currentAppLocalizations.vgRefresh,
             icon: const Icon(Icons.refresh),
             onPressed: _loading ? null : _load,
           ),
@@ -206,7 +207,7 @@ class _VogueslyInvitePageState extends ConsumerState<VogueslyInvitePage> {
                         Expanded(
                           child: _statCard(
                             icon: Icons.savings_outlined,
-                            label: '可用佣金',
+                            label: currentAppLocalizations.vgAvailableCommission,
                             value: _yuan(_data?.commissionCents ?? 0),
                             color: cs.primary,
                           ),
@@ -215,8 +216,8 @@ class _VogueslyInvitePageState extends ConsumerState<VogueslyInvitePage> {
                         Expanded(
                           child: _statCard(
                             icon: Icons.group_outlined,
-                            label: '已邀请',
-                            value: '${_data?.inviteCount ?? 0} 人',
+                            label: currentAppLocalizations.vgInvited,
+                            value: currentAppLocalizations.vgNPeople(_data?.inviteCount ?? 0),
                             color: cs.tertiary,
                           ),
                         ),
@@ -232,7 +233,7 @@ class _VogueslyInvitePageState extends ConsumerState<VogueslyInvitePage> {
                                 ? _transfer
                                 : null,
                             icon: const Icon(Icons.swap_horiz, size: 18),
-                            label: const Text('划转到余额'),
+                            label: Text(currentAppLocalizations.vgTransferToBalance),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -242,13 +243,13 @@ class _VogueslyInvitePageState extends ConsumerState<VogueslyInvitePage> {
                                 ? _withdraw
                                 : null,
                             icon: const Icon(Icons.account_balance, size: 18),
-                            label: const Text('提现'),
+                            label: Text(currentAppLocalizations.vgWithdraw),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 20),
-                    Text('我的邀请码',
+                    Text(currentAppLocalizations.vgMyReferralCode,
                         style: tt.titleMedium
                             ?.copyWith(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 10),
@@ -271,16 +272,16 @@ class _VogueslyInvitePageState extends ConsumerState<VogueslyInvitePage> {
                             ),
                             if (code != null)
                               TextButton.icon(
-                                onPressed: () => _copy(code, '邀请码'),
+                                onPressed: () => _copy(code, currentAppLocalizations.vgReferralCode),
                                 icon: const Icon(Icons.copy, size: 18),
-                                label: const Text('复制'),
+                                label: Text(currentAppLocalizations.vgCopy),
                               ),
                           ],
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Text('邀请链接',
+                    Text(currentAppLocalizations.vgReferralLink,
                         style: tt.titleMedium
                             ?.copyWith(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 10),
@@ -303,9 +304,9 @@ class _VogueslyInvitePageState extends ConsumerState<VogueslyInvitePage> {
                               child: FilledButton.icon(
                                 onPressed: _inviteLink.isEmpty
                                     ? null
-                                    : () => _copy(_inviteLink, '邀请链接'),
+                                    : () => _copy(_inviteLink, currentAppLocalizations.vgReferralLink),
                                 icon: const Icon(Icons.link, size: 18),
-                                label: const Text('复制邀请链接'),
+                                label: Text(currentAppLocalizations.vgCopyReferralLink),
                               ),
                             ),
                           ],
@@ -314,7 +315,7 @@ class _VogueslyInvitePageState extends ConsumerState<VogueslyInvitePage> {
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      '好友通过你的链接注册并购买套餐,你可获得返利佣金。佣金可用于抵扣续费。',
+                      currentAppLocalizations.vgReferralExplain,
                       style: tt.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant.withValues(alpha: 0.7)),
                     ),

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:fl_clash/common/app_localizations.dart';
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -25,15 +26,15 @@ const String _kGoogleG =
 const _kRememberEmailKey = 'voguesly_remember_email';
 
 /// 桌面 Google 登录回调后,浏览器落地页(提示返回 App,并尝试自动关标签)。
-const String _kDesktopLandingHtml =
+String get _kDesktopLandingHtml =>
     '<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8">'
     '<meta name="viewport" content="width=device-width, initial-scale=1">'
     '<title>Voguesly</title></head>'
     '<body style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;'
     'background:#0B0B12;color:#fff;display:flex;align-items:center;'
     'justify-content:center;height:100vh;margin:0;text-align:center">'
-    '<div><h2 style="margin:0 0 8px;font-weight:600">登录成功</h2>'
-    '<p style="opacity:.7;margin:0">请返回 Voguesly 应用继续</p></div>'
+    '${currentAppLocalizations.vgOauthSuccessHtmlHead}'
+    '${currentAppLocalizations.vgOauthSuccessHtmlBody}'
     '<script>setTimeout(function(){window.close();},1200);</script>'
     '</body></html>';
 
@@ -82,13 +83,13 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
 
   Future<void> _sendCode() async {
     if (!_email.text.contains('@')) {
-      _toast('请先输入有效邮箱');
+      _toast(currentAppLocalizations.vgEnterValidEmailFirst);
       return;
     }
     final ok =
         await ref.read(vogueslyAuthProvider.notifier).sendEmailVerify(_email.text);
     if (!mounted) return;
-    _toast(ok ? '验证码已发送' : '发送失败,请稍后再试');
+    _toast(ok ? currentAppLocalizations.vgCodeSent : currentAppLocalizations.vgSendFailedRetry);
     if (ok) {
       setState(() => _codeCooldown = 60);
       _codeTimer?.cancel();
@@ -106,7 +107,7 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
   Future<bool> _offlineGuard() async {
     final res = await Connectivity().checkConnectivity();
     if (res.contains(ConnectivityResult.none) || res.isEmpty) {
-      if (mounted) _toast('网络不可用,请检查网络连接后重试');
+      if (mounted) _toast(currentAppLocalizations.vgNetworkUnavailableRetry);
       return true;
     }
     return false;
@@ -131,7 +132,7 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
       }
     } else {
       final err = ref.read(vogueslyAuthProvider).error ??
-          (_registerMode ? '注册失败' : '登录失败');
+          (_registerMode ? currentAppLocalizations.vgSignUpFailed : currentAppLocalizations.vgSignInFailed);
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(SnackBar(content: Text(err)));
@@ -162,14 +163,14 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
       }
       final authData = Uri.parse(result).queryParameters['auth_data'];
       if (authData == null || authData.isEmpty) {
-        if (mounted) _toast('Google 登录失败,请重试');
+        if (mounted) _toast(currentAppLocalizations.vgGoogleSignInFailedRetry);
         return;
       }
       final ok =
           await ref.read(vogueslyAuthProvider.notifier).loginWithToken(authData);
       if (!ok && mounted) {
         // loginWithToken 喺 401/403 会置 state.error='登录已失效…' 并返 false。
-        _toast(ref.read(vogueslyAuthProvider).error ?? 'Google 登录失败,请重试');
+        _toast(ref.read(vogueslyAuthProvider).error ?? currentAppLocalizations.vgGoogleSignInFailedRetry);
       }
     } on PlatformException catch (e) {
       if (!mounted) return;
@@ -177,12 +178,12 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
       // 两者都系用户放弃,静默唔弹 toast(同 Google/Apple 登录面板取消一致,唔误导)。
       // 只有 NO_BROWSER 及其它真错误(网络/配置)先弹失败提示。
       if (e.code == 'CANCELED' || e.code == 'FAILED') return;
-      _toast('Google 登录失败,请检查网络后重试');
+      _toast(currentAppLocalizations.vgGoogleSignInFailedNetwork);
     } catch (e) {
       if (!mounted) return;
       // 非 PlatformException 兜底:含 cancel 静默,否则弹通用失败。
       if (e.toString().toLowerCase().contains('cancel')) return;
-      _toast('Google 登录失败,请检查网络后重试');
+      _toast(currentAppLocalizations.vgGoogleSignInFailedNetwork);
     }
   }
 
@@ -201,7 +202,7 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
         mode: LaunchMode.externalApplication,
       );
       if (!launched) {
-        throw PlatformException(code: 'FAILED', message: '无法打开浏览器');
+        throw PlatformException(code: 'FAILED', message: currentAppLocalizations.vgCannotOpenBrowser);
       }
       // 等浏览器带 auth_data 打返嚟(5 分钟够完成 Google 授权);超时抛 TimeoutException → 兜底 toast。
       final req = await server.first.timeout(const Duration(minutes: 5));
@@ -260,20 +261,20 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
                     ),
                     const SizedBox(height: 14),
                     Text(
-                      _registerMode ? '创建账户' : '登录账户',
+                      _registerMode ? currentAppLocalizations.vgCreateAccount : currentAppLocalizations.vgSignInAccount,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.titleLarge
                           ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      _registerMode ? '注册即自动连接节点' : '请输入您的凭据继续',
+                      _registerMode ? currentAppLocalizations.vgSignUpAutoConnect : currentAppLocalizations.vgEnterCredentials,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodySmall
                           ?.copyWith(color: cs.onSurfaceVariant),
                     ),
                     const SizedBox(height: 28),
-                    _label('邮箱', required: true),
+                    _label(currentAppLocalizations.vgEmail, required: true),
                     _field(
                       controller: _email,
                       hint: 'name@email.com',
@@ -281,24 +282,24 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
                       keyboardType: TextInputType.emailAddress,
                       enabled: !loading,
                       validator: (v) =>
-                          (v == null || !v.contains('@')) ? '请输入有效邮箱' : null,
+                          (v == null || !v.contains('@')) ? currentAppLocalizations.vgEnterValidEmail : null,
                     ),
                     if (showEmailCode) ...[
                       const SizedBox(height: 14),
-                      _label('邮箱验证码', required: true),
+                      _label(currentAppLocalizations.vgEmailCode, required: true),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
                             child: _field(
                               controller: _emailCode,
-                              hint: '6 位验证码',
+                              hint: currentAppLocalizations.vgSixDigitCode,
                               icon: Icons.mail_lock_outlined,
                               keyboardType: TextInputType.number,
                               enabled: !loading,
                               validator: (v) => (showEmailCode &&
                                       (v == null || v.trim().isEmpty))
-                                  ? '请输入验证码'
+                                  ? currentAppLocalizations.vgEnterCode
                                   : null,
                             ),
                           ),
@@ -315,17 +316,17 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
                                 ),
                               ),
                               child: Text(
-                                  _codeCooldown > 0 ? '${_codeCooldown}s' : '发送'),
+                                  _codeCooldown > 0 ? '${_codeCooldown}s' : currentAppLocalizations.vgSend),
                             ),
                           ),
                         ],
                       ),
                     ],
                     const SizedBox(height: 14),
-                    _label('密码', required: true),
+                    _label(currentAppLocalizations.vgPassword, required: true),
                     _field(
                       controller: _password,
-                      hint: '请输入密码',
+                      hint: currentAppLocalizations.vgEnterPassword,
                       icon: Icons.lock_outline,
                       obscure: _obscure,
                       enabled: !loading,
@@ -339,15 +340,15 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
                         onPressed: () => setState(() => _obscure = !_obscure),
                       ),
                       validator: (v) =>
-                          (v == null || v.isEmpty) ? '请输入密码' : null,
+                          (v == null || v.isEmpty) ? currentAppLocalizations.vgEnterPassword : null,
                       onSubmitted: (_) => _submit(),
                     ),
                     if (_registerMode) ...[
                       const SizedBox(height: 14),
-                      _label('邀请码（选填）'),
+                      _label(currentAppLocalizations.vgReferralCodeOptional),
                       _field(
                         controller: _inviteCode,
-                        hint: '填邀请码注册有优惠',
+                        hint: currentAppLocalizations.vgReferralCodeDiscount,
                         icon: Icons.card_giftcard_outlined,
                         enabled: !loading,
                         onSubmitted: (_) => _submit(),
@@ -378,7 +379,7 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
                                         : cs.onSurfaceVariant,
                                   ),
                                   const SizedBox(width: 6),
-                                  Text('记住我',
+                                  Text(currentAppLocalizations.vgRememberMe,
                                       style: theme.textTheme.bodySmall),
                                 ],
                               ),
@@ -392,7 +393,7 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
                                       Uri.parse('https://ylink.im'),
                                       mode: LaunchMode.externalApplication,
                                     ),
-                            child: const Text('忘记密码?'),
+                            child: Text(currentAppLocalizations.vgForgotPassword),
                           ),
                         ],
                       ),
@@ -416,7 +417,7 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
                           : Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text(_registerMode ? '注册' : '登录'),
+                                Text(_registerMode ? currentAppLocalizations.vgSignUp : currentAppLocalizations.vgSignIn),
                                 const SizedBox(width: 6),
                                 const Icon(Icons.arrow_forward, size: 18),
                               ],
@@ -429,7 +430,7 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
                         const Expanded(child: Divider()),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text('或',
+                          child: Text(currentAppLocalizations.vgOr,
                               style: theme.textTheme.bodySmall
                                   ?.copyWith(color: cs.onSurfaceVariant)),
                         ),
@@ -440,7 +441,7 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
                     OutlinedButton.icon(
                       onPressed: loading ? null : _googleLogin,
                       icon: SvgPicture.string(_kGoogleG, width: 20, height: 20),
-                      label: Text(_registerMode ? '使用 Google 注册' : '使用 Google 登录'),
+                      label: Text(_registerMode ? currentAppLocalizations.vgSignUpWithGoogle : currentAppLocalizations.vgSignInWithGoogle),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 13),
                         shape: RoundedRectangleBorder(
@@ -450,7 +451,7 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
                     ),
                     const SizedBox(height: 18),
                     Text(
-                      _registerMode ? '已有账户?' : '还没有账户?',
+                      _registerMode ? currentAppLocalizations.vgAlreadyHaveAccount : currentAppLocalizations.vgNoAccountYet,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodySmall
                           ?.copyWith(color: cs.onSurfaceVariant),
@@ -466,7 +467,7 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Text(_registerMode ? '去登录' : '创建账户'),
+                      child: Text(_registerMode ? currentAppLocalizations.vgGoSignIn : currentAppLocalizations.vgCreateAccount),
                     ),
                   ],
                 ),

@@ -19,7 +19,7 @@ class AboutView extends StatelessWidget {
       title: appLocalizations.more,
       items: [
         ListItem(
-          title: const Text('Telegram 客服'),
+          title: Text(currentAppLocalizations.vgTelegramSupport),
           // 自家可信链接直接开,唔弹「外部链接+裸URL」确认框(消费者会觉得似钓鱼)。
           onTap: () => launchUrl(
             Uri.parse('https://t.me/easysvpn'),
@@ -28,7 +28,7 @@ class AboutView extends StatelessWidget {
           trailing: const Icon(Icons.launch),
         ),
         ListItem(
-          title: const Text('官网'),
+          title: Text(currentAppLocalizations.vgOfficialSite),
           // 弃用被污染嘅 voguesly.com → 现役面板域名 cp.samseah.qzz.io。
           onTap: () => launchUrl(
             Uri.parse('https://cp.samseah.qzz.io'),
@@ -91,7 +91,7 @@ class AboutView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              '易联 voguesly · 美国住宅 IP 代理\n稳定连接 ChatGPT、Claude、OKX 等全球服务',
+              currentAppLocalizations.vgAboutTagline,
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],

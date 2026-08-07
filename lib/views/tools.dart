@@ -368,8 +368,8 @@ class _VersionItemState extends ConsumerState<_VersionItem> {
     final pkg = globalState.packageInfo;
     return ListItem(
       leading: const Icon(Icons.system_update_outlined),
-      title: const Text('版本'),
-      subtitle: Text('v${pkg.version} · 点击检查更新'),
+      title: Text(currentAppLocalizations.vgVersionLabel),
+      subtitle: Text(currentAppLocalizations.vgVersionTapToCheck(pkg.version)),
       trailing: _checking
           ? const SizedBox(
               width: 18,
@@ -396,7 +396,7 @@ class _QuickActions extends ConsumerWidget {
           Expanded(
             child: _QuickActionCard(
               icon: Icons.shopping_bag_outlined,
-              label: '购买 / 续费',
+              label: currentAppLocalizations.vgBuyOrRenew,
               onTap: () => VogueslyShopPage.open(context),
             ),
           ),
@@ -404,7 +404,7 @@ class _QuickActions extends ConsumerWidget {
           Expanded(
             child: _QuickActionCard(
               icon: Icons.support_agent,
-              label: '联系客服',
+              label: currentAppLocalizations.vgContactSupport,
               onTap: () => VogueslyCsPanel.open(context),
             ),
           ),
@@ -465,13 +465,13 @@ class _AccelModeItem extends ConsumerWidget {
     // ⚠️ 三态判:direct=裸奔(会显绿但流量唔走节点),唔可以当「智能分流(推荐)」谎报。
     final (subtitle, warn) = switch (mode) {
       // 全局 = 唔再自动分流,IP 跟手选线路走(选机房就显示机房 IP),要讲明白。
-      Mode.global => ('全局加速 · 全部走所选线路，IP 跟该线路', false),
-      Mode.direct => ('⚠️ 直连模式 · 未加速,流量未走节点(不安全)', true),
-      _ => ('智能分流 · AI/银行走住宅，国内直连（推荐）', false),
+      Mode.global => (currentAppLocalizations.vgGlobalModeSummary, false),
+      Mode.direct => (currentAppLocalizations.vgDirectModeSummary, true),
+      _ => (currentAppLocalizations.vgRuleModeSummary, false),
     };
     return ListItem(
       leading: Icon(Icons.tune, color: warn ? const Color(0xFFEF4444) : null),
-      title: const Text('加速模式'),
+      title: Text(currentAppLocalizations.vgAccelerationMode),
       subtitle: Text(
         subtitle,
         style: warn
@@ -494,10 +494,10 @@ class _AccelModeItem extends ConsumerWidget {
             ListTile(
               isThreeLine: true,
               leading: Icon(Icons.alt_route, color: cs.primary),
-              title: const Text('智能分流（推荐）'),
-              subtitle: const Text(
-                'AI、银行、支付自动走美国住宅 IP；国内网站直连更快，'
-                '看片下载走机房省住宅流量。IP 检测会显示住宅 IP。',
+              title: Text(currentAppLocalizations.vgSmartRoutingRecommended),
+              subtitle: Text(
+                currentAppLocalizations.vgSmartRoutingDesc1 +
+                currentAppLocalizations.vgSmartRoutingDesc2,
               ),
               trailing: !isGlobal ? Icon(Icons.check, color: cs.primary) : null,
               onTap: () {
@@ -508,13 +508,13 @@ class _AccelModeItem extends ConsumerWidget {
             ListTile(
               isThreeLine: true,
               leading: Icon(Icons.public, color: cs.primary),
-              title: const Text('全局加速'),
+              title: Text(currentAppLocalizations.vgGlobalAcceleration),
               // ⚠️ 呢句係重点:全局会覆盖智能分流,IP 检测站会显示你手选嗰条线路。
               // 用户选咗机房线路再去测 IP,会以为「买咗住宅 IP 但显示机房」= 产品信任伤害。
-              subtitle: const Text(
-                '所有流量都走你选的那一条线路，不再自动分流。'
-                '若选了机房线路，IP 检测会显示机房 IP；'
-                '需要住宅 IP 请在「线路」选住宅节点，或用智能分流。',
+              subtitle: Text(
+                currentAppLocalizations.vgGlobalAccelDesc1 +
+                currentAppLocalizations.vgGlobalAccelDesc2 +
+                currentAppLocalizations.vgGlobalAccelDesc3,
               ),
               trailing: isGlobal ? Icon(Icons.check, color: cs.primary) : null,
               onTap: () {
@@ -540,9 +540,9 @@ class _AccelModeItem extends ConsumerWidget {
 void showVogueslyFeedbackSheet(BuildContext context) {
   showSheet(
     context: context,
-    builder: (_) => const AdaptiveSheetScaffold(
-      body: _FeedbackBody(),
-      title: '反馈问题 / 上传日志',
+    builder: (_) => AdaptiveSheetScaffold(
+      body: const _FeedbackBody(),
+      title: currentAppLocalizations.vgReportIssueUploadLogs,
     ),
   );
 }
@@ -560,26 +560,26 @@ class _AccountServices extends StatelessWidget {
       children: [
         ListItem(
           leading: const Icon(Icons.account_circle_outlined),
-          title: const Text('用户中心'),
-          subtitle: const Text('余额、订单、重置订阅、修改密码'),
+          title: Text(currentAppLocalizations.vgUserCenter),
+          subtitle: Text(currentAppLocalizations.vgUserCenterSubtitle),
           onTap: () => VogueslyUserCenterPage.open(context),
         ),
         ListItem(
           leading: const Icon(Icons.card_giftcard_outlined),
-          title: const Text('邀请返利'),
-          subtitle: const Text('邀请好友、查看佣金、提现'),
+          title: Text(currentAppLocalizations.vgReferralRewards),
+          subtitle: Text(currentAppLocalizations.vgReferralSubtitle),
           onTap: () => VogueslyInvitePage.open(context),
         ),
         ListItem(
           leading: const Icon(Icons.campaign_outlined),
-          title: const Text('公告中心'),
-          subtitle: const Text('最新公告与维护通知'),
+          title: Text(currentAppLocalizations.vgAnnouncements),
+          subtitle: Text(currentAppLocalizations.vgAnnouncementsSubtitle),
           onTap: () => VogueslyNoticePage.open(context),
         ),
         ListItem(
           leading: const Icon(Icons.bar_chart_outlined),
-          title: const Text('流量明细'),
-          subtitle: const Text('逐日流量使用记录'),
+          title: Text(currentAppLocalizations.vgDataUsage),
+          subtitle: Text(currentAppLocalizations.vgDataUsageSubtitle),
           onTap: () => VogueslyStatPage.open(context),
         ),
       ],
@@ -594,8 +594,8 @@ class _FeedbackItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListItem(
       leading: const Icon(Icons.feedback_outlined),
-      title: const Text('反馈问题 / 上传日志'),
-      subtitle: const Text('一键把日志发给客服，帮你快速定位'),
+      title: Text(currentAppLocalizations.vgReportIssueUploadLogs),
+      subtitle: Text(currentAppLocalizations.vgReportIssueSubtitle),
       onTap: () => showVogueslyFeedbackSheet(context),
     );
   }
@@ -610,8 +610,8 @@ class _MyTicketsItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListItem(
       leading: const Icon(Icons.confirmation_number_outlined),
-      title: const Text('我的工单'),
-      subtitle: const Text('查看客服回复、继续跟进'),
+      title: Text(currentAppLocalizations.vgMyTickets),
+      subtitle: Text(currentAppLocalizations.vgMyTicketsSubtitle),
       onTap: () => VogueslyTicketsPage.open(context),
     );
   }
@@ -624,11 +624,11 @@ class _LogsViewItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const ListItem.open(
-      leading: Icon(Icons.article_outlined),
-      title: Text('查看日志'),
-      subtitle: Text('实时连接日志，排查问题用'),
-      delegate: OpenDelegate(widget: LogsView()),
+    return ListItem.open(
+      leading: const Icon(Icons.article_outlined),
+      title: Text(currentAppLocalizations.vgViewLogs),
+      subtitle: Text(currentAppLocalizations.vgViewLogsSubtitle),
+      delegate: const OpenDelegate(widget: LogsView()),
     );
   }
 }
@@ -654,16 +654,16 @@ class _FeedbackBodyState extends ConsumerState<_FeedbackBody> {
     final b = StringBuffer();
     try {
       final pkg = await PackageInfo.fromPlatform();
-      b.writeln('版本: ${pkg.version}+${pkg.buildNumber}');
+      b.writeln(currentAppLocalizations.vgVersionBuildWith(pkg.version, pkg.buildNumber));
     } catch (_) {}
     try {
       final d = await DeviceInfoPlugin().androidInfo;
-      b.writeln('设备: ${d.manufacturer} ${d.model} · Android ${d.version.release}');
+      b.writeln(currentAppLocalizations.vgDeviceInfoWith(d.manufacturer, d.model, d.version.release));
     } catch (_) {}
     // 近期 app 日志(尾 120 条)
     final logs = globalState.container.read(logsProvider).list;
     final tail = logs.length > 120 ? logs.sublist(logs.length - 120) : logs;
-    b.writeln('--- 近期日志 ---');
+    b.writeln(currentAppLocalizations.vgRecentLogsHeader);
     for (final l in tail) {
       b.writeln('${l.dateTime} [${l.logLevel.name}] ${l.payload}');
     }
@@ -673,12 +673,12 @@ class _FeedbackBodyState extends ConsumerState<_FeedbackBody> {
   Future<void> _submit() async {
     final token = ref.read(vogueslyAuthProvider).token;
     if (token == null) {
-      globalState.showNotifier('请先登录再反馈');
+      globalState.showNotifier(currentAppLocalizations.vgSignInBeforeFeedback);
       return;
     }
     setState(() => _busy = true);
     final diag = await _collectDiagnostics();
-    final msg = '${_desc.text.trim()}\n\n=== 诊断信息(自动附带) ===\n$diag';
+    final msg = currentAppLocalizations.vgFeedbackBodyWith(_desc.text.trim(), diag);
     final res = await ref.read(vogueslyApiProvider).submitFeedback(token, message: msg);
     if (!mounted) return;
     setState(() => _busy = false);
@@ -695,7 +695,7 @@ class _FeedbackBodyState extends ConsumerState<_FeedbackBody> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            '描述你遇到嘅问题，我哋会自动附上设备信息同近期日志帮你定位。',
+            currentAppLocalizations.vgFeedbackHint,
             style: context.textTheme.bodyMedium
                 ?.copyWith(color: cs.onSurfaceVariant),
           ),
@@ -705,7 +705,7 @@ class _FeedbackBodyState extends ConsumerState<_FeedbackBody> {
             minLines: 3,
             maxLines: 6,
             decoration: InputDecoration(
-              hintText: '例如：连接后打唔开网页 / 某个节点连唔到…',
+              hintText: currentAppLocalizations.vgFeedbackPlaceholder,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -721,7 +721,7 @@ class _FeedbackBodyState extends ConsumerState<_FeedbackBody> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.send_rounded),
-            label: Text(_busy ? '提交中…' : '提交给客服'),
+            label: Text(_busy ? currentAppLocalizations.vgSubmitting : currentAppLocalizations.vgSubmitToSupport),
           ),
         ],
       ),
@@ -785,7 +785,7 @@ class _AccountHeader extends ConsumerWidget {
               Expanded(
                 child: Text(
                   user?.email ??
-                      (loggedIn ? '账号已登录 · 套餐加载中…' : context.appLocalizations.vogNotLoggedIn),
+                      (loggedIn ? currentAppLocalizations.vgSignedInLoadingPlan : context.appLocalizations.vogNotLoggedIn),
                   style: context.textTheme.titleSmall,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -833,8 +833,8 @@ class _AccountHeader extends ConsumerWidget {
                   const SizedBox(width: 5),
                   Expanded(
                     child: Text(
-                      '套餐可同时连接 ${user.deviceLimit} 台设备；'
-                      '若提示连接超限，先完全退出其他客户端再重连',
+                      currentAppLocalizations.vgPlanDeviceLimitWith(user.deviceLimit ?? 1) +
+                      currentAppLocalizations.vgDeviceLimitHint,
                       style: context.textTheme.bodySmall
                           ?.copyWith(color: cs.onSurfaceVariant),
                     ),
@@ -856,11 +856,11 @@ class _SubscriptionEntry extends ConsumerWidget {
 
   // 上次更新时间:今日显「今天 HH:mm」,否则「MM-dd HH:mm」;从未更新显占位。
   String _lastUpdate(BuildContext context, DateTime? d) {
-    if (d == null) return '点下方按钮拉取最新节点';
+    if (d == null) return currentAppLocalizations.vgTapBelowToFetchNodes;
     final now = DateTime.now();
     final sameDay = d.year == now.year && d.month == now.month && d.day == now.day;
     final t = DateFormat('HH:mm').format(d);
-    return sameDay ? '上次更新 · 今天 $t' : '上次更新 · ${DateFormat('MM-dd').format(d)} $t';
+    return sameDay ? currentAppLocalizations.vgLastUpdatedTodayWith(t) : currentAppLocalizations.vgLastUpdatedWith(DateFormat('MM-dd').format(d), t);
   }
 
   Future<void> _refresh(BuildContext context, WidgetRef ref, Profile profile) async {
@@ -868,7 +868,7 @@ class _SubscriptionEntry extends ConsumerWidget {
         .read(profilesActionProvider.notifier)
         .refreshVogueslyProfile(profile, showLoading: true);
     if (!context.mounted) return;
-    globalState.showNotifier(ok ? '订阅已更新' : '更新失败,请稍后重试');
+    globalState.showNotifier(ok ? currentAppLocalizations.vgSubscriptionUpdated : currentAppLocalizations.vgUpdateFailedRetry);
   }
 
   void _openManage(BuildContext context) {
@@ -921,7 +921,7 @@ class _SubscriptionEntry extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '我的订阅',
+                        currentAppLocalizations.vgMySubscription,
                         style: context.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -929,7 +929,7 @@ class _SubscriptionEntry extends ConsumerWidget {
                       const SizedBox(height: 3),
                       Text(
                         profile == null
-                            ? '未导入订阅 · 进入管理页导入'
+                            ? currentAppLocalizations.vgNoSubscriptionImported
                             : _lastUpdate(context, profile.lastUpdateDate),
                         style: context.textTheme.bodySmall
                             ?.copyWith(color: cs.onSurfaceVariant),
@@ -954,13 +954,13 @@ class _SubscriptionEntry extends ConsumerWidget {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.refresh_rounded, size: 20),
-                    label: Text(updating ? '更新中…' : '更新订阅'),
+                    label: Text(updating ? currentAppLocalizations.vgUpdating : currentAppLocalizations.vgUpdateSubscription),
                   ),
                 ),
                 const SizedBox(width: 10),
                 OutlinedButton(
                   onPressed: () => _openManage(context),
-                  child: const Text('管理订阅'),
+                  child: Text(currentAppLocalizations.vgManageSubscription),
                 ),
               ],
             ),
@@ -979,13 +979,13 @@ class _LogoutItem extends ConsumerWidget {
     final cs = context.colorScheme;
     return ListItem(
       leading: Icon(Icons.logout, color: cs.error),
-      title: Text('退出登录', style: TextStyle(color: cs.error)),
+      title: Text(currentAppLocalizations.vgSignOut, style: TextStyle(color: cs.error)),
       onTap: () async {
         final ok = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('退出登录'),
-            content: const Text('确定退出当前账户?'),
+            title: Text(currentAppLocalizations.vgSignOut),
+            content: Text(currentAppLocalizations.vgSignOutConfirmShort),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
@@ -993,7 +993,7 @@ class _LogoutItem extends ConsumerWidget {
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('退出'),
+                child: Text(currentAppLocalizations.vgExit),
               ),
             ],
           ),

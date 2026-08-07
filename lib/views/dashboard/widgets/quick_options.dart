@@ -38,7 +38,7 @@ class TUNButton extends StatelessWidget {
           );
         },
         info: Info(
-          label: '${appLocalizations.tun}（设备接管）',
+          label: currentAppLocalizations.vgTunDeviceWide(appLocalizations.tun),
           iconData: Icons.stacked_line_chart,
         ),
         child: Container(
@@ -110,7 +110,7 @@ class SystemProxyButton extends StatelessWidget {
           );
         },
         info: Info(
-          label: '${appLocalizations.systemProxy}（兼容模式）',
+          label: currentAppLocalizations.vgSystemProxyCompat(appLocalizations.systemProxy),
           iconData: Icons.shuffle,
         ),
         child: Container(

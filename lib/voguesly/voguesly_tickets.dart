@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fl_clash/common/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'voguesly_api.dart';
@@ -41,7 +42,7 @@ class _VogueslyTicketsPageState extends ConsumerState<VogueslyTicketsPage> {
     if (token == null || token.isEmpty) {
       setState(() {
         _loading = false;
-        _error = '未登录';
+        _error = currentAppLocalizations.vgNotSignedIn;
       });
       return;
     }
@@ -67,11 +68,11 @@ class _VogueslyTicketsPageState extends ConsumerState<VogueslyTicketsPage> {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('我的工单'),
+        title: Text(currentAppLocalizations.vgMyTickets),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: '刷新',
+            tooltip: currentAppLocalizations.vgRefresh,
             onPressed: _loading ? null : _load,
           ),
         ],
@@ -92,7 +93,7 @@ class _VogueslyTicketsPageState extends ConsumerState<VogueslyTicketsPage> {
     }
     if (_tickets.isEmpty) {
       return _centeredHint(
-        '还没有工单\n遇到问题可以在「反馈问题 / 上传日志」提交',
+        currentAppLocalizations.vgNoTicketsHint,
         cs,
       );
     }
@@ -108,7 +109,7 @@ class _VogueslyTicketsPageState extends ConsumerState<VogueslyTicketsPage> {
             color: t.isClosed ? cs.outline : cs.primary,
           ),
           title: Text(
-            t.subject.isEmpty ? '工单 #${t.id}' : t.subject,
+            t.subject.isEmpty ? currentAppLocalizations.vgTicketNumber(t.id) : t.subject,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -125,10 +126,10 @@ class _VogueslyTicketsPageState extends ConsumerState<VogueslyTicketsPage> {
 
   Widget _statusChip(VogueslyTicket t, ColorScheme cs) {
     final (String label, Color color) = t.isClosed
-        ? ('已关闭', cs.outline)
+        ? (currentAppLocalizations.vgTicketClosed, cs.outline)
         : t.waitingReply
-            ? ('等待回复', cs.tertiary)
-            : ('客服已回', cs.primary);
+            ? (currentAppLocalizations.vgTicketAwaitingReply, cs.tertiary)
+            : (currentAppLocalizations.vgTicketSupportReplied, cs.primary);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
@@ -246,15 +247,15 @@ class _VogueslyTicketDetailPageState
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('关闭工单'),
-        content: const Text('关闭后就唔可以再回复。确定问题已解决?'),
+        title: Text(currentAppLocalizations.vgCloseTicket),
+        content: Text(currentAppLocalizations.vgCloseTicketConfirm),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('取消')),
+              child: Text(currentAppLocalizations.vgCancel)),
           TextButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('关闭工单')),
+              child: Text(currentAppLocalizations.vgCloseTicket)),
         ],
       ),
     );
@@ -267,7 +268,7 @@ class _VogueslyTicketDetailPageState
       await _load();
     } else {
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('关闭失败，请稍后再试')));
+          .showSnackBar(SnackBar(content: Text(currentAppLocalizations.vgCloseFailedRetry)));
     }
   }
 
@@ -288,10 +289,10 @@ class _VogueslyTicketDetailPageState
       appBar: AppBar(
         title: Text(t?.subject.isNotEmpty == true
             ? t!.subject
-            : '工单 #${widget.id}'),
+            : currentAppLocalizations.vgTicketNumber(widget.id)),
         actions: [
           if (t != null && !closed)
-            TextButton(onPressed: _close, child: const Text('关闭工单')),
+            TextButton(onPressed: _close, child: Text(currentAppLocalizations.vgCloseTicket)),
         ],
       ),
       body: Column(
@@ -301,7 +302,7 @@ class _VogueslyTicketDetailPageState
                 ? const Center(child: CircularProgressIndicator())
                 : (t == null || t.messages.isEmpty)
                     ? Center(
-                        child: Text('暂无消息',
+                        child: Text(currentAppLocalizations.vgNoMessages,
                             style: TextStyle(color: cs.onSurfaceVariant)))
                     : ListView.builder(
                         controller: _scrollCtrl,
@@ -315,7 +316,7 @@ class _VogueslyTicketDetailPageState
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 14),
               color: cs.surfaceContainerHighest,
-              child: Text('工单已关闭',
+              child: Text(currentAppLocalizations.vgTicketIsClosed,
                   textAlign: TextAlign.center,
                   style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13)),
             )
@@ -331,12 +332,12 @@ class _VogueslyTicketDetailPageState
                         controller: _inputCtrl,
                         minLines: 1,
                         maxLines: 4,
-                        decoration: const InputDecoration(
-                          hintText: '继续回复客服…',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          hintText: currentAppLocalizations.vgReplyToSupport,
+                          border: const OutlineInputBorder(),
                           isDense: true,
                           contentPadding:
-                              EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                              const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                         ),
                       ),
                     ),
@@ -381,7 +382,8 @@ class _VogueslyTicketDetailPageState
             Text(m.message, style: const TextStyle(fontSize: 14, height: 1.45)),
             const SizedBox(height: 3),
             Text(
-              '${me ? '我' : '客服'} · ${_time(m.createdAt)}',
+              '${me ? currentAppLocalizations.vgMe : currentAppLocalizations.vgSupport}'
+              ' · ${_time(m.createdAt)}',
               style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant),
             ),
           ],

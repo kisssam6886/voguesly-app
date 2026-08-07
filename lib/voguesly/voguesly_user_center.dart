@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fl_clash/common/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'voguesly_api.dart';
@@ -47,7 +48,7 @@ class _VogueslyUserCenterPageState
   }
 
   String _expiry(int? expiredAt) {
-    if (expiredAt == null || expiredAt == 0) return '长期有效';
+    if (expiredAt == null || expiredAt == 0) return currentAppLocalizations.vgNoExpiry;
     final d = DateTime.fromMillisecondsSinceEpoch(expiredAt * 1000);
     return '${d.year}-${d.month.toString().padLeft(2, '0')}-'
         '${d.day.toString().padLeft(2, '0')}';
@@ -64,15 +65,15 @@ class _VogueslyUserCenterPageState
     final ok = await showDialog<bool>(
       context: context,
       builder: (dctx) => AlertDialog(
-        title: const Text('重置订阅'),
-        content: const Text('重置后旧的订阅链接会立即失效,已导出到其他客户端的需重新导入。确定重置?'),
+        title: Text(currentAppLocalizations.vgResetSubscription),
+        content: Text(currentAppLocalizations.vgResetSubscriptionConfirm),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(dctx, false),
-              child: const Text('取消')),
+              child: Text(currentAppLocalizations.vgCancel)),
           FilledButton(
               onPressed: () => Navigator.pop(dctx, true),
-              child: const Text('重置')),
+              child: Text(currentAppLocalizations.vgReset)),
         ],
       ),
     );
@@ -96,42 +97,42 @@ class _VogueslyUserCenterPageState
     final ok = await showDialog<bool>(
       context: context,
       builder: (dctx) => AlertDialog(
-        title: const Text('修改密码'),
+        title: Text(currentAppLocalizations.vgChangePassword),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
                 controller: oldC,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: '当前密码')),
+                decoration: InputDecoration(labelText: currentAppLocalizations.vgCurrentPassword)),
             TextField(
                 controller: newC,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: '新密码(至少 8 位)')),
+                decoration: InputDecoration(labelText: currentAppLocalizations.vgNewPasswordMin8)),
             TextField(
                 controller: new2C,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: '确认新密码')),
+                decoration: InputDecoration(labelText: currentAppLocalizations.vgConfirmNewPassword)),
           ],
         ),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(dctx, false),
-              child: const Text('取消')),
+              child: Text(currentAppLocalizations.vgCancel)),
           FilledButton(
               onPressed: () => Navigator.pop(dctx, true),
-              child: const Text('确认修改')),
+              child: Text(currentAppLocalizations.vgConfirmChange)),
         ],
       ),
     );
     if (ok != true) return;
     final np = newC.text;
     if (np.length < 8) {
-      _toast('新密码至少 8 位');
+      _toast(currentAppLocalizations.vgNewPasswordTooShort);
       return;
     }
     if (np != new2C.text) {
-      _toast('两次新密码不一致');
+      _toast(currentAppLocalizations.vgPasswordsDoNotMatch);
       return;
     }
     final token = ref.read(vogueslyAuthProvider).token;
@@ -145,12 +146,12 @@ class _VogueslyUserCenterPageState
     showDialog(
       context: context,
       builder: (dctx) => AlertDialog(
-        title: const Text('退出登录'),
-        content: const Text('确定要退出当前账号吗?'),
+        title: Text(currentAppLocalizations.vgSignOut),
+        content: Text(currentAppLocalizations.vgSignOutConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dctx).pop(),
-            child: const Text('取消'),
+            child: Text(currentAppLocalizations.vgCancel),
           ),
           FilledButton(
             onPressed: () async {
@@ -160,7 +161,7 @@ class _VogueslyUserCenterPageState
               ref.read(vogueslyAuthProvider.notifier).logout();
               if (context.mounted) Navigator.of(context).maybePop();
             },
-            child: const Text('退出'),
+            child: Text(currentAppLocalizations.vgExit),
           ),
         ],
       ),
@@ -173,7 +174,7 @@ class _VogueslyUserCenterPageState
     final tt = Theme.of(context).textTheme;
     final user = ref.watch(vogueslyAuthProvider.select((s) => s.user));
     return Scaffold(
-      appBar: vogAppBar(context, title: '用户中心'),
+      appBar: vogAppBar(context, title: currentAppLocalizations.vgUserCenter),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         children: [
@@ -195,15 +196,15 @@ class _VogueslyUserCenterPageState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(user?.email ?? '未登录',
+                        Text(user?.email ?? currentAppLocalizations.vgNotSignedIn,
                             style:
                                 tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                             overflow: TextOverflow.ellipsis),
                         const SizedBox(height: 4),
                         Text(
                           user?.planName == null || user!.planName!.isEmpty
-                              ? '暂无套餐'
-                              : '当前套餐:${user.planName}',
+                              ? currentAppLocalizations.vgNoPlan
+                              : currentAppLocalizations.vgCurrentPlanWith(user.planName ?? ''),
                           style: tt.bodySmall?.copyWith(
                               color: cs.onSurfaceVariant.withValues(alpha: 0.8)),
                         ),
@@ -219,7 +220,7 @@ class _VogueslyUserCenterPageState
           Row(
             children: [
               Expanded(
-                child: _miniCard('账户余额',
+                child: _miniCard(currentAppLocalizations.vgAccountBalance,
                     _balanceCents == null
                         ? '—'
                         : '¥${(_balanceCents! / 100).toStringAsFixed(2)}',
@@ -228,13 +229,13 @@ class _VogueslyUserCenterPageState
               const SizedBox(width: 10),
               Expanded(
                 child: _miniCard(
-                    '剩余流量',
+                    currentAppLocalizations.vgRemainingData,
                     user == null ? '—' : _gb(user.remain),
                     Icons.data_usage_outlined),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: _miniCard('到期时间',
+                child: _miniCard(currentAppLocalizations.vgExpiryDate,
                     user == null ? '—' : _expiry(user.expiredAt),
                     Icons.event_outlined),
               ),
@@ -242,18 +243,18 @@ class _VogueslyUserCenterPageState
           ),
           const SizedBox(height: 22),
           // 快捷操作
-          _actionTile(Icons.storefront_outlined, '购买 / 续费套餐',
+          _actionTile(Icons.storefront_outlined, currentAppLocalizations.vgBuyOrRenewPlan,
               () => VogueslyShopPage.open(context)),
-          _actionTile(Icons.receipt_long_outlined, '我的订单',
+          _actionTile(Icons.receipt_long_outlined, currentAppLocalizations.vgMyOrders,
               () => VogueslyOrdersPage.open(context)),
-          _actionTile(Icons.card_giftcard_outlined, '邀请返利',
+          _actionTile(Icons.card_giftcard_outlined, currentAppLocalizations.vgReferralRewards,
               () => VogueslyInvitePage.open(context)),
           const Divider(height: 28),
           // 账号安全(从 ylink.im/#/profile 移入原生)
-          _actionTile(Icons.lock_reset_outlined, '重置订阅', _resetSecurity),
-          _actionTile(Icons.password_outlined, '修改密码', _changePassword),
+          _actionTile(Icons.lock_reset_outlined, currentAppLocalizations.vgResetSubscription, _resetSecurity),
+          _actionTile(Icons.password_outlined, currentAppLocalizations.vgChangePassword, _changePassword),
           const Divider(height: 28),
-          _actionTile(Icons.logout, '退出登录', _confirmLogout, danger: true),
+          _actionTile(Icons.logout, currentAppLocalizations.vgSignOut, _confirmLogout, danger: true),
         ],
       ),
     );
@@ -376,16 +377,16 @@ class _VogueslyOrdersPageState extends ConsumerState<VogueslyOrdersPage> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (dctx) => AlertDialog(
-        title: const Text('取消订单'),
-        content: Text('确定取消订单「${o.planName}」?'),
+        title: Text(currentAppLocalizations.vgCancelOrder),
+        content: Text(currentAppLocalizations.vgCancelOrderConfirm(o.planName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dctx).pop(false),
-            child: const Text('返回'),
+            child: Text(currentAppLocalizations.vgBack),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dctx).pop(true),
-            child: const Text('取消订单'),
+            child: Text(currentAppLocalizations.vgCancelOrder),
           ),
         ],
       ),
@@ -397,7 +398,7 @@ class _VogueslyOrdersPageState extends ConsumerState<VogueslyOrdersPage> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-          content: Text(done ? '订单已取消' : '取消失败,请稍后重试'),
+          content: Text(done ? currentAppLocalizations.vgOrderCancelledToast : currentAppLocalizations.vgCancelFailedRetry),
           behavior: SnackBarBehavior.floating),
     );
     if (done) _load();
@@ -410,10 +411,10 @@ class _VogueslyOrdersPageState extends ConsumerState<VogueslyOrdersPage> {
     return Scaffold(
       appBar: vogAppBar(
         context,
-        title: '我的订单',
+        title: currentAppLocalizations.vgMyOrders,
         actions: [
           IconButton(
-            tooltip: '刷新',
+            tooltip: currentAppLocalizations.vgRefresh,
             icon: const Icon(Icons.refresh),
             onPressed: _loading ? null : _load,
           ),
@@ -425,11 +426,11 @@ class _VogueslyOrdersPageState extends ConsumerState<VogueslyOrdersPage> {
             ? const Center(child: CircularProgressIndicator())
             : _orders.isEmpty
                 ? ListView(
-                    children: const [
-                      SizedBox(height: 120),
-                      Icon(Icons.receipt_long_outlined, size: 44),
-                      SizedBox(height: 12),
-                      Center(child: Text('暂无订单记录')),
+                    children: [
+                      const SizedBox(height: 120),
+                      const Icon(Icons.receipt_long_outlined, size: 44),
+                      const SizedBox(height: 12),
+                      Center(child: Text(currentAppLocalizations.vgNoOrders)),
                     ],
                   )
                 : ListView.separated(
@@ -484,7 +485,7 @@ class _VogueslyOrdersPageState extends ConsumerState<VogueslyOrdersPage> {
                               ),
                               if (o.tradeNo.isNotEmpty) ...[
                                 const SizedBox(height: 4),
-                                Text('订单号:${o.tradeNo}',
+                                Text(currentAppLocalizations.vgOrderNoWith(o.tradeNo),
                                     style: tt.bodySmall?.copyWith(
                                         color: cs.onSurfaceVariant
                                             .withValues(alpha: 0.6))),
@@ -497,13 +498,13 @@ class _VogueslyOrdersPageState extends ConsumerState<VogueslyOrdersPage> {
                                     Expanded(
                                       child: FilledButton(
                                         onPressed: () => _continuePay(o),
-                                        child: const Text('继续支付'),
+                                        child: Text(currentAppLocalizations.vgContinuePayment),
                                       ),
                                     ),
                                     const SizedBox(width: 10),
                                     OutlinedButton(
                                       onPressed: () => _cancel(o),
-                                      child: const Text('取消订单'),
+                                      child: Text(currentAppLocalizations.vgCancelOrder),
                                     ),
                                   ],
                                 ),

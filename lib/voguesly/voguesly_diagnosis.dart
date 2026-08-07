@@ -57,7 +57,8 @@ class LocalDiagnosis {
 /// 已知第三方代理 / VPN 软件。key = 进程名或路径入面嘅特征串(小写),value = 显示名。
 ///
 /// ⚠️ 唔好加过于通用嘅词(例如单独一个 'vpn'),会误报到系统组件度,反而吓亲用户。
-const _knownThirdParty = <String, String>{
+// ⚠️ 唔可以係 const:value 係要跟语言变嘅显示名(key 係进程名,永远唔翻译)。
+Map<String, String> get _knownThirdParty => <String, String>{
   'clash verge': 'Clash Verge',
   'clash-verge': 'Clash Verge',
   'clash for windows': 'Clash for Windows',
@@ -65,15 +66,15 @@ const _knownThirdParty = <String, String>{
   'mihomo-party': 'Mihomo Party',
   // 裸 mihomo 内核(自己命令行跑嘅)一样会绑端口。⚠️ 易联自己个核心叫 FlClashCore,
   // 唔叫 mihomo,所以呢条唔会误伤自己。
-  'mihomo': 'mihomo 内核',
-  'flclash': 'FlClash(原版)',
-  'shadowrocket': 'Shadowrocket(小火箭)',
-  'macpackettunnel': 'Shadowrocket(小火箭)',
+  'mihomo': currentAppLocalizations.vgMihomoCore,
+  'flclash': currentAppLocalizations.vgFlClashOriginal,
+  'shadowrocket': currentAppLocalizations.vgShadowrocket,
+  'macpackettunnel': currentAppLocalizations.vgShadowrocket,
   'surge': 'Surge',
   'quantumult': 'Quantumult X',
   'stash': 'Stash',
   'loon': 'Loon',
-  'v2ray': 'V2Ray 系客户端',
+  'v2ray': currentAppLocalizations.vgV2RayFamilyClient,
   'nekoray': 'NekoRay',
   'sing-box': 'sing-box',
   'singbox': 'sing-box',
@@ -280,9 +281,9 @@ Future<LocalDiagnosis> diagnoseLocal({
   final items = <DiagItem>[];
 
   if (!coreRunning) {
-    return const LocalDiagnosis(
+    return LocalDiagnosis(
       items: [],
-      verdict: '易联未连接。先撳首页个大圆圈连接,再返嚟检测。',
+      verdict: currentAppLocalizations.vgNotConnectedTapCircle,
       level: DiagLevel.info,
     );
   }
@@ -290,33 +291,33 @@ Future<LocalDiagnosis> diagnoseLocal({
   // ── Android:唔使(亦冇权限)扫其他 App,但要讲清楚点解唔会静默冲突 ──────────
   if (system.isAndroid) {
     final listening = await _portInUse(mixedPort);
-    items.add(const DiagItem(
-      title: '虚拟网卡(VPN)',
-      value: '易联接管中',
+    items.add(DiagItem(
+      title: currentAppLocalizations.vgVirtualNicVpn,
+      value: currentAppLocalizations.vgVogueslyInControl,
       level: DiagLevel.ok,
-      detail: '安卓同一时间只准一个 VPN 运行。你开易联嗰阵,系统会自动停低其他 VPN '
-          '并且弹窗问你 —— 所以唔会出现「两个都以为自己喺度行」嘅静默冲突。',
+      detail: currentAppLocalizations.vgAndroidOneVpnHint +
+          currentAppLocalizations.vgAndroidOneVpnHint2,
     ));
     items.add(DiagItem(
-      title: '本地端口 $mixedPort',
-      value: listening ? '监听中' : '未监听',
+      title: currentAppLocalizations.vgLocalPortNum(mixedPort),
+      value: listening ? currentAppLocalizations.vgListening : currentAppLocalizations.vgNotListening,
       level: listening ? DiagLevel.ok : DiagLevel.warn,
       detail: listening
           ? null
-          : '端口可能畀另一个代理 App 占咗。安卓上呢个唔影响上网(易联行 VPN 通道),'
-              '但会令本页嘅解锁/延迟检测量唔到嘢。',
+          : currentAppLocalizations.vgPortMaybeTakenAndroid +
+              currentAppLocalizations.vgPortMaybeTakenAndroid2,
     ));
     return LocalDiagnosis(
       items: items,
-      verdict: listening ? '本机环境正常。' : '上网正常;检测功能可能受本地端口占用影响。',
+      verdict: listening ? currentAppLocalizations.vgLocalEnvOk : currentAppLocalizations.vgOnlineButChecksAffected,
       level: listening ? DiagLevel.ok : DiagLevel.warn,
     );
   }
 
   if (!system.isDesktop) {
-    return const LocalDiagnosis(
+    return LocalDiagnosis(
       items: [],
-      verdict: '当前平台唔支持本机环境诊断。',
+      verdict: currentAppLocalizations.vgPlatformNoLocalDiag,
       level: DiagLevel.info,
     );
   }
@@ -330,34 +331,34 @@ Future<LocalDiagnosis> diagnoseLocal({
     final tun = await _macTun();
     tunOurs = tun.ours;
     items.add(DiagItem(
-      title: '虚拟网卡(TUN)',
-      value: tunOurs ? '易联接管中 · ${tun.name}' : (tunPreferred ? '未接管' : '未开启'),
+      title: currentAppLocalizations.vgVirtualNicTun,
+      value: tunOurs ? currentAppLocalizations.vgVogueslyInControlWith(tun.name ?? '') : (tunPreferred ? currentAppLocalizations.vgNotInControl : currentAppLocalizations.vgNotEnabled),
       level: tunOurs
           ? DiagLevel.ok
           : (tunPreferred ? DiagLevel.bad : DiagLevel.info),
       detail: tunOurs
-          ? '公网流量正行紧易联嘅虚拟网卡。呢条係主路径,唔靠系统代理。'
+          ? currentAppLocalizations.vgPublicTrafficOnOurTun
           : tun.foreign.isNotEmpty
-              ? '公网流量行紧 ${tun.foreign.join('、')},但唔係易联嘅虚拟网卡 —— '
-                  '大机会係另一个 VPN 抢咗默认路由。'
+              ? currentAppLocalizations.vgPublicTrafficOnOtherTun(tun.foreign.join('、')) +
+                  currentAppLocalizations.vgLikelyAnotherVpnTookRoute
               : (tunPreferred
-                  ? '设置入面开咗虚拟网卡,但公网流量并冇行 utun。可能係授权未完成。'
-                  : '你未开虚拟网卡,而家行紧系统代理兼容模式。'),
+                  ? currentAppLocalizations.vgTunOnButNoUtun
+                  : currentAppLocalizations.vgTunOffUsingCompatMode),
     ));
   } else {
     final route = await _run('route', const ['print', '-4']);
     tunOurs = route.contains('198.18.') || route.contains('198.19.');
     items.add(DiagItem(
-      title: '虚拟网卡(TUN)',
-      value: tunOurs ? '易联接管中' : (tunPreferred ? '未接管' : '未开启'),
+      title: currentAppLocalizations.vgVirtualNicTun,
+      value: tunOurs ? currentAppLocalizations.vgVogueslyInControl : (tunPreferred ? currentAppLocalizations.vgNotInControl : currentAppLocalizations.vgNotEnabled),
       level: tunOurs
           ? DiagLevel.ok
           : (tunPreferred ? DiagLevel.bad : DiagLevel.info),
       detail: tunOurs
-          ? '路由表见到易联嘅虚拟网卡。呢条係主路径,唔靠系统代理。'
+          ? currentAppLocalizations.vgRouteTableSeesOurTun
           : (tunPreferred
-              ? '设置入面开咗虚拟网卡,但路由表见唔到。可能係后台服务未装好。'
-              : '你未开虚拟网卡,而家行紧系统代理兼容模式。'),
+              ? currentAppLocalizations.vgTunOnButNotInRouteTable
+              : currentAppLocalizations.vgTunOffUsingCompatMode),
     ));
   }
 
@@ -369,16 +370,18 @@ Future<LocalDiagnosis> diagnoseLocal({
       (target.endsWith(':$mixedPort') || target.contains(':$mixedPort'));
   final hijacked = target != null && !ours;
   items.add(DiagItem(
-    title: '系统代理',
+    title: currentAppLocalizations.vgSystemProxy,
     value: target == null
-        ? '未开启'
-        : (ours ? '指向易联 · $target' : '被其他软件接管 · $target'),
+        ? currentAppLocalizations.vgNotEnabled
+        : (ours ? currentAppLocalizations.vgPointsToVogueslyWith(target) : currentAppLocalizations.vgTakenByOtherAppWith(target)),
     level: target == null
         ? DiagLevel.info
         : (ours ? DiagLevel.ok : DiagLevel.warn),
     detail: hijacked
-        ? '系统代理全机得一份设置,谁后写谁赢 —— 而家指住 $target,唔係易联嘅 $mixedPort。'
-            '${tunOurs ? '你嘅上网**唔受影响**,因为易联行紧虚拟网卡。' : '而虚拟网卡亦未接管,所以而家可能真係上唔到网。'}'
+        ? currentAppLocalizations.vgSystemProxySingleSlot(target, mixedPort) +
+            (tunOurs
+                ? currentAppLocalizations.vgTunUnaffectedNote
+                : currentAppLocalizations.vgTunAlsoNotInControlNote)
         : null,
   ));
 
@@ -387,29 +390,29 @@ Future<LocalDiagnosis> diagnoseLocal({
   final inUse = owner != null || await _portInUse(mixedPort);
   final portOurs = owner == null ? inUse : _isOurs(owner);
   items.add(DiagItem(
-    title: '本地端口 $mixedPort',
+    title: currentAppLocalizations.vgLocalPortNum(mixedPort),
     value: !inUse
-        ? '未监听'
-        : (portOurs ? '易联在监听' : '被其他程序占用 · $owner'),
+        ? currentAppLocalizations.vgNotListening
+        : (portOurs ? currentAppLocalizations.vgVogueslyListening : currentAppLocalizations.vgTakenByOtherProcessWith(owner ?? '')),
     level: !inUse
         ? DiagLevel.bad
         : (portOurs ? DiagLevel.ok : DiagLevel.bad),
     detail: portOurs
         ? null
         : (!inUse
-            ? '易联核心冇成功绑到端口。'
-            : '$owner 占住咗 $mixedPort,易联核心绑唔到 —— 呢个正正係「界面显示已连接但上唔到网」'
-                '嗰种最难查嘅故障。可以喺「设置 → 网络」改一个冇人用嘅端口。'),
+            ? currentAppLocalizations.vgCoreFailedToBindPort
+            : currentAppLocalizations.vgPortHeldByOther(owner ?? '', mixedPort) +
+                currentAppLocalizations.vgPortHeldByOther2),
   ));
 
   // ④ 同场运行嘅其他代理软件 —— 纯提示,唔当错
   items.add(DiagItem(
-    title: '同场运行',
-    value: thirdParty.isEmpty ? '未检测到其他代理软件' : thirdParty.join('、'),
+    title: currentAppLocalizations.vgRunningAlongside,
+    value: thirdParty.isEmpty ? currentAppLocalizations.vgNoOtherProxyDetected : thirdParty.join('、'),
     level: DiagLevel.info,
     detail: thirdParty.isEmpty
         ? null
-        : '易联唔会去动佢哋(有啲可能係你连公司内网嘅通道)。只要上面三项正常,共存冇问题。',
+        : currentAppLocalizations.vgCoexistFine,
   ));
 
   // ── 一句话结论 ──────────────────────────────────────────────────────────
@@ -418,16 +421,18 @@ Future<LocalDiagnosis> diagnoseLocal({
   final String verdict;
   final DiagLevel level;
   if (portBlocked) {
-    verdict = '本地端口畀 $owner 占咗,易联核心可能绑唔到端口 —— 建议换一个端口。';
+    verdict = currentAppLocalizations.vgLocalPortHeldSuggestChange(owner ?? '');
     level = DiagLevel.bad;
   } else if (!hasTransport) {
-    verdict = '而家冇任何一条通路接管紧流量,你应该係上唔到网。试下重新连接。';
+    verdict = currentAppLocalizations.vgNoPathCarryingTraffic;
     level = DiagLevel.bad;
   } else if (hijacked) {
-    verdict = '上网正常 —— 易联行紧虚拟网卡。系统代理畀其他软件占咗,但唔影响你上网。';
+    verdict = currentAppLocalizations.vgOnlineViaTunProxyTaken;
     level = DiagLevel.warn;
   } else {
-    verdict = '本机环境正常,易联${tunOurs ? '虚拟网卡' : '系统代理'}接管中。';
+    verdict = currentAppLocalizations.vgLocalEnvOkInControl(tunOurs
+        ? currentAppLocalizations.vgVirtualNic
+        : currentAppLocalizations.vgSystemProxy);
     level = DiagLevel.ok;
   }
 

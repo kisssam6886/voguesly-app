@@ -1,4 +1,5 @@
 import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/common/app_localizations.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -116,7 +117,7 @@ Future<bool> _doImportVogueslySubscription() async {
     try {
       // 显式 set label,否则 saveFile 路径会用 profile id 数字做名(令用户误会账号错)
       profile = await Profile.normal(
-        label: '易聯 Residential IP',
+        label: currentAppLocalizations.vgResidentialIpProfile,
         url: fetched.url,
       ).saveFile(fetched.bytes);
     } catch (_) {

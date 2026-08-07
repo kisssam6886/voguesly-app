@@ -22,17 +22,17 @@ Future<void> showGlobalModeNoticeIfNeeded(
   await showDialog<void>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text('已切换到全局加速'),
-      content: const Text(
-        '全局模式下，所有流量都走你在「线路」里选的那一条，不再按 AI／银行／'
-        '国内网站自动分流。\n\n'
-        '如果选的是机房线路，IP 检测网站会显示机房 IP。需要美国住宅 IP，'
-        '请在「线路」选住宅节点，或切回智能分流。',
+      title: Text(currentAppLocalizations.vgSwitchedToGlobal),
+      content: Text(
+        currentAppLocalizations.vgGlobalModeDialog1 +
+        currentAppLocalizations.vgGlobalModeDialog2 +
+        currentAppLocalizations.vgGlobalModeDialog3 +
+        currentAppLocalizations.vgGlobalModeDialog4,
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(),
-          child: const Text('知道了'),
+          child: Text(currentAppLocalizations.vgGotIt),
         ),
       ],
     ),

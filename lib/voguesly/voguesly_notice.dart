@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fl_clash/common/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'voguesly_api.dart';
@@ -40,7 +41,7 @@ class _VogueslyNoticePageState extends ConsumerState<VogueslyNoticePage> {
     if (token == null || token.isEmpty) {
       setState(() {
         _loading = false;
-        _error = '未登录';
+        _error = currentAppLocalizations.vgNotSignedIn;
       });
       return;
     }
@@ -86,10 +87,10 @@ class _VogueslyNoticePageState extends ConsumerState<VogueslyNoticePage> {
     return Scaffold(
       appBar: vogAppBar(
         context,
-        title: '公告中心',
+        title: currentAppLocalizations.vgAnnouncements,
         actions: [
           IconButton(
-            tooltip: '刷新',
+            tooltip: currentAppLocalizations.vgRefresh,
             icon: const Icon(Icons.refresh),
             onPressed: _loading ? null : _load,
           ),
@@ -110,11 +111,11 @@ class _VogueslyNoticePageState extends ConsumerState<VogueslyNoticePage> {
                   )
                 : _notices.isEmpty
                     ? ListView(
-                        children: const [
-                          SizedBox(height: 120),
-                          Icon(Icons.campaign_outlined, size: 44),
-                          SizedBox(height: 12),
-                          Center(child: Text('暂无公告')),
+                        children: [
+                          const SizedBox(height: 120),
+                          const Icon(Icons.campaign_outlined, size: 44),
+                          const SizedBox(height: 12),
+                          Center(child: Text(currentAppLocalizations.vgNoAnnouncements)),
                         ],
                       )
                     : ListView.separated(
@@ -212,7 +213,7 @@ class _VogueslyNoticePageState extends ConsumerState<VogueslyNoticePage> {
                                               _expanded.add(n.id);
                                             }
                                           }),
-                                          child: Text(expanded ? '收起' : '展开全文'),
+                                          child: Text(expanded ? currentAppLocalizations.vgCollapse : currentAppLocalizations.vgExpandFullText),
                                         ),
                                       ),
                                   ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fl_clash/common/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'voguesly_api.dart';
@@ -40,7 +41,7 @@ class _VogueslyStatPageState extends ConsumerState<VogueslyStatPage> {
     if (token == null || token.isEmpty) {
       setState(() {
         _loading = false;
-        _error = '未登录';
+        _error = currentAppLocalizations.vgNotSignedIn;
       });
       return;
     }
@@ -82,10 +83,10 @@ class _VogueslyStatPageState extends ConsumerState<VogueslyStatPage> {
     return Scaffold(
       appBar: vogAppBar(
         context,
-        title: '流量明细',
+        title: currentAppLocalizations.vgDataUsage,
         actions: [
           IconButton(
-            tooltip: '刷新',
+            tooltip: currentAppLocalizations.vgRefresh,
             icon: const Icon(Icons.refresh),
             onPressed: _loading ? null : _load,
           ),
@@ -113,7 +114,7 @@ class _VogueslyStatPageState extends ConsumerState<VogueslyStatPage> {
                           Expanded(
                             child: _statCard(
                               icon: Icons.upload_outlined,
-                              label: '总上行',
+                              label: currentAppLocalizations.vgTotalUpload,
                               value: _fmtBytes(totalU),
                               color: cs.tertiary,
                             ),
@@ -122,7 +123,7 @@ class _VogueslyStatPageState extends ConsumerState<VogueslyStatPage> {
                           Expanded(
                             child: _statCard(
                               icon: Icons.download_outlined,
-                              label: '总下行',
+                              label: currentAppLocalizations.vgTotalDownload,
                               value: _fmtBytes(totalD),
                               color: cs.primary,
                             ),
@@ -131,7 +132,7 @@ class _VogueslyStatPageState extends ConsumerState<VogueslyStatPage> {
                           Expanded(
                             child: _statCard(
                               icon: Icons.data_usage_outlined,
-                              label: '合计',
+                              label: currentAppLocalizations.vgTotal,
                               value: _fmtBytes(totalU + totalD),
                               color: cs.secondary,
                             ),
@@ -139,7 +140,7 @@ class _VogueslyStatPageState extends ConsumerState<VogueslyStatPage> {
                         ],
                       ),
                       const SizedBox(height: 20),
-                      Text('当月每日用量',
+                      Text(currentAppLocalizations.vgDailyUsageThisMonth,
                           style: tt.titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 10),
@@ -147,7 +148,7 @@ class _VogueslyStatPageState extends ConsumerState<VogueslyStatPage> {
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 48),
                           child: Center(
-                            child: Text('本月暂无流量记录',
+                            child: Text(currentAppLocalizations.vgNoUsageThisMonth,
                                 style: tt.bodyMedium?.copyWith(
                                     color: cs.onSurfaceVariant)),
                           ),

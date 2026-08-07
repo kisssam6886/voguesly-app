@@ -36,6 +36,8 @@ const String kSvgUsdt = '''
 <ellipse cx="24" cy="22.5" rx="10" ry="3.6" fill="none" stroke="#fff" stroke-width="3.2"/>
 </svg>''';
 
+/// ⚠️ 呢个文件入面嘅中文係【比对服务器返嚟嘅支付方式名】,唔係畀用户睇嘅文案 ——
+///    绝对唔可以 i18n,翻译咗就配唔到图标。同 proxies/card.dart 嘅地区关键词同一道理。
 /// 按支付方式名返回对应 SVG 字符串;认唔到返 null(caller fallback 通用图标)。
 String? payIconSvg(String label) {
   final l = label.toLowerCase();

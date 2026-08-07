@@ -269,7 +269,7 @@ class AppSidebarContainer extends ConsumerWidget {
         : await ref
             .read(profilesActionProvider.notifier)
             .refreshVogueslyProfile(vog.first, showLoading: true);
-    globalState.showNotifier(ok ? '订阅已更新' : '更新失败,请稍后重试');
+    globalState.showNotifier(ok ? currentAppLocalizations.vgSubscriptionUpdated : currentAppLocalizations.vgUpdateFailedRetry);
   }
 
   /// 侧栏「登出」:确认后关半框 overlay → 先删本账号订阅(防换账号串号)→ 清登录态。
@@ -278,16 +278,16 @@ class AppSidebarContainer extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('退出登录'),
-        content: const Text('确定退出当前账户?'),
+        title: Text(currentAppLocalizations.vgSignOut),
+        content: Text(currentAppLocalizations.vgSignOutConfirmShort),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('取消'),
+            child: Text(currentAppLocalizations.vgCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('退出'),
+            child: Text(currentAppLocalizations.vgExit),
           ),
         ],
       ),
@@ -373,13 +373,13 @@ class AppSidebarContainer extends ConsumerWidget {
                           // refreshVogueslyProfile / importVogueslySubscription 逻辑,拉最新节点+规则。
                           _SidebarLink(
                             icon: Icons.cloud_sync_outlined,
-                            label: '更新订阅',
+                            label: currentAppLocalizations.vgUpdateSubscription,
                             showLabel: showLabel,
                             onTap: () => _updateSubscription(ref),
                           ),
                           _SidebarLink(
                             icon: Icons.card_giftcard_outlined,
-                            label: '邀请返利',
+                            label: currentAppLocalizations.vgReferralRewards,
                             showLabel: showLabel,
                             selected: overlay == ContentOverlay.invite,
                             onTap: () => ref
@@ -388,7 +388,7 @@ class AppSidebarContainer extends ConsumerWidget {
                           ),
                           _SidebarLink(
                             icon: Icons.account_circle_outlined,
-                            label: '用户中心',
+                            label: currentAppLocalizations.vgUserCenter,
                             showLabel: showLabel,
                             selected: overlay == ContentOverlay.userCenter,
                             onTap: () => ref
@@ -397,7 +397,7 @@ class AppSidebarContainer extends ConsumerWidget {
                           ),
                           _SidebarLink(
                             icon: Icons.campaign_outlined,
-                            label: '公告中心',
+                            label: currentAppLocalizations.vgAnnouncements,
                             showLabel: showLabel,
                             selected: overlay == ContentOverlay.notice,
                             onTap: () => ref
@@ -406,7 +406,7 @@ class AppSidebarContainer extends ConsumerWidget {
                           ),
                           _SidebarLink(
                             icon: Icons.data_usage_outlined,
-                            label: '流量明细',
+                            label: currentAppLocalizations.vgDataUsage,
                             showLabel: showLabel,
                             selected: overlay == ContentOverlay.stat,
                             onTap: () => ref
@@ -415,7 +415,7 @@ class AppSidebarContainer extends ConsumerWidget {
                           ),
                           _SidebarLink(
                             icon: Icons.support_agent_outlined,
-                            label: '在线客服',
+                            label: currentAppLocalizations.vgLiveChat,
                             showLabel: showLabel,
                             selected: overlay == ContentOverlay.cs,
                             // Win/Linux 无 webview 桌面实现 → open() 改行系统浏览器(防崩);
@@ -433,8 +433,8 @@ class AppSidebarContainer extends ConsumerWidget {
                           _SidebarLink(
                             icon: Icons.system_update_alt_rounded,
                             label: updateVersion != null
-                                ? '有新版本 $updateVersion'
-                                : '检查更新',
+                                ? currentAppLocalizations.vgNewVersionAvailable(updateVersion)
+                                : currentAppLocalizations.vgCheckForUpdate,
                             showLabel: showLabel,
                             highlight: updateVersion != null,
                             onTap: () => ref
@@ -460,7 +460,7 @@ class AppSidebarContainer extends ConsumerWidget {
                       const SizedBox(height: 4),
                       _SidebarLink(
                         icon: Icons.logout,
-                        label: '登出',
+                        label: currentAppLocalizations.vgLogOut,
                         showLabel: showLabel,
                         danger: true,
                         onTap: () => _confirmLogout(context, ref),

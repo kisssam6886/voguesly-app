@@ -67,7 +67,7 @@ class MacInstaller {
     );
     final size = await old.length();
     if (size < 1024 * 1024) {
-      throw StateError('安装包文件不完整');
+      throw StateError(currentAppLocalizations.vgInstallerFileIncomplete);
     }
     return savePath;
   }
@@ -112,7 +112,7 @@ class MacInstaller {
         MacInstallState(
           stage: MacInstallStage.error,
           format: format,
-          errorMessage: '下载失败，请稍后重试',
+          errorMessage: currentAppLocalizations.vgDownloadFailedRetryFull,
         ),
       );
     }
@@ -162,7 +162,7 @@ class _MacUpdateSheetState extends State<MacUpdateSheet> {
             Text(_title, style: context.textTheme.titleMedium),
             const SizedBox(height: 6),
             Text(
-              '版本号: ${widget.version}',
+              currentAppLocalizations.vgVersionNumber(widget.version),
               style: context.textTheme.bodyMedium?.copyWith(
                 color: cs.onSurfaceVariant,
               ),
@@ -188,18 +188,18 @@ class _MacUpdateSheetState extends State<MacUpdateSheet> {
             if (_state.stage == MacInstallStage.opening)
               Text(
                 _state.format == MacInstallFormat.pkg
-                    ? 'PKG 安装器已打开，易联正在安全退出。请按系统提示授权，安装器会覆盖 Applications 中的旧版本。'
-                    : 'DMG 已打开，易联正在安全退出。请把新版本拖入 Applications 覆盖旧版本。',
+                    ? currentAppLocalizations.vgPkgOpenedQuitting
+                    : currentAppLocalizations.vgDmgOpenedQuitting,
               ),
             if (_state.stage == MacInstallStage.error) ...[
               Text(
-                _state.errorMessage ?? '下载失败，请稍后重试',
+                _state.errorMessage ?? currentAppLocalizations.vgDownloadFailedRetryFull,
                 style: context.textTheme.bodyMedium?.copyWith(
                   color: const Color(0xFFEF4444),
                 ),
               ),
               const SizedBox(height: 16),
-              OutlinedButton(onPressed: _start, child: const Text('重试')),
+              OutlinedButton(onPressed: _start, child: Text(currentAppLocalizations.vgRetry)),
             ],
           ],
         ),
@@ -208,8 +208,8 @@ class _MacUpdateSheetState extends State<MacUpdateSheet> {
   }
 
   String get _title => switch (_state.stage) {
-    MacInstallStage.downloading => '正在下载更新',
-    MacInstallStage.opening => '正在准备安装…',
-    MacInstallStage.error => '下载失败',
+    MacInstallStage.downloading => currentAppLocalizations.vgDownloadingUpdate,
+    MacInstallStage.opening => currentAppLocalizations.vgPreparingInstall,
+    MacInstallStage.error => currentAppLocalizations.vgDownloadFailed,
   };
 }

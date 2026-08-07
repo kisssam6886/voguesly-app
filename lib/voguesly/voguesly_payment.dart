@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:fl_clash/common/app_localizations.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -58,14 +59,14 @@ class VogueslyPayment {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('选择支付方式',
+              Text(currentAppLocalizations.vgChoosePaymentMethod,
                   style: Theme.of(ctx)
                       .textTheme
                       .titleLarge
                       ?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 4),
               Text(title, style: Theme.of(ctx).textTheme.bodyMedium),
-              Text('当前余额:$balanceText',
+              Text(currentAppLocalizations.vgCurrentBalanceWith(balanceText),
                   style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
                       color: cs.onSurfaceVariant.withValues(alpha: 0.7))),
               const SizedBox(height: 16),
@@ -76,7 +77,7 @@ class VogueslyPayment {
                     children: [
                       _payTile(
                         ctx,
-                        label: enough ? '余额支付' : '余额不足',
+                        label: enough ? currentAppLocalizations.vgPayWithBalance : currentAppLocalizations.vgInsufficientBalance,
                         enabled: enough,
                         onTap: enough
                             ? () => _checkout(ctx, ref, tradeNo, 0,
@@ -99,7 +100,7 @@ class VogueslyPayment {
               Center(
                 child: TextButton(
                   onPressed: () => Navigator.of(ctx).pop(),
-                  child: const Text('取消'),
+                  child: Text(currentAppLocalizations.vgCancel),
                 ),
               ),
             ],
@@ -112,6 +113,7 @@ class VogueslyPayment {
   // 优先用面板下发嘅**官方图标**(m.icon:simpleicons SVG URL / wikimedia .svg / data-uri;
   // 同网页前端一样);加载失败(如国内 CDN 不通)fallback 到内联手绘品牌图标;再冇就通用 icon。
   static Widget _payLeading(String label, String? iconUrl, Color fg) {
+    // ⚠️ label 係【面板下发嘅支付方式名】(中文),唔係本地文案 —— 唔可以 i18n。
     if (label.contains('余额')) {
       return Icon(Icons.account_balance_wallet, color: fg, size: 24);
     }
@@ -203,14 +205,14 @@ class VogueslyPayment {
     Navigator.of(sheetCtx).pop(); // 关支付方式弹窗
     final token = ref.read(vogueslyAuthProvider).token;
     if (token == null) return;
-    _showBlocking(navCtx, isBalance ? '正在扣款…' : '正在发起支付…');
+    _showBlocking(navCtx, isBalance ? currentAppLocalizations.vgChargingEllipsis : currentAppLocalizations.vgStartingPaymentEllipsis);
     final res =
         await ref.read(vogueslyApiProvider).checkout(token, tradeNo: tradeNo, method: method);
     if (navCtx.mounted) Navigator.of(navCtx, rootNavigator: true).pop();
     if (!navCtx.mounted) return;
     switch (res.kind) {
       case VogueslyCheckoutKind.balance:
-        _toast(navCtx, '购买成功,套餐已开通');
+        _toast(navCtx, currentAppLocalizations.vgPurchaseSuccessActivated);
         if (onPaid != null) await onPaid();
         break;
       case VogueslyCheckoutKind.qrcode:
@@ -253,12 +255,12 @@ class VogueslyPayment {
           if (status == 3 || status == 1) {
             t.cancel();
             if (Navigator.of(dctx).canPop()) Navigator.of(dctx).pop();
-            _toast(context, '支付成功,套餐已开通');
+            _toast(context, currentAppLocalizations.vgPaymentSuccessActivated);
             if (onPaid != null) await onPaid();
           }
         });
         return AlertDialog(
-          title: Text(qrData != null ? '扫码支付' : '等待支付到账'),
+          title: Text(qrData != null ? currentAppLocalizations.vgScanToPay : currentAppLocalizations.vgWaitingForPayment),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -276,8 +278,8 @@ class VogueslyPayment {
                 const SizedBox(height: 16),
                 Text(
                     (Platform.isAndroid || Platform.isIOS)
-                        ? '本机点下方「打开支付」直接付款,\n或用其它设备扫码。完成后自动到账。'
-                        : '请用手机 支付宝 / 微信 扫码支付。\n完成后本页会自动到账。',
+                        ? currentAppLocalizations.vgPayHereOrScanHint
+                        : currentAppLocalizations.vgScanWithPhoneHint,
                     textAlign: TextAlign.center),
                 const SizedBox(height: 12),
                 const SizedBox(
@@ -288,7 +290,7 @@ class VogueslyPayment {
                 const SizedBox(height: 8),
                 const CircularProgressIndicator(),
                 const SizedBox(height: 18),
-                const Text('已在浏览器打开支付页面。\n完成支付后本页会自动到账。',
+                Text(currentAppLocalizations.vgPaymentOpenedInBrowserHint,
                     textAlign: TextAlign.center),
               ],
             ],
@@ -304,7 +306,7 @@ class VogueslyPayment {
                     await launchUrl(uri, mode: LaunchMode.externalApplication);
                   }
                 },
-                child: const Text('打开支付'),
+                child: Text(currentAppLocalizations.vgOpenPayment),
               ),
             if (qrData == null)
               TextButton(
@@ -314,7 +316,7 @@ class VogueslyPayment {
                     await launchUrl(uri, mode: LaunchMode.externalApplication);
                   }
                 },
-                child: const Text('重新打开支付'),
+                child: Text(currentAppLocalizations.vgReopenPayment),
               ),
             TextButton(
               onPressed: () async {
@@ -322,7 +324,7 @@ class VogueslyPayment {
                 Navigator.of(dctx).pop();
                 if (onPaid != null) await onPaid();
               },
-              child: const Text('我已完成/关闭'),
+              child: Text(currentAppLocalizations.vgDoneOrClose),
             ),
           ],
         );
