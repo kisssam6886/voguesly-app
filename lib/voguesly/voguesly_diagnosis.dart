@@ -176,6 +176,12 @@ Future<String?> _portOwner(int port) async {
   return null;
 }
 
+/// 由长到短排好嘅 key,畀 _scanThirdParty 用:先试最具体嗰条,命中即停。
+/// 唔可以直接遍历 map(Dart map 保持插入次序,'mihomo' 排喺 'mihomo-party' 之后
+/// 只係碰啱,加多几条就唔保证)。
+final List<String> _thirdPartyKeysLongestFirst = _knownThirdParty.keys.toList()
+  ..sort((a, b) => b.length.compareTo(a.length));
+
 bool _isOurs(String name) {
   final lower = name.toLowerCase();
   return _ourOwn.any(lower.contains);
@@ -191,8 +197,15 @@ Future<List<String>> _scanThirdParty() async {
   for (final rawLine in output.split('\n')) {
     final line = rawLine.toLowerCase();
     if (line.trim().isEmpty || _isOurs(line)) continue;
-    for (final entry in _knownThirdParty.entries) {
-      if (line.contains(entry.key)) found.add(entry.value);
+    // ⚠️ key 之间存在子串关系(例如 'mihomo' ⊂ 'mihomo-party'),
+    // 逐条 contains 而唔 break 嘅话,一个 mihomo-party 进程会同时命中两条,
+    // 诊断页就会把同一个软件列成「Mihomo Party」+「mihomo 内核」两个,误导用户。
+    // 解法:由长到短试,命中最具体嗰条即停(一行 = 一个进程名,唔会有两个软件)。
+    for (final key in _thirdPartyKeysLongestFirst) {
+      if (line.contains(key)) {
+        found.add(_knownThirdParty[key]!);
+        break;
+      }
     }
   }
   return found.toList()..sort();

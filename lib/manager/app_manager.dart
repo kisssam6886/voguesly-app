@@ -50,22 +50,40 @@ class AppStateManager extends ConsumerStatefulWidget {
 
 class _AppStateManagerState extends ConsumerState<AppStateManager>
     with WidgetsBindingObserver {
-  /// 启动后静默检查一次新版本,只写 provider 畀侧栏亮入口,**唔弹任何窗**。
-  /// 延迟少少先跑,唔同启动嘅其他网络请求抢;失败一律静默(唔可以因为检查更新
-  /// 失败就打扰用户)。
-  Future<void> _silentCheckUpdate() async {
-    await Future.delayed(const Duration(seconds: 5));
+  /// 上次真正查过更新嘅时间。用嚟节流,避免回前台好频繁时不停打后端。
+  DateTime? _lastUpdateCheckAt;
+
+  /// 静默检查新版本,只写 provider 畀侧栏亮入口,**唔弹任何窗**。
+  /// 失败一律静默(唔可以因为检查更新失败就打扰用户)。
+  ///
+  /// ⚠️ 之前净係喺 initState 调一次 —— 桌面用户 app 长开唔重启,就永远唔会再查,
+  /// 出咗新版都要自己去撳「检查更新」先见到。所以回前台(resumed)亦要查一次。
+  /// [delay] 启动时等几秒避开其他启动请求;回前台唔使等。
+  Future<void> _silentCheckUpdate({
+    Duration delay = const Duration(seconds: 5),
+  }) async {
+    final now = DateTime.now();
+    if (_lastUpdateCheckAt != null &&
+        now.difference(_lastUpdateCheckAt!) < const Duration(hours: 1)) {
+      return; // 1 小时内查过就唔再查
+    }
+    _lastUpdateCheckAt = now; // 先占位,避免并发重入
+    if (delay > Duration.zero) await Future.delayed(delay);
     if (!mounted) return;
     try {
       final res = await request.checkForUpdate();
       if (!mounted || res == null) return;
       // checkForUpdate 内部已经做咗版本比较,有返回 = 真係有新版;
       // __net_error__ 係网络异常标记,唔当有更新。
-      if (res['__net_error__'] == true) return;
+      if (res['__net_error__'] == true) {
+        _lastUpdateCheckAt = null; // 网络问题唔算查过,下次回前台再试
+        return;
+      }
       final tag = res['tag_name'] as String?;
       if (tag == null || tag.isEmpty) return;
       ref.read(vogueslyUpdateVersionProvider.notifier).set(tag);
     } catch (_) {
+      _lastUpdateCheckAt = null; // 同上:异常唔算查过
       // 静默:侧栏唔亮入口就算,唔好因为呢个 feature 影响正常使用。
     }
   }
@@ -138,6 +156,9 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
         ref.read(setupActionProvider.notifier).tryCheckIp();
         // 回前台刷新套餐/流量(连接中配额被消耗,账号卡数字会冻结);未登录时 refreshUser 自身 no-op。
         ref.read(vogueslyAuthProvider.notifier).refreshUser();
+        // 回前台顺手查下有冇新版(内部 1 小时节流)。桌面用户长开唔重启,
+        // 冇呢句就只有启动嗰次会查,新版本推唔到佢哋手上。
+        _silentCheckUpdate(delay: Duration.zero);
         if (system.isAndroid) {
           ref.read(coreActionProvider.notifier).tryStartCore();
         }
