@@ -74,6 +74,16 @@ class AppLocalizations {
     return Intl.message('Dashboard', name: 'dashboard', desc: '', args: []);
   }
 
+  /// `Shop`
+  String get shop {
+    return Intl.message('Shop', name: 'shop', desc: '', args: []);
+  }
+
+  /// `Detection`
+  String get detection {
+    return Intl.message('Detection', name: 'detection', desc: '', args: []);
+  }
+
   /// `Routes`
   String get proxies {
     return Intl.message('Routes', name: 'proxies', desc: '', args: []);

@@ -3,6 +3,8 @@
   "global": "全局",
   "direct": "直連",
   "dashboard": "儀表盤",
+  "shop": "商城",
+  "detection": "檢測",
   "proxies": "線路",
   "profile": "配置",
   "profiles": "我的訂閱",

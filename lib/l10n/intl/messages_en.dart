@@ -424,6 +424,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Destination IPASN",
     ),
     "details": m3,
+    "detection": MessageLookupByLibrary.simpleMessage("Detection"),
     "detectionTip": MessageLookupByLibrary.simpleMessage(
       "Relying on third-party api is for reference only",
     ),
@@ -1024,6 +1025,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "selected": MessageLookupByLibrary.simpleMessage("Selected"),
     "selectedCountTitle": m17,
     "settings": MessageLookupByLibrary.simpleMessage("Settings"),
+    "shop": MessageLookupByLibrary.simpleMessage("Shop"),
     "show": MessageLookupByLibrary.simpleMessage("Show"),
     "shrink": MessageLookupByLibrary.simpleMessage("Shrink"),
     "silentLaunch": MessageLookupByLibrary.simpleMessage("SilentLaunch"),

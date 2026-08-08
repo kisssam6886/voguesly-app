@@ -431,6 +431,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "destinationIPASN": MessageLookupByLibrary.simpleMessage("ASN назначения"),
     "details": m3,
+    "detection": MessageLookupByLibrary.simpleMessage("Проверка"),
     "detectionTip": MessageLookupByLibrary.simpleMessage(
       "Опирается на сторонний API, только для справки",
     ),
@@ -1073,6 +1074,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "selected": MessageLookupByLibrary.simpleMessage("Выбрано"),
     "selectedCountTitle": m17,
     "settings": MessageLookupByLibrary.simpleMessage("Настройки"),
+    "shop": MessageLookupByLibrary.simpleMessage("Магазин"),
     "show": MessageLookupByLibrary.simpleMessage("Показать"),
     "shrink": MessageLookupByLibrary.simpleMessage("Сжать"),
     "silentLaunch": MessageLookupByLibrary.simpleMessage("Тихий запуск"),

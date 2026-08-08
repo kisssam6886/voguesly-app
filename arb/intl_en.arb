@@ -3,6 +3,8 @@
   "global": "Global",
   "direct": "Direct",
   "dashboard": "Dashboard",
+  "shop": "Shop",
+  "detection": "Detection",
   "proxies": "Routes",
   "profile": "Profile",
   "profiles": "My subscription",

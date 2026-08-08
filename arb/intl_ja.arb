@@ -3,6 +3,8 @@
   "global": "グローバル",
   "direct": "ダイレクト",
   "dashboard": "ダッシュボード",
+  "shop": "ショップ",
+  "detection": "検出",
   "proxies": "プロキシ",
   "profile": "プロファイル",
   "profiles": "プロファイル一覧",
