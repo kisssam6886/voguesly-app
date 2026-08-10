@@ -189,6 +189,23 @@ class SetupAction extends _$SetupAction {
   /// 唔加呢个 flag 就会每 9 秒弹一次,变成骚扰。恢复正常时自动清返。
   bool _systemProxyHijackWarned = false;
 
+  // ── 桌面隧道保活 / 静默断连自愈(2026-08-10)──────────────────────────
+  // 背景:校园网 / 企业网 / 部分 CGNAT 会喺连接空闲约 5 分钟后回收 NAT 会话,HY2 亦
+  // 有 idle 超时;而现有健康检查只睇本地路由表(utun / Wintun 路由仲喺),睇唔到「路由
+  // 还在但整条路已死」呢种静默断连 —— 用户体感就係「放埋电脑几分钟就断,要刷新先返」。
+  // 呢个保活每 45s 经隧道打一次 generate_204:
+  //   ① 有周期性活动 → 消灭 idle 间隙,直接防止空闲回收(同时覆盖 vless/reality TCP
+  //      同 HY2 两条路,唔使靠估到底边条死);
+  //   ② 若整条路真係死咗(探活连续失败)→ 做一次受控核心重启自愈。
+  // 全程仅桌面 + 已连接;连续 3 次(≈135s)先当真死、最快 90s 一次自愈、连续 3 次自愈
+  // 无效即停手只保持探活+日志,最终兜底仍係既有兼容模式。Android 唔行呢套(有自己嘅
+  // VpnService 生命周期 + 流量成本考虑)。
+  Timer? _desktopKeepaliveTimer;
+  bool _desktopKeepaliveInFlight = false;
+  int _desktopKeepaliveFailStreak = 0;
+  int _desktopKeepaliveRecoveryStreak = 0;
+  DateTime? _lastDesktopKeepaliveRecoveryAt;
+
   bool get isStart => startTime != null && startTime!.isBeforeNow;
 
   @override
@@ -240,6 +257,7 @@ class SetupAction extends _$SetupAction {
         _verifyDesktopSystemProxyConnected();
       }
     });
+    _startDesktopKeepalive();
   }
 
   /// 向 native 核实真实连接状态 + 打印诊断(入 in-app 日志,方便 Sam send 出嚟睇真相)。
@@ -448,6 +466,126 @@ class SetupAction extends _$SetupAction {
     globalState.showNotifier(currentAppLocalizations.vgSystemProxyOccupied);
   }
 
+  /// 启动桌面隧道保活定时器(见字段处说明)。幂等:每次连接/重启都重建单一定时器。
+  void _startDesktopKeepalive() {
+    if (!system.isDesktop) return;
+    _desktopKeepaliveTimer?.cancel();
+    _desktopKeepaliveFailStreak = 0;
+    // ⚠️ _desktopKeepaliveRecoveryStreak 唔喺度清 —— 佢要跨越自愈重启存活先做到「连续
+    // 自愈无效就停手」嘅反死循环;只喺探活成功或用户主动断开(handleStop)先清。
+    _desktopKeepaliveTimer = Timer.periodic(
+      const Duration(seconds: 45),
+      (_) => _desktopKeepaliveTick(),
+    );
+  }
+
+  Future<void> _desktopKeepaliveTick() async {
+    if (!system.isDesktop || startTime == null) return;
+    if (_desktopKeepaliveInFlight) return;
+    // 启动收敛窗口内唔好探(同 TUN 探测一致,避免建立途中误判成断连)。
+    final startedAt = _desktopTunVerificationStartedAt;
+    if (startedAt != null &&
+        DateTime.now().difference(startedAt) < const Duration(seconds: 20)) {
+      return;
+    }
+    final port = ref.read(patchClashConfigProvider).mixedPort;
+    if (port <= 0) return;
+
+    _desktopKeepaliveInFlight = true;
+    late final bool ok;
+    try {
+      ok = await _probeThroughProxy(port);
+    } finally {
+      _desktopKeepaliveInFlight = false;
+    }
+    // 探测期间用户可能已断开,唔好用一个 stale 结果触发自愈。
+    if (startTime == null) return;
+
+    if (ok) {
+      if (_desktopKeepaliveFailStreak > 0 ||
+          _desktopKeepaliveRecoveryStreak > 0) {
+        commonPrint.log(
+          '[KEEPALIVE] 隧道探活恢复正常',
+          logLevel: LogLevel.info,
+        );
+      }
+      _desktopKeepaliveFailStreak = 0;
+      _desktopKeepaliveRecoveryStreak = 0;
+      return;
+    }
+
+    _desktopKeepaliveFailStreak++;
+    commonPrint.log(
+      '[KEEPALIVE] 经隧道探活失败 streak=$_desktopKeepaliveFailStreak',
+      logLevel: LogLevel.warning,
+    );
+    // 需连续 3 次失败(≈135s)先当真死,避开瞬时抖动 / 单次慢探测误判。
+    if (_desktopKeepaliveFailStreak < 3) return;
+
+    // 硬限流:最快 90s 一次自愈,避免重启风暴。
+    final lastRecovery = _lastDesktopKeepaliveRecoveryAt;
+    if (lastRecovery != null &&
+        DateTime.now().difference(lastRecovery) < const Duration(seconds: 90)) {
+      return;
+    }
+    // 反死循环:连续自愈都唔见效(冇一次成功探活介入)超过 3 次就唔再重启,只保持
+    // 探活 + 日志,交返畀 TUN 探测 / 兼容兜底 / 用户介入,避免无限重启核心。
+    if (_desktopKeepaliveRecoveryStreak >= 3) {
+      if (_desktopKeepaliveFailStreak == 3) {
+        commonPrint.log(
+          '[KEEPALIVE] 连续自愈无效,停止自动重启,保持探活等待恢复',
+          logLevel: LogLevel.error,
+        );
+      }
+      return;
+    }
+
+    _desktopKeepaliveFailStreak = 0;
+    _lastDesktopKeepaliveRecoveryAt = DateTime.now();
+    _desktopKeepaliveRecoveryStreak++;
+    commonPrint.log(
+      '[KEEPALIVE] 隧道静默断连,执行一次受控核心重启自愈'
+      '(第 $_desktopKeepaliveRecoveryStreak 次)',
+      logLevel: LogLevel.warning,
+    );
+    try {
+      // restartCore 单飞(_restartFuture),内部会干净地 shutdown → 重连 → 重跑
+      // _handleStart(会重建本定时器);兜底行为(兼容模式)同既有 TUN 自愈一致。
+      await ref.read(coreActionProvider.notifier).restartCore(true);
+    } catch (e) {
+      commonPrint.log(
+        '[KEEPALIVE] 自愈重启失败: $e',
+        logLevel: LogLevel.error,
+      );
+    }
+  }
+
+  /// 经本地混合端口(即用户当前选中嘅节点路由)打一次轻量 generate_204。
+  /// 成功(204/200)= 从设备到节点到公网整条路此刻仲通;超时/异常 = 呢条路已死。
+  /// 用 http(免 TLS 握手开销);followRedirects=false;总超时 8s。
+  Future<bool> _probeThroughProxy(int port) async {
+    HttpClient? client;
+    try {
+      client = HttpClient();
+      client.connectionTimeout = const Duration(seconds: 8);
+      client.idleTimeout = const Duration(seconds: 5);
+      client.findProxy = (_) => 'PROXY 127.0.0.1:$port';
+      final request = await client
+          .getUrl(Uri.parse('http://www.gstatic.com/generate_204'))
+          .timeout(const Duration(seconds: 8));
+      request.followRedirects = false;
+      final response =
+          await request.close().timeout(const Duration(seconds: 8));
+      final code = response.statusCode;
+      await response.drain<void>();
+      return code == 204 || code == 200;
+    } catch (_) {
+      return false;
+    } finally {
+      client?.close(force: true);
+    }
+  }
+
   Future _updateStartTime() async {
     startTime = await service?.getRunTime();
   }
@@ -456,6 +594,13 @@ class SetupAction extends _$SetupAction {
     startTime = null;
     _updateTimer?.cancel();
     _updateTimer = null;
+    _desktopKeepaliveTimer?.cancel();
+    _desktopKeepaliveTimer = null;
+    _desktopKeepaliveInFlight = false;
+    _desktopKeepaliveFailStreak = 0;
+    // 用户主动断开 = 一次全新会话,反死循环计数清零(下次连接重新畀满 3 次自愈额度)。
+    _desktopKeepaliveRecoveryStreak = 0;
+    _lastDesktopKeepaliveRecoveryAt = null;
     _desktopTunVerifyFailCount = 0;
     _desktopProxyVerifyFailCount = 0;
     _desktopTunVerificationStartedAt = null;
