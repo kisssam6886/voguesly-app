@@ -67,7 +67,23 @@ const vogueslyVersionCheckUrl = 'https://cp.samseah.qzz.io/downloads/version.jso
 const defaultExternalController = '127.0.0.1:9090';
 const maxMobileWidth = 600;
 const maxLaptopWidth = 840;
-const defaultTestUrl = 'https://www.gstatic.com/generate_204';
+/// 节点延迟测速 / DIRECT 延迟嘅默认目标。
+///
+/// ⚠️ **唔好换返 gstatic**(2026-08-10 三点实测,数据见下),旧值 `https://www.gstatic.com/generate_204`
+/// 同时坏咗两件事:
+///  ① **国内直连唔通** → 测 DIRECT 必然 timeout,界面上「直连」永远显示红,用户以为直连坏咗。
+///     实测(Sam 家网,去代理真直连):gstatic 6s 超时;google/generate_204 一样超时。
+///  ② **单个 IP,遇到烂路由就虚高** → 界面上节点延迟数字唔可信。实测同一个 gstatic:
+///     HK 出口 **627ms**、SG 出口 49ms(相差 12 倍),而 cp.cloudflare 喺两边都係 6-10ms。
+///     `voguesly_detection.dart` 早就为咗同一原因唔用 gstatic(嗰度实测过 1055ms ≈ 4× 基线)。
+///
+/// 拣 `cp.cloudflare.com` 嘅理由:唯一**两边都满足**嘅候选 —— 国内直连通(实测 385ms,
+/// 令 DIRECT 有真数字),境外出口又快又稳(HK 6ms / SG 10ms,anycast 多 IP,唔会撞单点烂路由)。
+/// 用 http 唔用 https:免 TLS 握手噪音,量到更接近纯 RTT(mihomo 上游默认都係 http 204)。
+const defaultTestUrl = 'http://cp.cloudflare.com/generate_204';
+
+/// 旧默认值,只畀迁移逻辑认「呢个係我哋以前钉嘅默认」用,唔好再攞去测速。
+const legacyGstaticTestUrl = 'https://www.gstatic.com/generate_204';
 final commonFilter = ImageFilter.blur(
   sigmaX: 5,
   sigmaY: 5,

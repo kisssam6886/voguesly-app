@@ -18,7 +18,11 @@ class Migration {
   // mihomo-party、原版 FlClash 全部都听呢两个;用户机上只要有其中一个,后启动
   // 嗰个就绑唔到端口 → 表现係「显示已连接但上唔到网」,极难排查。
   // v5 把仲係默认值嘅老配置搬去易联专属端口;**用户自己改过嘅唔郁**。
-  final currentVersion = 5;
+  // v6: 测速地址去 gstatic。旧默认 https://www.gstatic.com/generate_204 国内直连唔通
+  // (令 DIRECT 永远显示红)、而且只解析到单个 IP,某啲节点撞到烂路由就令延迟数字虚高
+  // (实测同一目标 HK 627ms vs SG 49ms)。v6 把仲係旧默认嗰啲搬去 cp.cloudflare.com;
+  // **用户自己改过嘅测速地址唔郁**。实测数据见 constant.dart defaultTestUrl。
+  final currentVersion = 6;
 
   factory Migration() {
     _instance ??= Migration._internal();
@@ -47,6 +51,9 @@ class Migration {
     }
     if (_oldVersion < 5 && configMap != null) {
       _migrateAwayFromClashDefaultPorts(configMap);
+    }
+    if (_oldVersion < 6 && configMap != null) {
+      _migrateAwayFromGstaticTestUrl(configMap);
     }
     MigrationData data = MigrationData(configMap: configMap);
     if (_oldVersion == 0 && configMap != null) {
@@ -81,6 +88,25 @@ class Migration {
     }
     // external-controller(9090)刻意唔搬:佢默认关闭、要用户主动开先监听,
     // 撞端口机会低好多;而佢係枚举 @JsonValue,改咗会令旧配置反序列化失败。
+  }
+
+  /// 把仲钉住旧默认测速地址(gstatic)嘅老配置搬去新默认。
+  ///
+  /// 点解要搬:`testUrl` 会连同用户配置一齐落盘,单纯改 `defaultTestUrl` 只影响新装用户,
+  /// 老用户会**永远**留喺 gstatic —— 即係「DIRECT 永远红 + 节点延迟虚高」两个问题
+  /// 对现有用户完全冇修到(见 constant.dart `defaultTestUrl` 处嘅实测数据)。
+  ///
+  /// ⚠️ 只搬「仲係我哋旧默认值」嗰啲。用户自己改过嘅测速地址一律唔郁,
+  /// 同端口迁移一样嘅原则:唔可以覆盖用户自己嘅设置。
+  void _migrateAwayFromGstaticTestUrl(Map<String, Object?> configMap) {
+    final appRaw = configMap['appSettingProps'];
+    if (appRaw is Map) {
+      final app = Map<String, Object?>.from(appRaw);
+      if (app['testUrl'] == legacyGstaticTestUrl) {
+        app['testUrl'] = defaultTestUrl;
+        configMap['appSettingProps'] = app;
+      }
+    }
   }
 
   void _migrateDesktopConnectionDefaults(Map<String, Object?> configMap) {
