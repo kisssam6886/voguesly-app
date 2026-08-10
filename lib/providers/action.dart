@@ -189,22 +189,19 @@ class SetupAction extends _$SetupAction {
   /// 唔加呢个 flag 就会每 9 秒弹一次,变成骚扰。恢复正常时自动清返。
   bool _systemProxyHijackWarned = false;
 
-  // ── 桌面隧道保活 / 静默断连自愈(2026-08-10)──────────────────────────
+  // ── 桌面隧道保活(2026-08-10;0.9.71 收窄为纯保活)────────────────────
   // 背景:校园网 / 企业网 / 部分 CGNAT 会喺连接空闲约 5 分钟后回收 NAT 会话,HY2 亦
-  // 有 idle 超时;而现有健康检查只睇本地路由表(utun / Wintun 路由仲喺),睇唔到「路由
-  // 还在但整条路已死」呢种静默断连 —— 用户体感就係「放埋电脑几分钟就断,要刷新先返」。
-  // 呢个保活每 45s 经隧道打一次 generate_204:
-  //   ① 有周期性活动 → 消灭 idle 间隙,直接防止空闲回收(同时覆盖 vless/reality TCP
-  //      同 HY2 两条路,唔使靠估到底边条死);
-  //   ② 若整条路真係死咗(探活连续失败)→ 做一次受控核心重启自愈。
-  // 全程仅桌面 + 已连接;连续 3 次(≈135s)先当真死、最快 90s 一次自愈、连续 3 次自愈
-  // 无效即停手只保持探活+日志,最终兜底仍係既有兼容模式。Android 唔行呢套(有自己嘅
-  // VpnService 生命周期 + 流量成本考虑)。
+  // 有 idle 超时 —— 用户体感就係「放埋电脑几分钟就断,要刷新先返」。
+  // 呢个保活每 45s 经隧道打一次极轻量 generate_204,**唯一作用係制造周期性活动**,
+  // 令 NAT / QUIC 唔会当条链路空闲而回收(vless/reality TCP 同 HY2 两条路一齐覆盖)。
+  //
+  // ⚠️ **绝对唔可以再加「探活失败就重启核心」嘅自愈**(0.9.70 加过,已回滚):
+  // 客户端分唔清「链路真死」同「探测目标暂时唔通」,校园网丢包会令探活假失败,
+  // 结果喺用户正用紧嗰阵自己断线重启 —— 比原本嘅问题更差。探活结果只写日志。
+  // 仅桌面;Android 唔行呢套(有自己嘅 VpnService 生命周期 + 流量成本考虑)。
   Timer? _desktopKeepaliveTimer;
   bool _desktopKeepaliveInFlight = false;
   int _desktopKeepaliveFailStreak = 0;
-  int _desktopKeepaliveRecoveryStreak = 0;
-  DateTime? _lastDesktopKeepaliveRecoveryAt;
 
   bool get isStart => startTime != null && startTime!.isBeforeNow;
 
@@ -471,8 +468,6 @@ class SetupAction extends _$SetupAction {
     if (!system.isDesktop) return;
     _desktopKeepaliveTimer?.cancel();
     _desktopKeepaliveFailStreak = 0;
-    // ⚠️ _desktopKeepaliveRecoveryStreak 唔喺度清 —— 佢要跨越自愈重启存活先做到「连续
-    // 自愈无效就停手」嘅反死循环;只喺探活成功或用户主动断开(handleStop)先清。
     _desktopKeepaliveTimer = Timer.periodic(
       const Duration(seconds: 45),
       (_) => _desktopKeepaliveTick(),
@@ -498,71 +493,45 @@ class SetupAction extends _$SetupAction {
     } finally {
       _desktopKeepaliveInFlight = false;
     }
-    // 探测期间用户可能已断开,唔好用一个 stale 结果触发自愈。
+    // 探测期间用户可能已断开。
     if (startTime == null) return;
 
     if (ok) {
-      if (_desktopKeepaliveFailStreak > 0 ||
-          _desktopKeepaliveRecoveryStreak > 0) {
+      if (_desktopKeepaliveFailStreak > 0) {
         commonPrint.log(
           '[KEEPALIVE] 隧道探活恢复正常',
           logLevel: LogLevel.info,
         );
       }
       _desktopKeepaliveFailStreak = 0;
-      _desktopKeepaliveRecoveryStreak = 0;
       return;
     }
 
     _desktopKeepaliveFailStreak++;
-    commonPrint.log(
-      '[KEEPALIVE] 经隧道探活失败 streak=$_desktopKeepaliveFailStreak',
-      logLevel: LogLevel.warning,
-    );
-    // 需连续 3 次失败(≈135s)先当真死,避开瞬时抖动 / 单次慢探测误判。
-    if (_desktopKeepaliveFailStreak < 3) return;
-
-    // 硬限流:最快 90s 一次自愈,避免重启风暴。
-    final lastRecovery = _lastDesktopKeepaliveRecoveryAt;
-    if (lastRecovery != null &&
-        DateTime.now().difference(lastRecovery) < const Duration(seconds: 90)) {
-      return;
-    }
-    // 反死循环:连续自愈都唔见效(冇一次成功探活介入)超过 3 次就唔再重启,只保持
-    // 探活 + 日志,交返畀 TUN 探测 / 兼容兜底 / 用户介入,避免无限重启核心。
-    if (_desktopKeepaliveRecoveryStreak >= 3) {
-      if (_desktopKeepaliveFailStreak == 3) {
-        commonPrint.log(
-          '[KEEPALIVE] 连续自愈无效,停止自动重启,保持探活等待恢复',
-          logLevel: LogLevel.error,
-        );
-      }
-      return;
-    }
-
-    _desktopKeepaliveFailStreak = 0;
-    _lastDesktopKeepaliveRecoveryAt = DateTime.now();
-    _desktopKeepaliveRecoveryStreak++;
-    commonPrint.log(
-      '[KEEPALIVE] 隧道静默断连,执行一次受控核心重启自愈'
-      '(第 $_desktopKeepaliveRecoveryStreak 次)',
-      logLevel: LogLevel.warning,
-    );
-    try {
-      // restartCore 单飞(_restartFuture),内部会干净地 shutdown → 重连 → 重跑
-      // _handleStart(会重建本定时器);兜底行为(兼容模式)同既有 TUN 自愈一致。
-      await ref.read(coreActionProvider.notifier).restartCore(true);
-    } catch (e) {
+    // ⚠️ 2026-08-10 回归修复(0.9.71):**探活失败绝对唔可以再触发 restartCore**。
+    // 0.9.70 曾经喺连续 3 次失败后做「受控核心重启自愈」,实测坑咗校园网付费用户
+    // (uid=239,上海交大 202.120.11.167):佢 09:43 装 0.9.70 → 09:47 节点侧见到
+    // 全节点延迟测速爆发(重启特征)→ 09:48 投诉「用着用着就断」。
+    // 校园网间歇丢包令探活假失败,于是客户端喺用户正用紧嘅时候自己重启核心 =
+    // 亲手制造断线,比原本嘅 idle 断线更差。
+    // 结论:呢个探活只可以做「保活」(制造周期性活动,防 NAT/QUIC 空闲回收),
+    // **唔可以做「判死 + 自动重启」** —— 客户端无法可靠区分「链路真死」同
+    // 「探测目标暂时唔通」,判错嘅代价(主动断线)远大于收益。
+    // 真死嘅情况交返畀既有 TUN 探测 / 兼容模式兜底 / 用户手动重连。
+    if (_desktopKeepaliveFailStreak == 3) {
       commonPrint.log(
-        '[KEEPALIVE] 自愈重启失败: $e',
-        logLevel: LogLevel.error,
+        '[KEEPALIVE] 探活连续失败(只记录,唔会重启核心)',
+        logLevel: LogLevel.warning,
       );
     }
   }
 
   /// 经本地混合端口(即用户当前选中嘅节点路由)打一次轻量 generate_204。
-  /// 成功(204/200)= 从设备到节点到公网整条路此刻仲通;超时/异常 = 呢条路已死。
+  /// **用途只係保活**(制造周期性活动,令校园网/企业网 NAT 同 HY2 唔会当条链路
+  /// 空闲而回收);返回值只用嚟写日志,**唔会触发任何断开/重启**(见 tick 里说明)。
   /// 用 http(免 TLS 握手开销);followRedirects=false;总超时 8s。
+  /// ⚠️ 探测目标唔用 gstatic:国内链路对佢干扰大(见「DIRECT 测速 URL 换国内可达
+  /// 204」呢条待办),假失败多。Cloudflare 嘅 204 端点 anycast、经节点出口稳定。
   Future<bool> _probeThroughProxy(int port) async {
     HttpClient? client;
     try {
@@ -571,7 +540,7 @@ class SetupAction extends _$SetupAction {
       client.idleTimeout = const Duration(seconds: 5);
       client.findProxy = (_) => 'PROXY 127.0.0.1:$port';
       final request = await client
-          .getUrl(Uri.parse('http://www.gstatic.com/generate_204'))
+          .getUrl(Uri.parse('http://cp.cloudflare.com/generate_204'))
           .timeout(const Duration(seconds: 8));
       request.followRedirects = false;
       final response =
@@ -598,9 +567,6 @@ class SetupAction extends _$SetupAction {
     _desktopKeepaliveTimer = null;
     _desktopKeepaliveInFlight = false;
     _desktopKeepaliveFailStreak = 0;
-    // 用户主动断开 = 一次全新会话,反死循环计数清零(下次连接重新畀满 3 次自愈额度)。
-    _desktopKeepaliveRecoveryStreak = 0;
-    _lastDesktopKeepaliveRecoveryAt = null;
     _desktopTunVerifyFailCount = 0;
     _desktopProxyVerifyFailCount = 0;
     _desktopTunVerificationStartedAt = null;
