@@ -680,9 +680,16 @@ class Windows {
     final res = runas('cmd.exe', command);
 
     await Future.delayed(const Duration(milliseconds: 300));
+    // ⚠️ 重试要够耐心(2026-08-10 由 5 次 × 1s 加到 15 次 × 1s):
+    // 上面嘅 `sc delete` + `sc create` 有个 Windows 经典坑 —— 若旧 helper 进程係被强杀
+    // (例如安装器 taskkill /f),`sc delete` 会令服务变成 "marked for deletion",
+    // 同名 `sc create` 就会失败(error 1072),要等 SCM 释放晒句柄先得。
+    // 旧嘅 5 秒窗口远远唔够 → helper 起唔到 → TUN 建唔起 → 用户以为新版坏咗。
+    // 治本喺安装器嗰边(装之前 sc stop + sc delete 干净收场,见 inno_setup.iss);
+    // 呢度加长重试係第二道保险,畀 SCM 时间收场,唔好一失败就摆烂。
     final retryStatus = await retry(
       task: checkService,
-      maxAttempts: 5,
+      maxAttempts: 15,
       retryIf: (status) => status != WindowsHelperServiceStatus.running,
       delay: const Duration(seconds: 1),
     );
