@@ -8,10 +8,17 @@ import 'package:dio/dio.dart';
 ///   voguesly.com 已被 GFW SNI 污染(裸IP 100% RST + 套CF间歇被打),且旧域名嘅 /s/ 订阅
 ///   畀 Cloudflare 缓存(max-age=14400 = 4小时)serve 旧配置 → app 攞唔到 Sam 新加嘅节点。
 ///   ylink.im 系后端 app_url/subscribe_url 设定嘅现役 panel(CF DYNAMIC 唔缓存,干净)。
-///   corelane/octolink 旧镜像已死(HTTP 000),移除。待 Sam 开多个干净备用子域再加返 fallback。
-/// 后续如换品牌门面(如 ylink.im)只需改呢度。
+///   corelane/octolink 旧镜像已死(HTTP 000),移除。
+/// ✅ 2026-08-13 加返 fallback(_try 逐 host 轮询逻辑本就现成):主入口挂 → 轮 CF 备用(不同
+///   Anycast IP,治「单 IP 被墙」)→ 最后非CF直连HK逃生(异构路,治「整个 CF 被墙」)。
+///   d.ylink.im = 灰云直连 HK 盒(104.245.40.48),非CF。✅广州移动手机实测可达(全新 SNI,
+///   当年 voguesly.com 系 SNI 污染唔波及呢条);排最后兜底以保 CF 抗D,CF 全挂时接手。
+/// 后续如换品牌门面只需改呢度。
 const List<String> kVogueslyHosts = [
-  'https://ylink.im',
+  'https://ylink.im',           // 主(CF;后端 app_url/subscribe_url)
+  'https://cp.voguesly.com',    // CF 备①(不同 Anycast IP)
+  'https://cp.samseah.qzz.io',  // CF 备②(不同 CF zone/IP)
+  'https://d.ylink.im',         // 非CF直连HK逃生(异构路;广州移动实测可达)
 ];
 
 /// 易联(voguesly) 后端 XBoard API 服务。
