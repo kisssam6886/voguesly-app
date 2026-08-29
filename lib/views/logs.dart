@@ -5,6 +5,7 @@ import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 
@@ -43,6 +44,14 @@ class _LogsViewState extends ConsumerState<LogsView> {
 
   List<Widget> _buildActions() {
     return [
+      // ⚠️ 2026-08-29 加:导出成日失败,而日志係排障唯一凭据。
+      // 复制到剪贴板唔经文件系统、唔经储存面板,係最唔可能失败嗰条路。
+      IconButton(
+        onPressed: () {
+          _handleCopy();
+        },
+        icon: const Icon(Icons.copy_all_outlined),
+      ),
       IconButton(
         onPressed: () {
           _handleExport();
@@ -50,6 +59,15 @@ class _LogsViewState extends ConsumerState<LogsView> {
         icon: const Icon(Icons.save_as_outlined),
       ),
     ];
+  }
+
+  Future<void> _handleCopy() async {
+    await globalState.safeRun(() async {
+      final logs = globalState.container.read(logsProvider).list;
+      final text = await encodeLogsTask(logs);
+      await Clipboard.setData(ClipboardData(text: text));
+      globalState.showNotifier('已复制 ${logs.length} 条日志到剪贴板');
+    }, title: 'Copy logs');
   }
 
   void _onSearch(String value) {
@@ -71,15 +89,16 @@ class _LogsViewState extends ConsumerState<LogsView> {
 
   Future<void> _handleExport() async {
     final appLocalizations = context.appLocalizations;
-    final res = await globalState.safeRun<bool>(() async {
+    final path = await globalState.safeRun<String?>(() async {
       return globalState.container
           .read(logsProvider.notifier)
           .exportLogs();
     }, title: appLocalizations.exportLogs);
-    if (res != true) return;
+    if (path == null) return;
     globalState.showMessage(
       title: appLocalizations.tip,
-      message: TextSpan(text: appLocalizations.exportSuccess),
+      // 讲埋存咗去边 —— 用户以前净係见到「成功」,揾唔到个文件一样等於冇。
+      message: TextSpan(text: '${appLocalizations.exportSuccess}\n$path'),
     );
   }
 

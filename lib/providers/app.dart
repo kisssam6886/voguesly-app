@@ -35,14 +35,34 @@ class Logs extends _$Logs with AutoDisposeNotifierMixin {
     this.value = state.copyWith()..add(value);
   }
 
-  Future<bool> exportLogs() async {
+  /// 导出日志。
+  /// ⚠️ 2026-08-29:macOS 上用户报「操作失败,请稍后重试」——
+  /// safeRun 会 catch 住 exception 只弹通用文案,用户永远攞唔到日志,
+  /// 而工单排障就係靠呢份日志。所以储存面板一失败就直接写去下载目录,
+  /// 唔好静静 throw。返回实际保存路径(null = 真係失败)。
+  Future<String?> exportLogs() async {
     final logString = await encodeLogsTask(value.list);
     final tempFilePath = await appPath.tempFilePath;
     final file = File(tempFilePath);
     await file.safeWriteAsString(logString);
-    bool res = false;
-    res = await picker.saveFileWithPath(utils.logFile, tempFilePath) != null;
-    return res;
+
+    try {
+      final saved = await picker.saveFileWithPath(utils.logFile, tempFilePath);
+      if (saved != null) return saved;
+    } catch (_) {
+      // 储存面板开唔到 / 被拒 → 落下面 fallback
+    }
+
+    // fallback:直接写落下载目录。用 logString 唔用 temp 文件,
+    // 因为 saveFileWithPath 无论成败都会 safeDelete 咗个 temp。
+    try {
+      final dir = await appPath.downloadDirPath;
+      final target = '$dir/${utils.logFile}';
+      await File(target).writeAsString(logString);
+      return target;
+    } catch (_) {
+      return null;
+    }
   }
 }
 
