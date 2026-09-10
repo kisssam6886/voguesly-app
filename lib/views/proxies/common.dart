@@ -73,15 +73,36 @@ Future<void> proxyDelayTest(Proxy proxy, [String? testUrl]) async {
       .setDelay(await coreController.getDelay(currentTestUrl, state.proxyName));
 }
 
-Future<void> delayTest(List<Proxy> proxies, [String? testUrl]) async {
-  final delayProxies = proxies.map<Future>((proxy) async {
-    await proxyDelayTest(proxy, testUrl);
-  }).toList();
+/// 整组延迟测试嘅并发上限。
+///
+/// 点解要限:原本 `batch(100)` 等于一次过掟 100 条落 Core。超出 Core 自己嘅
+/// 并发处理能力嗰批会喺入面排队,排到嘅时候已经食晒 5 秒 timeout ⇒ 明明活嘅节点
+/// 报「超时/红」。Sam 2026-09-08 实测:52 条节点一次过测,大量报死;改逐条顺序测
+/// 之后只有 6 条係真死。上游 chen08209 亦独立撞到同一个坑(commit 7fb4f4f,
+/// 佢哋 cap 喺 50 —— 但我哋实测 52 已经出事,所以要更保守)。
+///
+/// 同一个根因喺 `voguesly_detection.dart` 嘅 `_pingBounded` 已经写过:
+/// 并发暴发会令个别探针嘅暖连接建唔起、量到冷握手(虚高≈4×RTT)。
+///
+/// 12 = 准确度同总时长嘅折衷:52 条约 5 轮,每条结果一完成即刻回填 UI(唔係等
+/// 成批先刷),所以用户见到嘅係逐个亮起,唔会觉得卡住。
+const _kDelayTestConcurrency = 12;
 
-  final batchesDelayProxies = delayProxies.batch(100);
-  for (final batchDelayProxies in batchesDelayProxies) {
-    await Future.wait(batchDelayProxies);
+Future<void> delayTest(List<Proxy> proxies, [String? testUrl]) async {
+  final list = List<Proxy>.of(proxies);
+  var index = 0;
+
+  Future<void> worker() async {
+    while (true) {
+      final i = index++;
+      if (i >= list.length) return;
+      await proxyDelayTest(list[i], testUrl);
+    }
   }
+
+  final workerCount =
+      list.length < _kDelayTestConcurrency ? list.length : _kDelayTestConcurrency;
+  await Future.wait([for (var w = 0; w < workerCount; w++) worker()]);
   globalState.container.read(sortNumProvider.notifier).add();
 }
 
