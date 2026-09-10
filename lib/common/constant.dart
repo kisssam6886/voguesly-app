@@ -36,7 +36,17 @@ const watchExecution = false;
 
 final defaultTextScaleFactor =
     WidgetsBinding.instance.platformDispatcher.textScaleFactor;
-const httpTimeoutDuration = Duration(milliseconds: 5000);
+/// 延迟测试畀 Core 嘅上限。
+///
+/// 5000 → 8000(2026-09-10)。点解:呢个常数就係 Sam 截图见到嗰个「5001ms」本身
+/// (5000 + 1)。欧洲/香港线路由大陆过去 RTT 300-850ms,一次 HTTPS 探测要
+/// TCP 1 + TLS 2 + HTTP 1 ≈ 4 个来回;850ms × 4 = 3.4s,再撞埋并发争用就爆 5 秒,
+/// 于是「英国住宅 / 荷兰 / 德国 / 香港 CMI」几乎必然报超时,而美国/日本(60-180ms)冇事
+/// —— 睇落就係「总係呢几个坏」。
+///
+/// ⚠️ 改呢个一定要一齐改 interface.dart 嗰个 RPC wrapper timeout,
+///    wrapper 必须**大过**呢个值,否则 wrapper 先放弃 = 一样报假死。
+const httpTimeoutDuration = Duration(milliseconds: 8000);
 const moreDuration = Duration(milliseconds: 100);
 const animateDuration = Duration(milliseconds: 100);
 const midDuration = Duration(milliseconds: 200);

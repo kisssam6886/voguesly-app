@@ -326,7 +326,10 @@ abstract class CoreHandlerInterface with CoreInterface {
     return await _invoke<String>(
           method: ActionMethod.asyncTestDelay,
           data: json.encode(delayParams),
-          timeout: const Duration(seconds: 6),
+          // ⚠️ 必须大过 httpTimeoutDuration(而家 8s),否则 wrapper 会喺 Core 仲未
+          // 放弃之前就自己 timeout,把一条**其实量紧**嘅节点报成死。
+          // 原本 6s vs Core 5s 得 1s 余裕,一有争用就係 wrapper 先死。
+          timeout: const Duration(seconds: 11),
         ) ??
         json.encode(Delay(name: proxyName, value: -1, url: url));
   }
