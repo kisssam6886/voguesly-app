@@ -10,15 +10,27 @@ import 'package:dio/dio.dart';
 ///   ylink.im 系后端 app_url/subscribe_url 设定嘅现役 panel(CF DYNAMIC 唔缓存,干净)。
 ///   corelane/octolink 旧镜像已死(HTTP 000),移除。
 /// ✅ 2026-08-13 加返 fallback(_try 逐 host 轮询逻辑本就现成):主入口挂 → 轮 CF 备用(不同
-///   Anycast IP,治「单 IP 被墙」)→ 最后非CF直连HK逃生(异构路,治「整个 CF 被墙」)。
-///   d.ylink.im = 灰云直连 HK 盒(104.245.40.48),非CF。✅广州移动手机实测可达(全新 SNI,
-///   当年 voguesly.com 系 SNI 污染唔波及呢条);排最后兜底以保 CF 抗D,CF 全挂时接手。
+///   Anycast IP,治「单 IP 被墙」)→ 最后非CF直连逃生(异构路,治「整个 CF 被墙」)。
+///
+/// 🔴 2026-09-10 由**真·大陆直连**(旁路由 root@10.10.10.252,广东移动)逐条实测,各 3 轮,
+///    改咗成条链。⚠️ 呢种量度**唔可以喺 Mac 上做** —— TUN 会把包全部送入隧道,
+///    量到嘅係「经我哋自己节点」嘅假数。见记忆 reference_mainland_probe_is_the_openwrt_router。
+///
+///    实测结果:
+///      ylink.im            200 200 200  ✅ 主入口稳
+///      cp.samseah.qzz.io   200 200 200  ✅ 独立 CF zone,稳
+///      w.ylink.im          200 200 200  ✅ 同 CF zone 唔同子域
+///      cp.voguesly.com     000 000 302  ❌ 移走:voguesly.com **整域** SNI 封,得 1/3
+///      d.ylink.im          000 000 000  ❌ 移走:域名畀 GFW **点名污染**,三次分别返
+///                                          8.7.198.46 / 59.24.3.174 / 93.46.8.90(注入地址库)
+///      go.ylink.im         时好时坏      ⚠️ 排最尾:同 d 係同一台 SG 裸 IP(161.118.219.50),
+///                                          名冇被污染但裸 IP 本身时通时唔通
 /// 后续如换品牌门面只需改呢度。
 const List<String> kVogueslyHosts = [
   'https://ylink.im',           // 主(CF;后端 app_url/subscribe_url)
-  'https://cp.voguesly.com',    // CF 备①(不同 Anycast IP)
-  'https://cp.samseah.qzz.io',  // CF 备②(不同 CF zone/IP)
-  'https://d.ylink.im',         // 非CF直连HK逃生(异构路;广州移动实测可达)
+  'https://cp.samseah.qzz.io',  // CF 备①(独立 CF zone/IP)  — 实测 200×3
+  'https://w.ylink.im',         // CF 备②(同 zone 唔同子域) — 实测 200×3
+  'https://go.ylink.im',        // 非CF 直连 SG 逃生(异构路);唔稳,排最尾兜底
 ];
 
 /// 易联(voguesly) 后端 XBoard API 服务。
