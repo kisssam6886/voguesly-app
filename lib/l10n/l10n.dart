@@ -6964,9 +6964,9 @@ class AppLocalizations {
     );
   }
 
-  /// `Store`
+  /// `Buy Plan`
   String get vgStore {
-    return Intl.message('Store', name: 'vgStore', desc: '', args: []);
+    return Intl.message('Buy Plan', name: 'vgStore', desc: '', args: []);
   }
 
   /// `Account balance`

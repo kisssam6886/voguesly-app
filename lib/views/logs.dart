@@ -64,7 +64,7 @@ class _LogsViewState extends ConsumerState<LogsView> {
   Future<void> _handleCopy() async {
     await globalState.safeRun(() async {
       final logs = globalState.container.read(logsProvider).list;
-      final text = await encodeLogsTask(logs);
+      final text = '${buildLogSnapshot()}\n${await encodeLogsTask(logs)}';
       await Clipboard.setData(ClipboardData(text: text));
       globalState.showNotifier(
         currentAppLocalizations.vgCopiedLogsToClipboard(logs.length),

@@ -832,7 +832,7 @@
   "vgNotSignedInPleaseSignIn": "未登录,请先登录",
   "vgNoPlansAvailable": "暂无可购买套餐,或网络异常,请下拉重试",
   "vgLoadFailedWith": "加载失败:{p0}",
-  "vgStore": "商城",
+  "vgStore": "购买套餐",
   "vgAccountBalance": "账户余额",
   "vgManageBalanceAndPlan": "管理余额和套餐",
   "vgMyOrders": "我的订单",

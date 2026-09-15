@@ -830,7 +830,7 @@
   "vgNotSignedInPleaseSignIn": "Вы не вошли — сначала выполните вход",
   "vgNoPlansAvailable": "Нет доступных тарифов или проблема с сетью. Потяните вниз для повтора.",
   "vgLoadFailedWith": "Не удалось загрузить: {p0}",
-  "vgStore": "Магазин",
+  "vgStore": "Купить тариф",
   "vgAccountBalance": "Баланс аккаунта",
   "vgManageBalanceAndPlan": "Управление балансом и тарифами",
   "vgMyOrders": "Мои заказы",

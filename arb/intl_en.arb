@@ -832,7 +832,7 @@
   "vgNotSignedInPleaseSignIn": "Not signed in — please sign in first",
   "vgNoPlansAvailable": "No plans available, or a network issue. Pull down to retry.",
   "vgLoadFailedWith": "Loading failed: {p0}",
-  "vgStore": "Store",
+  "vgStore": "Buy Plan",
   "vgAccountBalance": "Account balance",
   "vgManageBalanceAndPlan": "Manage balance and plans",
   "vgMyOrders": "My orders",

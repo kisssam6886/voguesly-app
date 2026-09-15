@@ -7,11 +7,45 @@ import 'package:fl_clash/core/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
+import 'package:fl_clash/state.dart';
 import 'package:flutter/services.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:wifi_ssid/wifi_ssid.dart';
 
 part 'generated/app.g.dart';
+
+/// 导出 / 复制日志时 prepend 嘅环境快照 —— 畀客服查问题:
+/// 客户端版本、系统、TUN 状态、当前订阅、各策略组选咗边个节点。
+/// 每项独立 try:攞唔到某项唔应该令整个导出失败(导出本身就係排障最后一根稻草)。
+String buildLogSnapshot() {
+  final c = globalState.container;
+  final sb = StringBuffer();
+  sb.writeln('==== 环境快照 / Snapshot ====');
+  try {
+    final pkg = globalState.packageInfo;
+    sb.writeln('版本 Version: ${pkg.version}+${pkg.buildNumber}');
+  } catch (_) {}
+  try {
+    sb.writeln('系统 OS: ${Platform.operatingSystem} ${Platform.operatingSystemVersion}');
+  } catch (_) {}
+  try {
+    sb.writeln('TUN: ${c.read(realTunEnableProvider)}');
+  } catch (_) {}
+  try {
+    final p = c.read(currentProfileProvider);
+    final name = (p?.label.isNotEmpty ?? false) ? p!.label : (p?.id ?? '-');
+    sb.writeln('订阅 Profile: $name');
+  } catch (_) {}
+  try {
+    final sel = c.read(selectedMapProvider);
+    if (sel.isNotEmpty) {
+      sb.writeln('节点选择 Selected:');
+      sel.forEach((g, n) => sb.writeln('  $g -> $n'));
+    }
+  } catch (_) {}
+  sb.writeln('=============================');
+  return sb.toString();
+}
 
 @riverpod
 class RealTunEnable extends _$RealTunEnable with AutoDisposeNotifierMixin {
@@ -41,7 +75,7 @@ class Logs extends _$Logs with AutoDisposeNotifierMixin {
   /// 而工单排障就係靠呢份日志。所以储存面板一失败就直接写去下载目录,
   /// 唔好静静 throw。返回实际保存路径(null = 真係失败)。
   Future<String?> exportLogs() async {
-    final logString = await encodeLogsTask(value.list);
+    final logString = '${buildLogSnapshot()}\n${await encodeLogsTask(value.list)}';
     final tempFilePath = await appPath.tempFilePath;
     final file = File(tempFilePath);
     await file.safeWriteAsString(logString);

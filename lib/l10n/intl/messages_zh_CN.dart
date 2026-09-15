@@ -1370,7 +1370,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgStartingPaymentEllipsis": MessageLookupByLibrary.simpleMessage(
       "正在发起支付…",
     ),
-    "vgStore": MessageLookupByLibrary.simpleMessage("商城"),
+    "vgStore": MessageLookupByLibrary.simpleMessage("购买套餐"),
     "vgSubmit": MessageLookupByLibrary.simpleMessage("提交"),
     "vgSubmitFailedRetry": MessageLookupByLibrary.simpleMessage("提交失败，请稍后再试"),
     "vgSubmitFailedWith": m59,

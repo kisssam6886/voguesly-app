@@ -1954,7 +1954,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgStartingPaymentEllipsis": MessageLookupByLibrary.simpleMessage(
       "Начинаем оплату…",
     ),
-    "vgStore": MessageLookupByLibrary.simpleMessage("Магазин"),
+    "vgStore": MessageLookupByLibrary.simpleMessage("Купить тариф"),
     "vgSubmit": MessageLookupByLibrary.simpleMessage("Отправить"),
     "vgSubmitFailedRetry": MessageLookupByLibrary.simpleMessage(
       "Не удалось отправить, повторите попытку позже",

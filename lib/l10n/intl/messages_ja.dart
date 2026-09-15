@@ -1572,7 +1572,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgStartingPaymentEllipsis": MessageLookupByLibrary.simpleMessage(
       "決済を開始しています…",
     ),
-    "vgStore": MessageLookupByLibrary.simpleMessage("ストア"),
+    "vgStore": MessageLookupByLibrary.simpleMessage("プラン購入"),
     "vgSubmit": MessageLookupByLibrary.simpleMessage("送信"),
     "vgSubmitFailedRetry": MessageLookupByLibrary.simpleMessage(
       "送信に失敗しました。しばらくしてから再試行してください",

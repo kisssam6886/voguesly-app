@@ -830,7 +830,7 @@
   "vgNotSignedInPleaseSignIn": "未ログインです。先にログインしてください",
   "vgNoPlansAvailable": "購入可能なプランがないか、通信エラーです。下に引いて再試行してください。",
   "vgLoadFailedWith": "読み込みに失敗しました: {p0}",
-  "vgStore": "ストア",
+  "vgStore": "プラン購入",
   "vgAccountBalance": "アカウント残高",
   "vgManageBalanceAndPlan": "残高とプランを管理",
   "vgMyOrders": "注文履歴",
