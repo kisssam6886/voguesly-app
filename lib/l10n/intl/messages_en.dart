@@ -1030,7 +1030,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "selected": MessageLookupByLibrary.simpleMessage("Selected"),
     "selectedCountTitle": m17,
     "settings": MessageLookupByLibrary.simpleMessage("Settings"),
-    "shop": MessageLookupByLibrary.simpleMessage("Shop"),
+    "shop": MessageLookupByLibrary.simpleMessage("Buy Plan"),
     "show": MessageLookupByLibrary.simpleMessage("Show"),
     "shrink": MessageLookupByLibrary.simpleMessage("Shrink"),
     "silentLaunch": MessageLookupByLibrary.simpleMessage("SilentLaunch"),

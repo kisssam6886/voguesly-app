@@ -74,9 +74,9 @@ class AppLocalizations {
     return Intl.message('Dashboard', name: 'dashboard', desc: '', args: []);
   }
 
-  /// `Shop`
+  /// `Buy Plan`
   String get shop {
-    return Intl.message('Shop', name: 'shop', desc: '', args: []);
+    return Intl.message('Buy Plan', name: 'shop', desc: '', args: []);
   }
 
   /// `Detection`

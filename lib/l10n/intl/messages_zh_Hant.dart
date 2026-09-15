@@ -738,7 +738,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "selected": MessageLookupByLibrary.simpleMessage("已選擇"),
     "selectedCountTitle": m17,
     "settings": MessageLookupByLibrary.simpleMessage("設置"),
-    "shop": MessageLookupByLibrary.simpleMessage("商城"),
+    "shop": MessageLookupByLibrary.simpleMessage("購買套餐"),
     "show": MessageLookupByLibrary.simpleMessage("顯示"),
     "shrink": MessageLookupByLibrary.simpleMessage("緊湊"),
     "silentLaunch": MessageLookupByLibrary.simpleMessage("靜默啓動"),

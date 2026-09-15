@@ -1079,7 +1079,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "selected": MessageLookupByLibrary.simpleMessage("Выбрано"),
     "selectedCountTitle": m17,
     "settings": MessageLookupByLibrary.simpleMessage("Настройки"),
-    "shop": MessageLookupByLibrary.simpleMessage("Магазин"),
+    "shop": MessageLookupByLibrary.simpleMessage("Купить тариф"),
     "show": MessageLookupByLibrary.simpleMessage("Показать"),
     "shrink": MessageLookupByLibrary.simpleMessage("Сжать"),
     "silentLaunch": MessageLookupByLibrary.simpleMessage("Тихий запуск"),

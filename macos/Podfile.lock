@@ -27,6 +27,9 @@ PODS:
     - FlutterMacOS
   - package_info_plus (0.0.1):
     - FlutterMacOS
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - rust_api (0.0.1):
     - FlutterMacOS
   - screen_retriever_macos (0.0.1):
@@ -94,6 +97,7 @@ DEPENDENCIES:
   - hotkey_manager_macos (from `Flutter/ephemeral/.symlinks/plugins/hotkey_manager_macos/macos`)
   - mobile_scanner (from `Flutter/ephemeral/.symlinks/plugins/mobile_scanner/darwin`)
   - package_info_plus (from `Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos`)
+  - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
   - rust_api (from `Flutter/ephemeral/.symlinks/plugins/rust_api/macos`)
   - screen_retriever_macos (from `Flutter/ephemeral/.symlinks/plugins/screen_retriever_macos/macos`)
   - setup (from `Flutter/ephemeral/.symlinks/plugins/setup/macos`)
@@ -140,6 +144,8 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/mobile_scanner/darwin
   package_info_plus:
     :path: Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos
+  path_provider_foundation:
+    :path: Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin
   rust_api:
     :path: Flutter/ephemeral/.symlinks/plugins/rust_api/macos
   screen_retriever_macos:
@@ -182,6 +188,7 @@ SPEC CHECKSUMS:
   hotkey_manager_macos: a4317849af96d2430fa89944d3c58977ca089fbe
   mobile_scanner: 9157936403f5a0644ca3779a38ff8404c5434a93
   package_info_plus: f0052d280d17aa382b932f399edf32507174e870
+  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
   rust_api: 112f3cfd993afe61c6662bdb30fd6e3509fb3bf8
   screen_retriever_macos: 452e51764a9e1cdb74b3c541238795849f21557f
   setup: 8b838da8e99b84b526ac668469e84de76f32fb74
