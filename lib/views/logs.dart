@@ -66,7 +66,9 @@ class _LogsViewState extends ConsumerState<LogsView> {
       final logs = globalState.container.read(logsProvider).list;
       final text = await encodeLogsTask(logs);
       await Clipboard.setData(ClipboardData(text: text));
-      globalState.showNotifier('已复制 ${logs.length} 条日志到剪贴板');
+      globalState.showNotifier(
+        currentAppLocalizations.vgCopiedLogsToClipboard(logs.length),
+      );
     }, title: 'Copy logs');
   }
 

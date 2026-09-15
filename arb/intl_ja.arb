@@ -658,7 +658,7 @@
   "vgResetVogueslySystemProxy": "Voguesly のシステムプロキシをリセット",
   "vgResetProxyHint": "Voguesly 自身の設定のみを書き換えます。他のプロキシアプリを終了・変更することはありません。",
   "vgTesting": "テスト中…",
-  "vgTimeout": "タイムアウト",
+  "vgTimeout": "未接続",
   "vgCheckFailedConnectFirst": "検出に失敗しました。先に接続してから再試行してください。",
   "vgIpAddress": "IP アドレス",
   "vgCountryRegion": "国 / 地域",
@@ -687,6 +687,15 @@
   "vgPublicTrafficOnOurTun": "外部向け通信は Voguesly の仮想 NIC を通っています。これが主経路で、システムプロキシには依存しません。",
   "vgPublicTrafficOnOtherTun": "外部向け通信は {p0} を通っており、Voguesly の仮想 NIC ではありません —— ",
   "vgLikelyAnotherVpnTookRoute": "別の VPN がデフォルトルートを奪っている可能性が高いです。",
+  "vgTunTakenByOtherVpn": "Voguesly は起動していますが、公衆トラフィックは Voguesly の仮想 NIC ではなく {p0} を経由しています — ノードとルールは実際には有効になっていません。そのアプリを完全に終了するか、そのアプリのネットワーク引き継ぎをオフにしてから、Voguesly で再接続してください。",
+  "@vgTunTakenByOtherVpn": {
+    "type": "text",
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
   "vgTunOnButNoUtun": "設定では仮想 NIC が有効ですが、外部向け通信が utun を通っていません。承認が未完了の可能性があります。",
   "vgTunOffUsingCompatMode": "仮想 NIC はオフです。現在はシステムプロキシ互換モードで動作しています。",
   "vgRouteTableSeesOurTun": "ルーティングテーブルに Voguesly の仮想 NIC が見えています。これが主経路で、システムプロキシには依存しません。",
@@ -990,5 +999,14 @@
   "vgSupport": "サポート",
   "vgLoadingEllipsis": "読み込み中…",
   "advancedTools": "詳細ツール",
-  "updateSubscription": "サブスクリプションを更新"
+  "updateSubscription": "サブスクリプションを更新",
+  "vgCopiedLogsToClipboard": "{p0} 件のログをクリップボードにコピーしました",
+  "@vgCopiedLogsToClipboard": {
+    "type": "text",
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  }
 }

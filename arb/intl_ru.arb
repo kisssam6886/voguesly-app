@@ -658,7 +658,7 @@
   "vgResetVogueslySystemProxy": "Сбросить системный прокси Voguesly",
   "vgResetProxyHint": "Это перезапишет только собственные настройки Voguesly. Другие прокси-приложения не будут закрыты или изменены.",
   "vgTesting": "Тестирование…",
-  "vgTimeout": "Тайм-аут",
+  "vgTimeout": "Нет ответа",
   "vgCheckFailedConnectFirst": "Проверка не удалась. Сначала подключитесь, затем повторите.",
   "vgIpAddress": "IP-адрес",
   "vgCountryRegion": "Страна / регион",
@@ -687,6 +687,15 @@
   "vgPublicTrafficOnOurTun": "Внешний трафик идёт через виртуальный адаптер Voguesly. Это основной путь, системный прокси не задействован.",
   "vgPublicTrafficOnOtherTun": "Внешний трафик идёт через {p0}, а не через виртуальный адаптер Voguesly — ",
   "vgLikelyAnotherVpnTookRoute": "скорее всего, другой VPN перехватил маршрут по умолчанию.",
+  "vgTunTakenByOtherVpn": "Voguesly включён, но публичный трафик идёт через {p0}, а не через виртуальный сетевой адаптер Voguesly — ваши узлы и правила фактически не действуют. Полностью закройте это приложение или отключите в нём перехват сети, затем переподключитесь в Voguesly.",
+  "@vgTunTakenByOtherVpn": {
+    "type": "text",
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
   "vgTunOnButNoUtun": "В настройках виртуальный адаптер включён, но внешний трафик не идёт через utun. Возможно, авторизация не завершена.",
   "vgTunOffUsingCompatMode": "Виртуальный адаптер выключен; сейчас используется режим совместимости системного прокси.",
   "vgRouteTableSeesOurTun": "В таблице маршрутизации виден виртуальный адаптер Voguesly. Это основной путь, системный прокси не задействован.",
@@ -990,5 +999,14 @@
   "vgSupport": "Поддержка",
   "vgLoadingEllipsis": "Загрузка…",
   "advancedTools": "Дополнительные инструменты",
-  "updateSubscription": "Обновить подписку"
+  "updateSubscription": "Обновить подписку",
+  "vgCopiedLogsToClipboard": "Скопировано строк журнала в буфер обмена: {p0}",
+  "@vgCopiedLogsToClipboard": {
+    "type": "text",
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  }
 }

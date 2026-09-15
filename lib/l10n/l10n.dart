@@ -5454,9 +5454,9 @@ class AppLocalizations {
     return Intl.message('Testing…', name: 'vgTesting', desc: '', args: []);
   }
 
-  /// `Timeout`
+  /// `No response`
   String get vgTimeout {
-    return Intl.message('Timeout', name: 'vgTimeout', desc: '', args: []);
+    return Intl.message('No response', name: 'vgTimeout', desc: '', args: []);
   }
 
   /// `Check failed. Connect first, then try again.`
@@ -5716,6 +5716,16 @@ class AppLocalizations {
       name: 'vgLikelyAnotherVpnTookRoute',
       desc: '',
       args: [],
+    );
+  }
+
+  /// `Voguesly is on, but public traffic is going through {p0}, not Voguesly’s virtual NIC — your nodes and rules are not actually in effect. Quit that app completely, or turn off its network takeover, then reconnect in Voguesly.`
+  String vgTunTakenByOtherVpn(Object p0) {
+    return Intl.message(
+      'Voguesly is on, but public traffic is going through $p0, not Voguesly’s virtual NIC — your nodes and rules are not actually in effect. Quit that app completely, or turn off its network takeover, then reconnect in Voguesly.',
+      name: 'vgTunTakenByOtherVpn',
+      desc: '',
+      args: [p0],
     );
   }
 
@@ -8501,6 +8511,16 @@ class AppLocalizations {
       name: 'vgLoadingEllipsis',
       desc: '',
       args: [],
+    );
+  }
+
+  /// `Copied {p0} log lines to clipboard`
+  String vgCopiedLogsToClipboard(Object p0) {
+    return Intl.message(
+      'Copied $p0 log lines to clipboard',
+      name: 'vgCopiedLogsToClipboard',
+      desc: '',
+      args: [p0],
     );
   }
 }

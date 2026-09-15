@@ -74,117 +74,122 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m22(p0) => "Cancel the order \"${p0}\"?";
 
-  static String m23(p0) => "${p0} copied";
+  static String m23(p0) => "Copied ${p0} log lines to clipboard";
 
-  static String m24(p0) => "Current balance: ${p0}";
+  static String m24(p0) => "${p0} copied";
 
-  static String m25(p0) => "Current plan: ${p0} · ";
+  static String m25(p0) => "Current balance: ${p0}";
 
-  static String m26(p0) => "Current plan: ${p0}";
+  static String m26(p0) => "Current plan: ${p0} · ";
 
-  static String m27(p0, p1, p2) => "Device: ${p0} ${p1} · Android ${p2}";
+  static String m27(p0) => "Current plan: ${p0}";
 
-  static String m28(p0) => "Duration ${p0}";
+  static String m28(p0, p1, p2) => "Device: ${p0} ${p1} · Android ${p2}";
 
-  static String m29(p0) => "${p0} expired";
+  static String m29(p0) => "Duration ${p0}";
 
-  static String m30(p0, p1) =>
+  static String m30(p0) => "${p0} expired";
+
+  static String m31(p0, p1) =>
       "${p0}\\n\\n=== Diagnostics (attached automatically) ===\\n${p1}";
 
-  static String m31(p0) => "From ${p0}";
+  static String m32(p0) => "From ${p0}";
 
-  static String m32(p0) =>
+  static String m33(p0) =>
       "${p0}; traffic is still carried by System Proxy (compatibility mode).";
 
-  static String m33(p0) => "Last updated · today ${p0}";
+  static String m34(p0) => "Last updated · today ${p0}";
 
-  static String m34(p0, p1) => "Last updated · ${p0} ${p1}";
+  static String m35(p0, p1) => "Last updated · ${p0} ${p1}";
 
-  static String m35(p0) => "Loading failed: ${p0}";
+  static String m36(p0) => "Loading failed: ${p0}";
 
-  static String m36(p0, p1) => "Loading failed: ${p0} (code ${p1})";
-
-  static String m37(p0) =>
-      "Local environment is healthy; Voguesly is in control via ${p0}.";
+  static String m37(p0, p1) => "Loading failed: ${p0} (code ${p1})";
 
   static String m38(p0) =>
+      "Local environment is healthy; Voguesly is in control via ${p0}.";
+
+  static String m39(p0) =>
       "The local port is held by ${p0}, so the Voguesly core may fail to bind — consider switching to another port.";
 
-  static String m39(p0) => "Local port ${p0}";
+  static String m40(p0) => "Local port ${p0}";
 
-  static String m40(p0) => "${p0} billing cycles available";
+  static String m41(p0) => "${p0} billing cycles available";
 
-  static String m41(p0) => "${p0} days";
+  static String m42(p0) => "${p0} days";
 
-  static String m42(p0) => "${p0} months";
+  static String m43(p0) => "${p0} months";
 
-  static String m43(p0) => "${p0} people";
+  static String m44(p0) => "${p0} people";
 
-  static String m44(p0) => "${p0} years";
+  static String m45(p0) => "${p0} years";
 
-  static String m45(p0) => "Network error: ${p0}";
+  static String m46(p0) => "Network error: ${p0}";
 
-  static String m46(p0) => "Version ${p0} available";
+  static String m47(p0) => "Version ${p0} available";
 
-  static String m47(p0) => "Could not place the order: ${p0}";
+  static String m48(p0) => "Could not place the order: ${p0}";
 
-  static String m48(p0) => "Order no.: ${p0}";
-
-  static String m49(p0) =>
-      "Another proxy is running (${p0}). Close it before connecting Voguesly.";
+  static String m49(p0) => "Order no.: ${p0}";
 
   static String m50(p0) =>
+      "Another proxy is running (${p0}). Close it before connecting Voguesly.";
+
+  static String m51(p0) =>
       "Another proxy is running (${p0}). Voguesly\'s TUN will stay off this time.";
 
-  static String m51(p0) => "Could not start the payment: ${p0}";
+  static String m52(p0) => "Could not start the payment: ${p0}";
 
-  static String m52(p0) => "Your plan allows ${p0} simultaneous devices;";
+  static String m53(p0) => "Your plan allows ${p0} simultaneous devices;";
 
-  static String m53(p0) => "Points to Voguesly · ${p0}";
+  static String m54(p0) => "Points to Voguesly · ${p0}";
 
-  static String m54(p0, p1) =>
+  static String m55(p0, p1) =>
       "${p0} is holding ${p1}, so the Voguesly core cannot bind — this is exactly the \"shows connected but no internet\"";
 
-  static String m55(p0) =>
+  static String m56(p0) =>
       "Public traffic is going through ${p0}, which is not Voguesly\'s virtual NIC — ";
 
-  static String m56(p0) => "Sending failed: ${p0}";
+  static String m57(p0) => "Sending failed: ${p0}";
 
-  static String m57(p0) => "Speed limit ${p0} Mbps";
+  static String m58(p0) => "Speed limit ${p0} Mbps";
 
-  static String m58(p0) => "Submission failed: ${p0}";
+  static String m59(p0) => "Submission failed: ${p0}";
 
-  static String m59(p0) => "${p0} (compatibility)";
+  static String m60(p0) => "${p0} (compatibility)";
 
-  static String m60(p0, p1) =>
+  static String m61(p0, p1) =>
       "A machine has only one system proxy setting and the last writer wins — right now it points to ${p0}, not Voguesly\'s ${p1}.";
 
-  static String m61(p0) => "Taken by another app · ${p0}";
+  static String m62(p0) => "Taken by another app · ${p0}";
 
-  static String m62(p0) => "Occupied by another process · ${p0}";
+  static String m63(p0) => "Occupied by another process · ${p0}";
 
-  static String m63(p0) => "Tap to disconnect  ·  ${p0}";
+  static String m64(p0) => "Tap to disconnect  ·  ${p0}";
 
-  static String m64(p0) =>
+  static String m65(p0) =>
       "${p0}; System Proxy (compatibility mode) has been enabled temporarily to keep you online.";
 
-  static String m65(p0) => "Ticket #${p0}";
+  static String m66(p0) => "Ticket #${p0}";
 
-  static String m66(p0) => "Data ${p0} GB";
+  static String m67(p0) => "Data ${p0} GB";
 
-  static String m67(p0) => "${p0} (device-wide)";
+  static String m68(p0) => "${p0} (device-wide)";
 
-  static String m68(p0, p1) => "Version: ${p0}+${p1}";
+  static String m69(p0) =>
+      "Voguesly is on, but public traffic is going through ${p0}, not Voguesly’s virtual NIC — your nodes and rules are not actually in effect. Quit that app completely, or turn off its network takeover, then reconnect in Voguesly.";
 
-  static String m69(p0) => "Version: ${p0}";
+  static String m70(p0, p1) => "Version: ${p0}+${p1}";
 
-  static String m70(p0) => "v${p0} · tap to check for updates";
+  static String m71(p0) => "Version: ${p0}";
 
-  static String m71(p0) => "Voguesly in control · ${p0}";
+  static String m72(p0) => "v${p0} · tap to check for updates";
 
-  static String m72(p0) => "WebView failed to initialise: ${p0}";
+  static String m73(p0) => "Voguesly in control · ${p0}";
 
-  static String m73(count) =>
+  static String m74(p0) => "WebView failed to initialise: ${p0}";
+
+  static String m75(count) =>
       "${Intl.plural(count, one: '1 year ago', other: '${count} years ago')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -1294,7 +1299,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgContinuePayment": MessageLookupByLibrary.simpleMessage(
       "Continue payment",
     ),
-    "vgCopiedSuffix": m23,
+    "vgCopiedLogsToClipboard": m23,
+    "vgCopiedSuffix": m24,
     "vgCopy": MessageLookupByLibrary.simpleMessage("Copy"),
     "vgCopyReferralLink": MessageLookupByLibrary.simpleMessage(
       "Copy referral link",
@@ -1305,12 +1311,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgCountryRegion": MessageLookupByLibrary.simpleMessage("Country / region"),
     "vgCreateAccount": MessageLookupByLibrary.simpleMessage("Create account"),
     "vgCreditCard": MessageLookupByLibrary.simpleMessage("Credit card"),
-    "vgCurrentBalanceWith": m24,
+    "vgCurrentBalanceWith": m25,
     "vgCurrentPassword": MessageLookupByLibrary.simpleMessage(
       "Current password",
     ),
-    "vgCurrentPlanPrefixWith": m25,
-    "vgCurrentPlanWith": m26,
+    "vgCurrentPlanPrefixWith": m26,
+    "vgCurrentPlanWith": m27,
     "vgCurrentRoute": MessageLookupByLibrary.simpleMessage("Current route"),
     "vgDailyUsageThisMonth": MessageLookupByLibrary.simpleMessage(
       "Daily usage this month",
@@ -1322,7 +1328,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgDataUsageSubtitle": MessageLookupByLibrary.simpleMessage(
       "Day-by-day data usage",
     ),
-    "vgDeviceInfoWith": m27,
+    "vgDeviceInfoWith": m28,
     "vgDeviceLimitHint": MessageLookupByLibrary.simpleMessage(
       "if you see a connection-limit message, fully quit the other clients and reconnect",
     ),
@@ -1345,7 +1351,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgDownloadingUpdate": MessageLookupByLibrary.simpleMessage(
       "Downloading update",
     ),
-    "vgDurationWith": m28,
+    "vgDurationWith": m29,
     "vgEmail": MessageLookupByLibrary.simpleMessage("Email"),
     "vgEmailCode": MessageLookupByLibrary.simpleMessage(
       "Email verification code",
@@ -1377,9 +1383,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgExpiredRenew": MessageLookupByLibrary.simpleMessage(
       "Expired · please renew",
     ),
-    "vgExpiredSuffix": m29,
+    "vgExpiredSuffix": m30,
     "vgExpiryDate": MessageLookupByLibrary.simpleMessage("Expires"),
-    "vgFeedbackBodyWith": m30,
+    "vgFeedbackBodyWith": m31,
     "vgFeedbackHint": MessageLookupByLibrary.simpleMessage(
       "Describe the problem you ran into. We attach your device info and recent logs automatically to help pinpoint it.",
     ),
@@ -1398,7 +1404,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgFreeTrialImportToConnect": MessageLookupByLibrary.simpleMessage(
       "Free trial activated — import nodes to connect",
     ),
-    "vgFromPrice": m31,
+    "vgFromPrice": m32,
     "vgGlobalAccelDesc1": MessageLookupByLibrary.simpleMessage(
       "All traffic uses the single route you picked; nothing is split automatically.",
     ),
@@ -1454,9 +1460,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgInvalidAmount": MessageLookupByLibrary.simpleMessage("Invalid amount"),
     "vgInvited": MessageLookupByLibrary.simpleMessage("Invited"),
     "vgIpAddress": MessageLookupByLibrary.simpleMessage("IP address"),
-    "vgKeptSystemProxyCarrying": m32,
-    "vgLastUpdatedTodayWith": m33,
-    "vgLastUpdatedWith": m34,
+    "vgKeptSystemProxyCarrying": m33,
+    "vgLastUpdatedTodayWith": m34,
+    "vgLastUpdatedWith": m35,
     "vgLatencyHint": MessageLookupByLibrary.simpleMessage(
       "Domestic sites should connect directly (fast); international ones go through a node. Lower is better.",
     ),
@@ -1478,8 +1484,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgLoadFailedTapRetry": MessageLookupByLibrary.simpleMessage(
       "Loading failed · tap to retry",
     ),
-    "vgLoadFailedWith": m35,
-    "vgLoadFailedWithCode": m36,
+    "vgLoadFailedWith": m36,
+    "vgLoadFailedWithCode": m37,
     "vgLoadingAccount": MessageLookupByLibrary.simpleMessage(
       "Loading account…",
     ),
@@ -1494,12 +1500,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgLocalEnvOk": MessageLookupByLibrary.simpleMessage(
       "Local environment is healthy.",
     ),
-    "vgLocalEnvOkInControl": m37,
+    "vgLocalEnvOkInControl": m38,
     "vgLocalEnvironment": MessageLookupByLibrary.simpleMessage(
       "Local environment",
     ),
-    "vgLocalPortHeldSuggestChange": m38,
-    "vgLocalPortNum": m39,
+    "vgLocalPortHeldSuggestChange": m39,
+    "vgLocalPortNum": m40,
     "vgLogOut": MessageLookupByLibrary.simpleMessage("Log out"),
     "vgMacDnsHintDesc": MessageLookupByLibrary.simpleMessage(
       "Voguesly\'s DNS is added temporarily only while macOS TUN is running, and restored on disconnect or exit; System Proxy mode does not touch DNS",
@@ -1522,18 +1528,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgMyTicketsSubtitle": MessageLookupByLibrary.simpleMessage(
       "Read support replies and follow up",
     ),
-    "vgNBillingCycles": m40,
-    "vgNDays": m41,
-    "vgNMonths": m42,
-    "vgNPeople": m43,
-    "vgNYears": m44,
+    "vgNBillingCycles": m41,
+    "vgNDays": m42,
+    "vgNMonths": m43,
+    "vgNPeople": m44,
+    "vgNYears": m45,
     "vgNeedUnknownSourcesPermission": MessageLookupByLibrary.simpleMessage(
       "Installing the update needs the \"install unknown apps\" permission. Grant it in Settings and come back — installation continues automatically.",
     ),
     "vgNetUnstableRetry": MessageLookupByLibrary.simpleMessage(
       "Network is unstable. Check your connection and try again.",
     ),
-    "vgNetworkErrorWith": m45,
+    "vgNetworkErrorWith": m46,
     "vgNetworkSkippedDirect": MessageLookupByLibrary.simpleMessage(
       "Acceleration skipped on this network · going direct",
     ),
@@ -1552,7 +1558,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgNewPasswordTooShort": MessageLookupByLibrary.simpleMessage(
       "New password must be at least 8 characters",
     ),
-    "vgNewVersionAvailable": m46,
+    "vgNewVersionAvailable": m47,
     "vgNoAccountYet": MessageLookupByLibrary.simpleMessage(
       "Don\'t have an account?",
     ),
@@ -1641,15 +1647,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgOrderFailedRetry": MessageLookupByLibrary.simpleMessage(
       "Could not place the order, please try again later",
     ),
-    "vgOrderFailedWith": m47,
-    "vgOrderNoWith": m48,
+    "vgOrderFailedWith": m48,
+    "vgOrderNoWith": m49,
     "vgOrderPendingPayment": MessageLookupByLibrary.simpleMessage(
       "Awaiting payment",
     ),
     "vgOrderRefunded": MessageLookupByLibrary.simpleMessage("Refunded"),
     "vgOriginalsOnly": MessageLookupByLibrary.simpleMessage("Originals only"),
-    "vgOtherProxyRunningCloseFirst": m49,
-    "vgOtherProxyRunningSkipTun": m50,
+    "vgOtherProxyRunningCloseFirst": m50,
+    "vgOtherProxyRunningSkipTun": m51,
     "vgPassword": MessageLookupByLibrary.simpleMessage("Password"),
     "vgPasswordChanged": MessageLookupByLibrary.simpleMessage(
       "Password changed",
@@ -1669,7 +1675,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgPaymentStartFailed": MessageLookupByLibrary.simpleMessage(
       "Could not start the payment",
     ),
-    "vgPaymentStartFailedWith": m51,
+    "vgPaymentStartFailedWith": m52,
     "vgPaymentSuccessActivated": MessageLookupByLibrary.simpleMessage(
       "Payment complete, your plan is active",
     ),
@@ -1679,12 +1685,12 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "vgPlacingOrder": MessageLookupByLibrary.simpleMessage("Placing order…"),
     "vgPlan": MessageLookupByLibrary.simpleMessage("Plan"),
-    "vgPlanDeviceLimitWith": m52,
+    "vgPlanDeviceLimitWith": m53,
     "vgPlatformNoLocalDiag": MessageLookupByLibrary.simpleMessage(
       "Local environment diagnostics is not supported on this platform.",
     ),
-    "vgPointsToVogueslyWith": m53,
-    "vgPortHeldByOther": m54,
+    "vgPointsToVogueslyWith": m54,
+    "vgPortHeldByOther": m55,
     "vgPortHeldByOther2": MessageLookupByLibrary.simpleMessage(
       "kind of failure, the hardest one to track down. You can pick an unused port under Settings → Network.",
     ),
@@ -1697,7 +1703,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgPreparingInstall": MessageLookupByLibrary.simpleMessage(
       "Preparing to install…",
     ),
-    "vgPublicTrafficOnOtherTun": m55,
+    "vgPublicTrafficOnOtherTun": m56,
     "vgPublicTrafficOnOurTun": MessageLookupByLibrary.simpleMessage(
       "Public traffic is going through Voguesly\'s virtual NIC. This is the main path and does not rely on the system proxy.",
     ),
@@ -1802,7 +1808,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgSendFailedRetryComma": MessageLookupByLibrary.simpleMessage(
       "Sending failed, please try again later",
     ),
-    "vgSendFailedWith": m56,
+    "vgSendFailedWith": m57,
     "vgSent": MessageLookupByLibrary.simpleMessage("Sent"),
     "vgSessionExpiredSignInAgain": MessageLookupByLibrary.simpleMessage(
       "Your session expired. Please sign in again.",
@@ -1852,7 +1858,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgSomethingWentWrongRetry": MessageLookupByLibrary.simpleMessage(
       "Something went wrong, please try again later",
     ),
-    "vgSpeedLimitNMbps": m57,
+    "vgSpeedLimitNMbps": m58,
     "vgSplitRouteHint": MessageLookupByLibrary.simpleMessage(
       "International services exit abroad, domestic services stay local — smart routing verified live.",
     ),
@@ -1872,7 +1878,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgSubmitFailedRetry": MessageLookupByLibrary.simpleMessage(
       "Submission failed, please try again later",
     ),
-    "vgSubmitFailedWith": m58,
+    "vgSubmitFailedWith": m59,
     "vgSubmitToSupport": MessageLookupByLibrary.simpleMessage(
       "Send to support",
     ),
@@ -1895,27 +1901,27 @@ class MessageLookup extends MessageLookupByLibrary {
       "Switched to global acceleration",
     ),
     "vgSystemProxy": MessageLookupByLibrary.simpleMessage("System proxy"),
-    "vgSystemProxyCompat": m59,
+    "vgSystemProxyCompat": m60,
     "vgSystemProxyCompatDesc": MessageLookupByLibrary.simpleMessage(
       "Only covers apps that support the system proxy; apps like Telegram may still need TUN",
     ),
     "vgSystemProxyOccupied": MessageLookupByLibrary.simpleMessage(
       "System Proxy could not take over traffic — it may be occupied by another proxy app. Quit it and try again.",
     ),
-    "vgSystemProxySingleSlot": m60,
-    "vgTakenByOtherAppWith": m61,
-    "vgTakenByOtherProcessWith": m62,
+    "vgSystemProxySingleSlot": m61,
+    "vgTakenByOtherAppWith": m62,
+    "vgTakenByOtherProcessWith": m63,
     "vgTaobao": MessageLookupByLibrary.simpleMessage("Taobao"),
     "vgTapBelowToFetchNodes": MessageLookupByLibrary.simpleMessage(
       "Tap the button below to fetch the latest nodes",
     ),
     "vgTapToActivate": MessageLookupByLibrary.simpleMessage("Tap to activate"),
     "vgTapToConnect": MessageLookupByLibrary.simpleMessage("Tap to connect"),
-    "vgTapToDisconnectWith": m63,
+    "vgTapToDisconnectWith": m64,
     "vgTelegramSupport": MessageLookupByLibrary.simpleMessage(
       "Telegram support",
     ),
-    "vgTempEnabledSystemProxy": m64,
+    "vgTempEnabledSystemProxy": m65,
     "vgTesting": MessageLookupByLibrary.simpleMessage("Testing…"),
     "vgThreeYearly": MessageLookupByLibrary.simpleMessage("Every 3 years"),
     "vgTicketAwaitingReply": MessageLookupByLibrary.simpleMessage(
@@ -1923,15 +1929,15 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "vgTicketClosed": MessageLookupByLibrary.simpleMessage("Closed"),
     "vgTicketIsClosed": MessageLookupByLibrary.simpleMessage("Ticket closed"),
-    "vgTicketNumber": m65,
+    "vgTicketNumber": m66,
     "vgTicketSupportReplied": MessageLookupByLibrary.simpleMessage(
       "Support replied",
     ),
-    "vgTimeout": MessageLookupByLibrary.simpleMessage("Timeout"),
+    "vgTimeout": MessageLookupByLibrary.simpleMessage("No response"),
     "vgTotal": MessageLookupByLibrary.simpleMessage("Total"),
     "vgTotalDownload": MessageLookupByLibrary.simpleMessage("Total download"),
     "vgTotalUpload": MessageLookupByLibrary.simpleMessage("Total upload"),
-    "vgTrafficNGb": m66,
+    "vgTrafficNGb": m67,
     "vgTrafficStillOnTun": MessageLookupByLibrary.simpleMessage(
       "Your traffic is still carried by Voguesly\'s virtual NIC, so browsing is unaffected;",
     ),
@@ -1955,7 +1961,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgTunAlsoNotInControlNote": MessageLookupByLibrary.simpleMessage(
       "The virtual NIC is not in control either, so you may genuinely be offline right now.",
     ),
-    "vgTunDeviceWide": m67,
+    "vgTunDeviceWide": m68,
     "vgTunDeviceWideDesc": MessageLookupByLibrary.simpleMessage(
       "Takes over traffic for the whole device; other VPNs must be off and system permission granted",
     ),
@@ -1983,6 +1989,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgTunServiceNotEnabled": MessageLookupByLibrary.simpleMessage(
       "Voguesly\'s background TUN service is not enabled. Allow the background item in System Settings and try again.",
     ),
+    "vgTunTakenByOtherVpn": m69,
     "vgTunTwiceNoTakeover": MessageLookupByLibrary.simpleMessage(
       "TUN failed to take over system traffic after two attempts.",
     ),
@@ -2015,10 +2022,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgV2RayFamilyClient": MessageLookupByLibrary.simpleMessage(
       "V2Ray-family client",
     ),
-    "vgVersionBuildWith": m68,
+    "vgVersionBuildWith": m70,
     "vgVersionLabel": MessageLookupByLibrary.simpleMessage("Version"),
-    "vgVersionNumber": m69,
-    "vgVersionTapToCheck": m70,
+    "vgVersionNumber": m71,
+    "vgVersionTapToCheck": m72,
     "vgViewLogs": MessageLookupByLibrary.simpleMessage("View logs"),
     "vgViewLogsSubtitle": MessageLookupByLibrary.simpleMessage(
       "Live connection logs, for troubleshooting",
@@ -2036,7 +2043,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgVogueslyInControl": MessageLookupByLibrary.simpleMessage(
       "Voguesly in control",
     ),
-    "vgVogueslyInControlWith": m71,
+    "vgVogueslyInControlWith": m73,
     "vgVogueslyListening": MessageLookupByLibrary.simpleMessage(
       "Voguesly is listening",
     ),
@@ -2047,7 +2054,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Waiting for payment",
     ),
     "vgWeChat": MessageLookupByLibrary.simpleMessage("WeChat"),
-    "vgWebViewInitFailed": m72,
+    "vgWebViewInitFailed": m74,
     "vgWithdraw": MessageLookupByLibrary.simpleMessage("Withdraw"),
     "vgWithdrawFailed": MessageLookupByLibrary.simpleMessage(
       "Withdrawal failed",
@@ -2089,7 +2096,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "WebDAV configuration",
     ),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("Whitelist mode"),
-    "yearsAgo": m73,
+    "yearsAgo": m75,
     "zh_CN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),
   };
 }

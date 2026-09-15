@@ -21,7 +21,10 @@ class Utils {
 
   Color? getDelayColor(int? delay) {
     if (delay == null) return null;
-    if (delay < 0) return Colors.red;
+    // 一次拨测 timeout(delay<0)唔代表节点真坏 —— 弱网 / 手机热点抖动嗰刻拨,
+    // 好节点都会 timeout(实测 CN2GIA 5x 从稳定线路 683ms,但热点下会 timeout)。
+    // 用中性灰橙而唔係死红,避免吓到用户以为「买咗嘅节点坏咗」。红色留畀真确定坏嘅嘢。
+    if (delay < 0) return const Color(0xFF9AA0A6); // 中性灰:未连通(未必坏)
     if (delay < 600) return Colors.green;
     return const Color(0xFFC57F0A);
   }

@@ -73,117 +73,122 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m22(p0) => "Отменить заказ «${p0}»?";
 
-  static String m23(p0) => "${p0} скопировано";
+  static String m23(p0) => "Скопировано строк журнала в буфер обмена: ${p0}";
 
-  static String m24(p0) => "Текущий баланс: ${p0}";
+  static String m24(p0) => "${p0} скопировано";
 
-  static String m25(p0) => "Текущий тариф: ${p0} · ";
+  static String m25(p0) => "Текущий баланс: ${p0}";
 
-  static String m26(p0) => "Текущий тариф: ${p0}";
+  static String m26(p0) => "Текущий тариф: ${p0} · ";
 
-  static String m27(p0, p1, p2) => "Устройство: ${p0} ${p1} · Android ${p2}";
+  static String m27(p0) => "Текущий тариф: ${p0}";
 
-  static String m28(p0) => "Срок ${p0}";
+  static String m28(p0, p1, p2) => "Устройство: ${p0} ${p1} · Android ${p2}";
 
-  static String m29(p0) => "${p0} истёк";
+  static String m29(p0) => "Срок ${p0}";
 
-  static String m30(p0, p1) =>
+  static String m30(p0) => "${p0} истёк";
+
+  static String m31(p0, p1) =>
       "${p0}\\n\\n=== Диагностика (прикреплено автоматически) ===\\n${p1}";
 
-  static String m31(p0) => "от ${p0}";
+  static String m32(p0) => "от ${p0}";
 
-  static String m32(p0) =>
+  static String m33(p0) =>
       "${p0}; трафик по-прежнему идёт через системный прокси (режим совместимости).";
 
-  static String m33(p0) => "Обновлено · сегодня ${p0}";
+  static String m34(p0) => "Обновлено · сегодня ${p0}";
 
-  static String m34(p0, p1) => "Обновлено · ${p0} ${p1}";
+  static String m35(p0, p1) => "Обновлено · ${p0} ${p1}";
 
-  static String m35(p0) => "Не удалось загрузить: ${p0}";
+  static String m36(p0) => "Не удалось загрузить: ${p0}";
 
-  static String m36(p0, p1) => "Не удалось загрузить: ${p0} (code ${p1})";
-
-  static String m37(p0) =>
-      "Локальное окружение в порядке; Voguesly управляет через ${p0}.";
+  static String m37(p0, p1) => "Не удалось загрузить: ${p0} (code ${p1})";
 
   static String m38(p0) =>
+      "Локальное окружение в порядке; Voguesly управляет через ${p0}.";
+
+  static String m39(p0) =>
       "Локальный порт занят ${p0}, ядро Voguesly может не привязаться — рекомендуем сменить порт.";
 
-  static String m39(p0) => "Локальный порт ${p0}";
+  static String m40(p0) => "Локальный порт ${p0}";
 
-  static String m40(p0) => "Доступно циклов оплаты: ${p0}";
+  static String m41(p0) => "Доступно циклов оплаты: ${p0}";
 
-  static String m41(p0) => "${p0} дн.";
+  static String m42(p0) => "${p0} дн.";
 
-  static String m42(p0) => "${p0} мес.";
+  static String m43(p0) => "${p0} мес.";
 
-  static String m43(p0) => "${p0} чел.";
+  static String m44(p0) => "${p0} чел.";
 
-  static String m44(p0) => "${p0} г.";
+  static String m45(p0) => "${p0} г.";
 
-  static String m45(p0) => "Ошибка сети: ${p0}";
+  static String m46(p0) => "Ошибка сети: ${p0}";
 
-  static String m46(p0) => "Доступна версия ${p0}";
+  static String m47(p0) => "Доступна версия ${p0}";
 
-  static String m47(p0) => "Не удалось оформить заказ: ${p0}";
+  static String m48(p0) => "Не удалось оформить заказ: ${p0}";
 
-  static String m48(p0) => "Номер заказа: ${p0}";
-
-  static String m49(p0) =>
-      "Запущен другой прокси (${p0}). Закройте его перед подключением Voguesly.";
+  static String m49(p0) => "Номер заказа: ${p0}";
 
   static String m50(p0) =>
+      "Запущен другой прокси (${p0}). Закройте его перед подключением Voguesly.";
+
+  static String m51(p0) =>
       "Запущен другой прокси (${p0}). TUN Voguesly в этот раз не включается.";
 
-  static String m51(p0) => "Не удалось начать оплату: ${p0}";
+  static String m52(p0) => "Не удалось начать оплату: ${p0}";
 
-  static String m52(p0) => "Ваш тариф допускает одновременно устройств: ${p0};";
+  static String m53(p0) => "Ваш тариф допускает одновременно устройств: ${p0};";
 
-  static String m53(p0) => "Указывает на Voguesly · ${p0}";
+  static String m54(p0) => "Указывает на Voguesly · ${p0}";
 
-  static String m54(p0, p1) =>
+  static String m55(p0, p1) =>
       "${p0} занимает ${p1}, поэтому ядро Voguesly не может привязаться — это и есть тот самый случай «показывает подключено, но интернета нет»,";
 
-  static String m55(p0) =>
+  static String m56(p0) =>
       "Внешний трафик идёт через ${p0}, а не через виртуальный адаптер Voguesly — ";
 
-  static String m56(p0) => "Не удалось отправить: ${p0}";
+  static String m57(p0) => "Не удалось отправить: ${p0}";
 
-  static String m57(p0) => "Ограничение скорости ${p0} Мбит/с";
+  static String m58(p0) => "Ограничение скорости ${p0} Мбит/с";
 
-  static String m58(p0) => "Не удалось отправить: ${p0}";
+  static String m59(p0) => "Не удалось отправить: ${p0}";
 
-  static String m59(p0) => "${p0} (совместимость)";
+  static String m60(p0) => "${p0} (совместимость)";
 
-  static String m60(p0, p1) =>
+  static String m61(p0, p1) =>
       "На компьютере только одна настройка системного прокси, и побеждает тот, кто записал последним — сейчас она указывает на ${p0}, а не на ${p1} от Voguesly.";
 
-  static String m61(p0) => "Перехвачено другим приложением · ${p0}";
+  static String m62(p0) => "Перехвачено другим приложением · ${p0}";
 
-  static String m62(p0) => "Занято другим процессом · ${p0}";
+  static String m63(p0) => "Занято другим процессом · ${p0}";
 
-  static String m63(p0) => "Нажмите, чтобы отключиться  ·  ${p0}";
+  static String m64(p0) => "Нажмите, чтобы отключиться  ·  ${p0}";
 
-  static String m64(p0) =>
+  static String m65(p0) =>
       "${p0}; временно включён системный прокси (режим совместимости), чтобы сохранить доступ в интернет.";
 
-  static String m65(p0) => "Обращение №${p0}";
+  static String m66(p0) => "Обращение №${p0}";
 
-  static String m66(p0) => "Трафик ${p0} ГБ";
+  static String m67(p0) => "Трафик ${p0} ГБ";
 
-  static String m67(p0) => "${p0} (весь трафик)";
+  static String m68(p0) => "${p0} (весь трафик)";
 
-  static String m68(p0, p1) => "Версия: ${p0}+${p1}";
+  static String m69(p0) =>
+      "Voguesly включён, но публичный трафик идёт через ${p0}, а не через виртуальный сетевой адаптер Voguesly — ваши узлы и правила фактически не действуют. Полностью закройте это приложение или отключите в нём перехват сети, затем переподключитесь в Voguesly.";
 
-  static String m69(p0) => "Версия: ${p0}";
+  static String m70(p0, p1) => "Версия: ${p0}+${p1}";
 
-  static String m70(p0) => "v${p0} · нажмите, чтобы проверить обновления";
+  static String m71(p0) => "Версия: ${p0}";
 
-  static String m71(p0) => "Управляет Voguesly · ${p0}";
+  static String m72(p0) => "v${p0} · нажмите, чтобы проверить обновления";
 
-  static String m72(p0) => "Не удалось инициализировать WebView: ${p0}";
+  static String m73(p0) => "Управляет Voguesly · ${p0}";
 
-  static String m73(count) =>
+  static String m74(p0) => "Не удалось инициализировать WebView: ${p0}";
+
+  static String m75(count) =>
       "${Intl.plural(count, one: '${count} год назад', few: '${count} года назад', many: '${count} лет назад', other: '${count} года назад')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -1371,7 +1376,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgContinuePayment": MessageLookupByLibrary.simpleMessage(
       "Продолжить оплату",
     ),
-    "vgCopiedSuffix": m23,
+    "vgCopiedLogsToClipboard": m23,
+    "vgCopiedSuffix": m24,
     "vgCopy": MessageLookupByLibrary.simpleMessage("Копировать"),
     "vgCopyReferralLink": MessageLookupByLibrary.simpleMessage(
       "Копировать реферальную ссылку",
@@ -1382,10 +1388,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgCountryRegion": MessageLookupByLibrary.simpleMessage("Страна / регион"),
     "vgCreateAccount": MessageLookupByLibrary.simpleMessage("Создать аккаунт"),
     "vgCreditCard": MessageLookupByLibrary.simpleMessage("Банковская карта"),
-    "vgCurrentBalanceWith": m24,
+    "vgCurrentBalanceWith": m25,
     "vgCurrentPassword": MessageLookupByLibrary.simpleMessage("Текущий пароль"),
-    "vgCurrentPlanPrefixWith": m25,
-    "vgCurrentPlanWith": m26,
+    "vgCurrentPlanPrefixWith": m26,
+    "vgCurrentPlanWith": m27,
     "vgCurrentRoute": MessageLookupByLibrary.simpleMessage("Текущий маршрут"),
     "vgDailyUsageThisMonth": MessageLookupByLibrary.simpleMessage(
       "Дневное использование за месяц",
@@ -1399,7 +1405,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgDataUsageSubtitle": MessageLookupByLibrary.simpleMessage(
       "Ежедневная статистика трафика",
     ),
-    "vgDeviceInfoWith": m27,
+    "vgDeviceInfoWith": m28,
     "vgDeviceLimitHint": MessageLookupByLibrary.simpleMessage(
       "если появляется сообщение о превышении лимита, полностью закройте другие клиенты и подключитесь снова",
     ),
@@ -1422,7 +1428,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgDownloadingUpdate": MessageLookupByLibrary.simpleMessage(
       "Загрузка обновления",
     ),
-    "vgDurationWith": m28,
+    "vgDurationWith": m29,
     "vgEmail": MessageLookupByLibrary.simpleMessage("Эл. почта"),
     "vgEmailCode": MessageLookupByLibrary.simpleMessage("Код из письма"),
     "vgEmptyResponseRetry": MessageLookupByLibrary.simpleMessage(
@@ -1452,9 +1458,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgExpiredRenew": MessageLookupByLibrary.simpleMessage(
       "Истёк · продлите тариф",
     ),
-    "vgExpiredSuffix": m29,
+    "vgExpiredSuffix": m30,
     "vgExpiryDate": MessageLookupByLibrary.simpleMessage("Дата окончания"),
-    "vgFeedbackBodyWith": m30,
+    "vgFeedbackBodyWith": m31,
     "vgFeedbackHint": MessageLookupByLibrary.simpleMessage(
       "Опишите возникшую проблему. Мы автоматически приложим сведения об устройстве и последние журналы.",
     ),
@@ -1471,7 +1477,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgFreeTrialImportToConnect": MessageLookupByLibrary.simpleMessage(
       "Бесплатный пробный доступ активирован — импортируйте узлы для подключения",
     ),
-    "vgFromPrice": m31,
+    "vgFromPrice": m32,
     "vgGlobalAccelDesc1": MessageLookupByLibrary.simpleMessage(
       "Весь трафик идёт по одному выбранному маршруту, без автоматического разделения.",
     ),
@@ -1527,9 +1533,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgInvalidAmount": MessageLookupByLibrary.simpleMessage("Неверная сумма"),
     "vgInvited": MessageLookupByLibrary.simpleMessage("Приглашено"),
     "vgIpAddress": MessageLookupByLibrary.simpleMessage("IP-адрес"),
-    "vgKeptSystemProxyCarrying": m32,
-    "vgLastUpdatedTodayWith": m33,
-    "vgLastUpdatedWith": m34,
+    "vgKeptSystemProxyCarrying": m33,
+    "vgLastUpdatedTodayWith": m34,
+    "vgLastUpdatedWith": m35,
     "vgLatencyHint": MessageLookupByLibrary.simpleMessage(
       "Внутренние сайты должны идти напрямую (быстро), международные — через узел. Чем ниже, тем лучше.",
     ),
@@ -1551,8 +1557,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgLoadFailedTapRetry": MessageLookupByLibrary.simpleMessage(
       "Не удалось загрузить · нажмите для повтора",
     ),
-    "vgLoadFailedWith": m35,
-    "vgLoadFailedWithCode": m36,
+    "vgLoadFailedWith": m36,
+    "vgLoadFailedWithCode": m37,
     "vgLoadingAccount": MessageLookupByLibrary.simpleMessage(
       "Загрузка аккаунта…",
     ),
@@ -1567,12 +1573,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgLocalEnvOk": MessageLookupByLibrary.simpleMessage(
       "Локальное окружение в порядке.",
     ),
-    "vgLocalEnvOkInControl": m37,
+    "vgLocalEnvOkInControl": m38,
     "vgLocalEnvironment": MessageLookupByLibrary.simpleMessage(
       "Локальное окружение",
     ),
-    "vgLocalPortHeldSuggestChange": m38,
-    "vgLocalPortNum": m39,
+    "vgLocalPortHeldSuggestChange": m39,
+    "vgLocalPortNum": m40,
     "vgLogOut": MessageLookupByLibrary.simpleMessage("Выйти"),
     "vgMacDnsHintDesc": MessageLookupByLibrary.simpleMessage(
       "DNS Voguesly добавляется временно только при работе TUN на macOS и восстанавливается при отключении или выходе; режим системного прокси DNS не меняет",
@@ -1595,18 +1601,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgMyTicketsSubtitle": MessageLookupByLibrary.simpleMessage(
       "Читайте ответы поддержки и продолжайте диалог",
     ),
-    "vgNBillingCycles": m40,
-    "vgNDays": m41,
-    "vgNMonths": m42,
-    "vgNPeople": m43,
-    "vgNYears": m44,
+    "vgNBillingCycles": m41,
+    "vgNDays": m42,
+    "vgNMonths": m43,
+    "vgNPeople": m44,
+    "vgNYears": m45,
     "vgNeedUnknownSourcesPermission": MessageLookupByLibrary.simpleMessage(
       "Для установки обновления нужно разрешение «установка неизвестных приложений». Выдайте его в настройках и вернитесь — установка продолжится автоматически.",
     ),
     "vgNetUnstableRetry": MessageLookupByLibrary.simpleMessage(
       "Сеть нестабильна. Проверьте подключение и повторите попытку.",
     ),
-    "vgNetworkErrorWith": m45,
+    "vgNetworkErrorWith": m46,
     "vgNetworkSkippedDirect": MessageLookupByLibrary.simpleMessage(
       "На этой сети ускорение пропущено · прямое подключение",
     ),
@@ -1625,7 +1631,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgNewPasswordTooShort": MessageLookupByLibrary.simpleMessage(
       "Новый пароль должен содержать не менее 8 символов",
     ),
-    "vgNewVersionAvailable": m46,
+    "vgNewVersionAvailable": m47,
     "vgNoAccountYet": MessageLookupByLibrary.simpleMessage("Ещё нет аккаунта?"),
     "vgNoAnnouncements": MessageLookupByLibrary.simpleMessage("Объявлений нет"),
     "vgNoExpiry": MessageLookupByLibrary.simpleMessage("Бессрочно"),
@@ -1712,15 +1718,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgOrderFailedRetry": MessageLookupByLibrary.simpleMessage(
       "Не удалось оформить заказ, повторите попытку позже",
     ),
-    "vgOrderFailedWith": m47,
-    "vgOrderNoWith": m48,
+    "vgOrderFailedWith": m48,
+    "vgOrderNoWith": m49,
     "vgOrderPendingPayment": MessageLookupByLibrary.simpleMessage(
       "Ожидает оплаты",
     ),
     "vgOrderRefunded": MessageLookupByLibrary.simpleMessage("Возвращён"),
     "vgOriginalsOnly": MessageLookupByLibrary.simpleMessage("Только оригиналы"),
-    "vgOtherProxyRunningCloseFirst": m49,
-    "vgOtherProxyRunningSkipTun": m50,
+    "vgOtherProxyRunningCloseFirst": m50,
+    "vgOtherProxyRunningSkipTun": m51,
     "vgPassword": MessageLookupByLibrary.simpleMessage("Пароль"),
     "vgPasswordChanged": MessageLookupByLibrary.simpleMessage("Пароль изменён"),
     "vgPasswordsDoNotMatch": MessageLookupByLibrary.simpleMessage(
@@ -1738,7 +1744,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgPaymentStartFailed": MessageLookupByLibrary.simpleMessage(
       "Не удалось начать оплату",
     ),
-    "vgPaymentStartFailedWith": m51,
+    "vgPaymentStartFailedWith": m52,
     "vgPaymentSuccessActivated": MessageLookupByLibrary.simpleMessage(
       "Оплата прошла, тариф активирован",
     ),
@@ -1748,12 +1754,12 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "vgPlacingOrder": MessageLookupByLibrary.simpleMessage("Оформляем заказ…"),
     "vgPlan": MessageLookupByLibrary.simpleMessage("Тариф"),
-    "vgPlanDeviceLimitWith": m52,
+    "vgPlanDeviceLimitWith": m53,
     "vgPlatformNoLocalDiag": MessageLookupByLibrary.simpleMessage(
       "Диагностика локального окружения не поддерживается на этой платформе.",
     ),
-    "vgPointsToVogueslyWith": m53,
-    "vgPortHeldByOther": m54,
+    "vgPointsToVogueslyWith": m54,
+    "vgPortHeldByOther": m55,
     "vgPortHeldByOther2": MessageLookupByLibrary.simpleMessage(
       "который сложнее всего диагностировать. Выберите свободный порт в «Настройки → Сеть».",
     ),
@@ -1766,7 +1772,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgPreparingInstall": MessageLookupByLibrary.simpleMessage(
       "Подготовка к установке…",
     ),
-    "vgPublicTrafficOnOtherTun": m55,
+    "vgPublicTrafficOnOtherTun": m56,
     "vgPublicTrafficOnOurTun": MessageLookupByLibrary.simpleMessage(
       "Внешний трафик идёт через виртуальный адаптер Voguesly. Это основной путь, системный прокси не задействован.",
     ),
@@ -1879,7 +1885,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgSendFailedRetryComma": MessageLookupByLibrary.simpleMessage(
       "Не удалось отправить, повторите попытку позже",
     ),
-    "vgSendFailedWith": m56,
+    "vgSendFailedWith": m57,
     "vgSent": MessageLookupByLibrary.simpleMessage("Отправлено"),
     "vgSessionExpiredSignInAgain": MessageLookupByLibrary.simpleMessage(
       "Сессия истекла. Войдите снова.",
@@ -1933,7 +1939,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgSomethingWentWrongRetry": MessageLookupByLibrary.simpleMessage(
       "Произошла ошибка, повторите попытку позже",
     ),
-    "vgSpeedLimitNMbps": m57,
+    "vgSpeedLimitNMbps": m58,
     "vgSplitRouteHint": MessageLookupByLibrary.simpleMessage(
       "Международные сервисы выходят за рубеж, локальные остаются внутри — умная маршрутизация проверяется в реальном времени.",
     ),
@@ -1953,7 +1959,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgSubmitFailedRetry": MessageLookupByLibrary.simpleMessage(
       "Не удалось отправить, повторите попытку позже",
     ),
-    "vgSubmitFailedWith": m58,
+    "vgSubmitFailedWith": m59,
     "vgSubmitToSupport": MessageLookupByLibrary.simpleMessage(
       "Отправить в поддержку",
     ),
@@ -1978,16 +1984,16 @@ class MessageLookup extends MessageLookupByLibrary {
       "Переключено на глобальное ускорение",
     ),
     "vgSystemProxy": MessageLookupByLibrary.simpleMessage("Системный прокси"),
-    "vgSystemProxyCompat": m59,
+    "vgSystemProxyCompat": m60,
     "vgSystemProxyCompatDesc": MessageLookupByLibrary.simpleMessage(
       "Охватывает только приложения с поддержкой системного прокси; Telegram и подобным может понадобиться TUN",
     ),
     "vgSystemProxyOccupied": MessageLookupByLibrary.simpleMessage(
       "Системный прокси не смог перехватить трафик — возможно, он занят другой программой. Закройте её и повторите попытку.",
     ),
-    "vgSystemProxySingleSlot": m60,
-    "vgTakenByOtherAppWith": m61,
-    "vgTakenByOtherProcessWith": m62,
+    "vgSystemProxySingleSlot": m61,
+    "vgTakenByOtherAppWith": m62,
+    "vgTakenByOtherProcessWith": m63,
     "vgTaobao": MessageLookupByLibrary.simpleMessage("Taobao"),
     "vgTapBelowToFetchNodes": MessageLookupByLibrary.simpleMessage(
       "Нажмите кнопку ниже, чтобы получить актуальные узлы",
@@ -1998,11 +2004,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgTapToConnect": MessageLookupByLibrary.simpleMessage(
       "Нажмите для подключения",
     ),
-    "vgTapToDisconnectWith": m63,
+    "vgTapToDisconnectWith": m64,
     "vgTelegramSupport": MessageLookupByLibrary.simpleMessage(
       "Поддержка в Telegram",
     ),
-    "vgTempEnabledSystemProxy": m64,
+    "vgTempEnabledSystemProxy": m65,
     "vgTesting": MessageLookupByLibrary.simpleMessage("Тестирование…"),
     "vgThreeYearly": MessageLookupByLibrary.simpleMessage("Раз в 3 года"),
     "vgTicketAwaitingReply": MessageLookupByLibrary.simpleMessage(
@@ -2012,15 +2018,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgTicketIsClosed": MessageLookupByLibrary.simpleMessage(
       "Обращение закрыто",
     ),
-    "vgTicketNumber": m65,
+    "vgTicketNumber": m66,
     "vgTicketSupportReplied": MessageLookupByLibrary.simpleMessage(
       "Поддержка ответила",
     ),
-    "vgTimeout": MessageLookupByLibrary.simpleMessage("Тайм-аут"),
+    "vgTimeout": MessageLookupByLibrary.simpleMessage("Нет ответа"),
     "vgTotal": MessageLookupByLibrary.simpleMessage("Итого"),
     "vgTotalDownload": MessageLookupByLibrary.simpleMessage("Всего получено"),
     "vgTotalUpload": MessageLookupByLibrary.simpleMessage("Всего отправлено"),
-    "vgTrafficNGb": m66,
+    "vgTrafficNGb": m67,
     "vgTrafficStillOnTun": MessageLookupByLibrary.simpleMessage(
       "Трафик по-прежнему идёт через виртуальный адаптер Voguesly, доступ в интернет не нарушен;",
     ),
@@ -2046,7 +2052,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgTunAlsoNotInControlNote": MessageLookupByLibrary.simpleMessage(
       "Виртуальный адаптер тоже не управляет трафиком, поэтому интернета сейчас может действительно не быть.",
     ),
-    "vgTunDeviceWide": m67,
+    "vgTunDeviceWide": m68,
     "vgTunDeviceWideDesc": MessageLookupByLibrary.simpleMessage(
       "Перехватывает трафик всего устройства; другие VPN должны быть выключены, требуется разрешение системы",
     ),
@@ -2074,6 +2080,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgTunServiceNotEnabled": MessageLookupByLibrary.simpleMessage(
       "Фоновая служба TUN для Voguesly не включена. Разрешите фоновый элемент в системных настройках и повторите попытку.",
     ),
+    "vgTunTakenByOtherVpn": m69,
     "vgTunTwiceNoTakeover": MessageLookupByLibrary.simpleMessage(
       "TUN дважды запускался, но не перехватил системный трафик.",
     ),
@@ -2108,10 +2115,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgV2RayFamilyClient": MessageLookupByLibrary.simpleMessage(
       "Клиент семейства V2Ray",
     ),
-    "vgVersionBuildWith": m68,
+    "vgVersionBuildWith": m70,
     "vgVersionLabel": MessageLookupByLibrary.simpleMessage("Версия"),
-    "vgVersionNumber": m69,
-    "vgVersionTapToCheck": m70,
+    "vgVersionNumber": m71,
+    "vgVersionTapToCheck": m72,
     "vgViewLogs": MessageLookupByLibrary.simpleMessage("Просмотр журналов"),
     "vgViewLogsSubtitle": MessageLookupByLibrary.simpleMessage(
       "Журналы подключения в реальном времени, для диагностики",
@@ -2129,7 +2136,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgVogueslyInControl": MessageLookupByLibrary.simpleMessage(
       "Управляет Voguesly",
     ),
-    "vgVogueslyInControlWith": m71,
+    "vgVogueslyInControlWith": m73,
     "vgVogueslyListening": MessageLookupByLibrary.simpleMessage(
       "Voguesly слушает",
     ),
@@ -2140,7 +2147,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Ожидание оплаты",
     ),
     "vgWeChat": MessageLookupByLibrary.simpleMessage("WeChat"),
-    "vgWebViewInitFailed": m72,
+    "vgWebViewInitFailed": m74,
     "vgWithdraw": MessageLookupByLibrary.simpleMessage("Вывести"),
     "vgWithdrawFailed": MessageLookupByLibrary.simpleMessage(
       "Не удалось вывести средства",
@@ -2184,7 +2191,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "whitelistMode": MessageLookupByLibrary.simpleMessage(
       "Режим белого списка",
     ),
-    "yearsAgo": m73,
+    "yearsAgo": m75,
     "zh_CN": MessageLookupByLibrary.simpleMessage("Упрощенный китайский"),
   };
 }

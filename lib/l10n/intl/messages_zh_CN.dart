@@ -67,108 +67,113 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m22(p0) => "确定取消订单「${p0}」?";
 
-  static String m23(p0) => "${p0}已复制";
+  static String m23(p0) => "已复制 ${p0} 条日志到剪贴板";
 
-  static String m24(p0) => "当前余额:${p0}";
+  static String m24(p0) => "${p0}已复制";
 
-  static String m25(p0) => "当前套餐: ${p0} · ";
+  static String m25(p0) => "当前余额:${p0}";
 
-  static String m26(p0) => "当前套餐:${p0}";
+  static String m26(p0) => "当前套餐: ${p0} · ";
 
-  static String m27(p0, p1, p2) => "设备: ${p0} ${p1} · Android ${p2}";
+  static String m27(p0) => "当前套餐:${p0}";
 
-  static String m28(p0) => "时长 ${p0}";
+  static String m28(p0, p1, p2) => "设备: ${p0} ${p1} · Android ${p2}";
 
-  static String m29(p0) => "${p0}已过期";
+  static String m29(p0) => "时长 ${p0}";
 
-  static String m30(p0, p1) => "${p0}\\n\\n=== 诊断信息(自动附带) ===\\n${p1}";
+  static String m30(p0) => "${p0}已过期";
 
-  static String m31(p0) => "${p0} 起";
+  static String m31(p0, p1) => "${p0}\\n\\n=== 诊断信息(自动附带) ===\\n${p1}";
 
-  static String m32(p0) => "${p0}；已保持「系统代理（兼容模式）」承载流量";
+  static String m32(p0) => "${p0} 起";
 
-  static String m33(p0) => "上次更新 · 今天 ${p0}";
+  static String m33(p0) => "${p0}；已保持「系统代理（兼容模式）」承载流量";
 
-  static String m34(p0, p1) => "上次更新 · ${p0} ${p1}";
+  static String m34(p0) => "上次更新 · 今天 ${p0}";
 
-  static String m35(p0) => "加载失败:${p0}";
+  static String m35(p0, p1) => "上次更新 · ${p0} ${p1}";
 
-  static String m36(p0, p1) => "加载失败:${p0}(code ${p1})";
+  static String m36(p0) => "加载失败:${p0}";
 
-  static String m37(p0) => "本机环境正常，易联正以${p0}接管中。";
+  static String m37(p0, p1) => "加载失败:${p0}(code ${p1})";
 
-  static String m38(p0) => "本机端口被 ${p0} 占用，易联核心可能无法绑定 —— 建议改用另一个端口。";
+  static String m38(p0) => "本机环境正常，易联正以${p0}接管中。";
 
-  static String m39(p0) => "本地端口 ${p0}";
+  static String m39(p0) => "本机端口被 ${p0} 占用，易联核心可能无法绑定 —— 建议改用另一个端口。";
 
-  static String m40(p0) => "${p0} 个周期可选";
+  static String m40(p0) => "本地端口 ${p0}";
 
-  static String m41(p0) => "${p0} 天";
+  static String m41(p0) => "${p0} 个周期可选";
 
-  static String m42(p0) => "${p0} 个月";
+  static String m42(p0) => "${p0} 天";
 
-  static String m43(p0) => "${p0} 人";
+  static String m43(p0) => "${p0} 个月";
 
-  static String m44(p0) => "${p0} 年";
+  static String m44(p0) => "${p0} 人";
 
-  static String m45(p0) => "网络异常: ${p0}";
+  static String m45(p0) => "${p0} 年";
 
-  static String m46(p0) => "有新版本 ${p0}";
+  static String m46(p0) => "网络异常: ${p0}";
 
-  static String m47(p0) => "下单失败: ${p0}";
+  static String m47(p0) => "有新版本 ${p0}";
 
-  static String m48(p0) => "订单号:${p0}";
+  static String m48(p0) => "下单失败: ${p0}";
 
-  static String m49(p0) => "检测到其他代理正在运行(${p0})，请先关闭后再连接易联";
+  static String m49(p0) => "订单号:${p0}";
 
-  static String m50(p0) => "检测到其他代理正在运行(${p0})，本次暂不启用易联 TUN";
+  static String m50(p0) => "检测到其他代理正在运行(${p0})，请先关闭后再连接易联";
 
-  static String m51(p0) => "支付发起失败: ${p0}";
+  static String m51(p0) => "检测到其他代理正在运行(${p0})，本次暂不启用易联 TUN";
 
-  static String m52(p0) => "套餐可同时连接 ${p0} 台设备；";
+  static String m52(p0) => "支付发起失败: ${p0}";
 
-  static String m53(p0) => "指向易联 · ${p0}";
+  static String m53(p0) => "套餐可同时连接 ${p0} 台设备；";
 
-  static String m54(p0, p1) =>
+  static String m54(p0) => "指向易联 · ${p0}";
+
+  static String m55(p0, p1) =>
       "${p0} 占用了 ${p1}，导致易联核心无法绑定 —— 这正是「界面显示已连接但上不了网」";
 
-  static String m55(p0) => "公网流量正在走 ${p0}，但不是易联的虚拟网卡 ——";
+  static String m56(p0) => "公网流量正在走 ${p0}，但不是易联的虚拟网卡 ——";
 
-  static String m56(p0) => "发送失败: ${p0}";
+  static String m57(p0) => "发送失败: ${p0}";
 
-  static String m57(p0) => "限速 ${p0} Mbps";
+  static String m58(p0) => "限速 ${p0} Mbps";
 
-  static String m58(p0) => "提交失败: ${p0}";
+  static String m59(p0) => "提交失败: ${p0}";
 
-  static String m59(p0) => "${p0}（兼容模式）";
+  static String m60(p0) => "${p0}（兼容模式）";
 
-  static String m60(p0, p1) => "系统代理全机只有一份设置，后写者胜 —— 当前指向 ${p0}，不是易联的 ${p1}。";
+  static String m61(p0, p1) => "系统代理全机只有一份设置，后写者胜 —— 当前指向 ${p0}，不是易联的 ${p1}。";
 
-  static String m61(p0) => "被其他软件接管 · ${p0}";
+  static String m62(p0) => "被其他软件接管 · ${p0}";
 
-  static String m62(p0) => "被其他程序占用 · ${p0}";
+  static String m63(p0) => "被其他程序占用 · ${p0}";
 
-  static String m63(p0) => "轻触断开  ·  ${p0}";
+  static String m64(p0) => "轻触断开  ·  ${p0}";
 
-  static String m64(p0) => "${p0}；已临时启用「系统代理（兼容模式）」保证上网。";
+  static String m65(p0) => "${p0}；已临时启用「系统代理（兼容模式）」保证上网。";
 
-  static String m65(p0) => "工单 #${p0}";
+  static String m66(p0) => "工单 #${p0}";
 
-  static String m66(p0) => "流量 ${p0} GB";
+  static String m67(p0) => "流量 ${p0} GB";
 
-  static String m67(p0) => "${p0}（设备接管）";
+  static String m68(p0) => "${p0}（设备接管）";
 
-  static String m68(p0, p1) => "版本: ${p0}+${p1}";
+  static String m69(p0) =>
+      "易联开着，但公网流量走了 ${p0}，不是易联的虚拟网卡 —— 你的节点和规则其实没生效。请关闭那个软件（完全退出），或在它里面把网络接管关掉，然后回到易联重新连接。";
 
-  static String m69(p0) => "版本号: ${p0}";
+  static String m70(p0, p1) => "版本: ${p0}+${p1}";
 
-  static String m70(p0) => "v${p0} · 点击检查更新";
+  static String m71(p0) => "版本号: ${p0}";
 
-  static String m71(p0) => "易联接管中 · ${p0}";
+  static String m72(p0) => "v${p0} · 点击检查更新";
 
-  static String m72(p0) => "WebView 初始化失败:${p0}";
+  static String m73(p0) => "易联接管中 · ${p0}";
 
-  static String m73(count) => "${count} 年前";
+  static String m74(p0) => "WebView 初始化失败:${p0}";
+
+  static String m75(count) => "${count} 年前";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -931,7 +936,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgConnected": MessageLookupByLibrary.simpleMessage("已连接"),
     "vgContactSupport": MessageLookupByLibrary.simpleMessage("联系客服"),
     "vgContinuePayment": MessageLookupByLibrary.simpleMessage("继续支付"),
-    "vgCopiedSuffix": m23,
+    "vgCopiedLogsToClipboard": m23,
+    "vgCopiedSuffix": m24,
     "vgCopy": MessageLookupByLibrary.simpleMessage("复制"),
     "vgCopyReferralLink": MessageLookupByLibrary.simpleMessage("复制邀请链接"),
     "vgCoreFailedToBindPort": MessageLookupByLibrary.simpleMessage(
@@ -940,16 +946,16 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgCountryRegion": MessageLookupByLibrary.simpleMessage("国家/地区"),
     "vgCreateAccount": MessageLookupByLibrary.simpleMessage("创建账户"),
     "vgCreditCard": MessageLookupByLibrary.simpleMessage("信用卡"),
-    "vgCurrentBalanceWith": m24,
+    "vgCurrentBalanceWith": m25,
     "vgCurrentPassword": MessageLookupByLibrary.simpleMessage("当前密码"),
-    "vgCurrentPlanPrefixWith": m25,
-    "vgCurrentPlanWith": m26,
+    "vgCurrentPlanPrefixWith": m26,
+    "vgCurrentPlanWith": m27,
     "vgCurrentRoute": MessageLookupByLibrary.simpleMessage("当前线路"),
     "vgDailyUsageThisMonth": MessageLookupByLibrary.simpleMessage("当月每日用量"),
     "vgDataExhaustedRenew": MessageLookupByLibrary.simpleMessage("流量已用尽 · 请续费"),
     "vgDataUsage": MessageLookupByLibrary.simpleMessage("流量明细"),
     "vgDataUsageSubtitle": MessageLookupByLibrary.simpleMessage("逐日流量使用记录"),
-    "vgDeviceInfoWith": m27,
+    "vgDeviceInfoWith": m28,
     "vgDeviceLimitHint": MessageLookupByLibrary.simpleMessage(
       "若提示连接超限，请先完全退出其他客户端再重连",
     ),
@@ -968,7 +974,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "下载失败，请稍后重试",
     ),
     "vgDownloadingUpdate": MessageLookupByLibrary.simpleMessage("正在下载更新"),
-    "vgDurationWith": m28,
+    "vgDurationWith": m29,
     "vgEmail": MessageLookupByLibrary.simpleMessage("邮箱"),
     "vgEmailCode": MessageLookupByLibrary.simpleMessage("邮箱验证码"),
     "vgEmptyResponseRetry": MessageLookupByLibrary.simpleMessage("返回为空, 请重试"),
@@ -982,9 +988,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgExit": MessageLookupByLibrary.simpleMessage("退出"),
     "vgExpandFullText": MessageLookupByLibrary.simpleMessage("展开全文"),
     "vgExpiredRenew": MessageLookupByLibrary.simpleMessage("已过期 · 请续费"),
-    "vgExpiredSuffix": m29,
+    "vgExpiredSuffix": m30,
     "vgExpiryDate": MessageLookupByLibrary.simpleMessage("到期时间"),
-    "vgFeedbackBodyWith": m30,
+    "vgFeedbackBodyWith": m31,
     "vgFeedbackHint": MessageLookupByLibrary.simpleMessage(
       "请描述你遇到的问题，我们会自动附上设备信息和近期日志帮你定位。",
     ),
@@ -997,7 +1003,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgFreeTrialImportToConnect": MessageLookupByLibrary.simpleMessage(
       "免费测试已开通,导入节点即可连接",
     ),
-    "vgFromPrice": m31,
+    "vgFromPrice": m32,
     "vgGlobalAccelDesc1": MessageLookupByLibrary.simpleMessage(
       "所有流量都走你选的那一条线路，不再自动分流。",
     ),
@@ -1047,9 +1053,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgInvalidAmount": MessageLookupByLibrary.simpleMessage("金额无效"),
     "vgInvited": MessageLookupByLibrary.simpleMessage("已邀请"),
     "vgIpAddress": MessageLookupByLibrary.simpleMessage("IP 地址"),
-    "vgKeptSystemProxyCarrying": m32,
-    "vgLastUpdatedTodayWith": m33,
-    "vgLastUpdatedWith": m34,
+    "vgKeptSystemProxyCarrying": m33,
+    "vgLastUpdatedTodayWith": m34,
+    "vgLastUpdatedWith": m35,
     "vgLatencyHint": MessageLookupByLibrary.simpleMessage(
       "国内应直连(快),国际经节点。数值越低越好。",
     ),
@@ -1069,8 +1075,8 @@ class MessageLookup extends MessageLookupByLibrary {
       "加载失败,请下拉重试",
     ),
     "vgLoadFailedTapRetry": MessageLookupByLibrary.simpleMessage("载入失败·点我重试"),
-    "vgLoadFailedWith": m35,
-    "vgLoadFailedWithCode": m36,
+    "vgLoadFailedWith": m36,
+    "vgLoadFailedWithCode": m37,
     "vgLoadingAccount": MessageLookupByLibrary.simpleMessage("正在载入账号…"),
     "vgLoadingEllipsis": MessageLookupByLibrary.simpleMessage("载入中…"),
     "vgLoadingPlan": MessageLookupByLibrary.simpleMessage("正在载入套餐…"),
@@ -1079,10 +1085,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "装了其他代理软件？这里说明当前哪一条通路正在工作、哪个程序占用了什么。",
     ),
     "vgLocalEnvOk": MessageLookupByLibrary.simpleMessage("本机环境正常。"),
-    "vgLocalEnvOkInControl": m37,
+    "vgLocalEnvOkInControl": m38,
     "vgLocalEnvironment": MessageLookupByLibrary.simpleMessage("本机环境"),
-    "vgLocalPortHeldSuggestChange": m38,
-    "vgLocalPortNum": m39,
+    "vgLocalPortHeldSuggestChange": m39,
+    "vgLocalPortNum": m40,
     "vgLogOut": MessageLookupByLibrary.simpleMessage("登出"),
     "vgMacDnsHintDesc": MessageLookupByLibrary.simpleMessage(
       "仅 macOS TUN 运行时临时加入易联 DNS，断开或退出后自动恢复；系统代理模式不修改 DNS",
@@ -1097,18 +1103,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgMySubscription": MessageLookupByLibrary.simpleMessage("我的订阅"),
     "vgMyTickets": MessageLookupByLibrary.simpleMessage("我的工单"),
     "vgMyTicketsSubtitle": MessageLookupByLibrary.simpleMessage("查看客服回复、继续跟进"),
-    "vgNBillingCycles": m40,
-    "vgNDays": m41,
-    "vgNMonths": m42,
-    "vgNPeople": m43,
-    "vgNYears": m44,
+    "vgNBillingCycles": m41,
+    "vgNDays": m42,
+    "vgNMonths": m43,
+    "vgNPeople": m44,
+    "vgNYears": m45,
     "vgNeedUnknownSourcesPermission": MessageLookupByLibrary.simpleMessage(
       "安装更新需要「允许安装未知来源应用」权限,请去设置开启后返回,会自动继续安装。",
     ),
     "vgNetUnstableRetry": MessageLookupByLibrary.simpleMessage(
       "网络不稳定，请检查网络后重试",
     ),
-    "vgNetworkErrorWith": m45,
+    "vgNetworkErrorWith": m46,
     "vgNetworkSkippedDirect": MessageLookupByLibrary.simpleMessage(
       "当前网络已跳过加速 · 走直连",
     ),
@@ -1123,7 +1129,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "vgNewPasswordMin8": MessageLookupByLibrary.simpleMessage("新密码(至少 8 位)"),
     "vgNewPasswordTooShort": MessageLookupByLibrary.simpleMessage("新密码至少 8 位"),
-    "vgNewVersionAvailable": m46,
+    "vgNewVersionAvailable": m47,
     "vgNoAccountYet": MessageLookupByLibrary.simpleMessage("还没有账户?"),
     "vgNoAnnouncements": MessageLookupByLibrary.simpleMessage("暂无公告"),
     "vgNoExpiry": MessageLookupByLibrary.simpleMessage("长期有效"),
@@ -1190,13 +1196,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgOrderCompleted": MessageLookupByLibrary.simpleMessage("已完成"),
     "vgOrderFailed": MessageLookupByLibrary.simpleMessage("下单失败"),
     "vgOrderFailedRetry": MessageLookupByLibrary.simpleMessage("下单失败,请稍后再试"),
-    "vgOrderFailedWith": m47,
-    "vgOrderNoWith": m48,
+    "vgOrderFailedWith": m48,
+    "vgOrderNoWith": m49,
     "vgOrderPendingPayment": MessageLookupByLibrary.simpleMessage("待支付"),
     "vgOrderRefunded": MessageLookupByLibrary.simpleMessage("已退款"),
     "vgOriginalsOnly": MessageLookupByLibrary.simpleMessage("仅自制剧"),
-    "vgOtherProxyRunningCloseFirst": m49,
-    "vgOtherProxyRunningSkipTun": m50,
+    "vgOtherProxyRunningCloseFirst": m50,
+    "vgOtherProxyRunningSkipTun": m51,
     "vgPassword": MessageLookupByLibrary.simpleMessage("密码"),
     "vgPasswordChanged": MessageLookupByLibrary.simpleMessage("密码已修改"),
     "vgPasswordsDoNotMatch": MessageLookupByLibrary.simpleMessage("两次新密码不一致"),
@@ -1208,7 +1214,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "已在浏览器打开支付页面。\\n完成支付后本页会自动到账。",
     ),
     "vgPaymentStartFailed": MessageLookupByLibrary.simpleMessage("支付发起失败"),
-    "vgPaymentStartFailedWith": m51,
+    "vgPaymentStartFailedWith": m52,
     "vgPaymentSuccessActivated": MessageLookupByLibrary.simpleMessage(
       "支付成功,套餐已开通",
     ),
@@ -1218,12 +1224,12 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "vgPlacingOrder": MessageLookupByLibrary.simpleMessage("正在下单…"),
     "vgPlan": MessageLookupByLibrary.simpleMessage("套餐"),
-    "vgPlanDeviceLimitWith": m52,
+    "vgPlanDeviceLimitWith": m53,
     "vgPlatformNoLocalDiag": MessageLookupByLibrary.simpleMessage(
       "当前平台不支持本机环境诊断。",
     ),
-    "vgPointsToVogueslyWith": m53,
-    "vgPortHeldByOther": m54,
+    "vgPointsToVogueslyWith": m54,
+    "vgPortHeldByOther": m55,
     "vgPortHeldByOther2": MessageLookupByLibrary.simpleMessage(
       "这种最难查的故障。可以在「设置 → 网络」改用一个没人使用的端口。",
     ),
@@ -1234,7 +1240,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "但会令本页的解锁／延迟检测量不到数据。",
     ),
     "vgPreparingInstall": MessageLookupByLibrary.simpleMessage("正在准备安装…"),
-    "vgPublicTrafficOnOtherTun": m55,
+    "vgPublicTrafficOnOtherTun": m56,
     "vgPublicTrafficOnOurTun": MessageLookupByLibrary.simpleMessage(
       "公网流量正在走易联的虚拟网卡。这是主路径，不依赖系统代理。",
     ),
@@ -1313,7 +1319,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgSendFailedRetryComma": MessageLookupByLibrary.simpleMessage(
       "发送失败，请稍后再试",
     ),
-    "vgSendFailedWith": m56,
+    "vgSendFailedWith": m57,
     "vgSent": MessageLookupByLibrary.simpleMessage("已发送"),
     "vgSessionExpiredSignInAgain": MessageLookupByLibrary.simpleMessage(
       "登录已失效,请重新登录",
@@ -1351,7 +1357,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgSomethingWentWrongRetry": MessageLookupByLibrary.simpleMessage(
       "出错了,请稍后重试",
     ),
-    "vgSpeedLimitNMbps": m57,
+    "vgSpeedLimitNMbps": m58,
     "vgSplitRouteHint": MessageLookupByLibrary.simpleMessage(
       "国际服务走外国出口、国内服务走本地 —— 智能分流实时验证",
     ),
@@ -1367,7 +1373,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgStore": MessageLookupByLibrary.simpleMessage("商城"),
     "vgSubmit": MessageLookupByLibrary.simpleMessage("提交"),
     "vgSubmitFailedRetry": MessageLookupByLibrary.simpleMessage("提交失败，请稍后再试"),
-    "vgSubmitFailedWith": m58,
+    "vgSubmitFailedWith": m59,
     "vgSubmitToSupport": MessageLookupByLibrary.simpleMessage("提交给客服"),
     "vgSubmittedSupportWillFollowUp": MessageLookupByLibrary.simpleMessage(
       "已提交，客服会尽快跟进",
@@ -1384,37 +1390,37 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgSupport": MessageLookupByLibrary.simpleMessage("客服"),
     "vgSwitchedToGlobal": MessageLookupByLibrary.simpleMessage("已切换到全局加速"),
     "vgSystemProxy": MessageLookupByLibrary.simpleMessage("系统代理"),
-    "vgSystemProxyCompat": m59,
+    "vgSystemProxyCompat": m60,
     "vgSystemProxyCompatDesc": MessageLookupByLibrary.simpleMessage(
       "仅接管支持系统代理的应用；Telegram 等应用可能仍需要 TUN",
     ),
     "vgSystemProxyOccupied": MessageLookupByLibrary.simpleMessage(
       "系统代理未能接管流量，可能被其他代理软件占用；请退出其他代理软件后重试",
     ),
-    "vgSystemProxySingleSlot": m60,
-    "vgTakenByOtherAppWith": m61,
-    "vgTakenByOtherProcessWith": m62,
+    "vgSystemProxySingleSlot": m61,
+    "vgTakenByOtherAppWith": m62,
+    "vgTakenByOtherProcessWith": m63,
     "vgTaobao": MessageLookupByLibrary.simpleMessage("淘宝"),
     "vgTapBelowToFetchNodes": MessageLookupByLibrary.simpleMessage(
       "点下方按钮拉取最新节点",
     ),
     "vgTapToActivate": MessageLookupByLibrary.simpleMessage("点我开通"),
     "vgTapToConnect": MessageLookupByLibrary.simpleMessage("点击连接"),
-    "vgTapToDisconnectWith": m63,
+    "vgTapToDisconnectWith": m64,
     "vgTelegramSupport": MessageLookupByLibrary.simpleMessage("Telegram 客服"),
-    "vgTempEnabledSystemProxy": m64,
+    "vgTempEnabledSystemProxy": m65,
     "vgTesting": MessageLookupByLibrary.simpleMessage("测试中…"),
     "vgThreeYearly": MessageLookupByLibrary.simpleMessage("三年付"),
     "vgTicketAwaitingReply": MessageLookupByLibrary.simpleMessage("等待回复"),
     "vgTicketClosed": MessageLookupByLibrary.simpleMessage("已关闭"),
     "vgTicketIsClosed": MessageLookupByLibrary.simpleMessage("工单已关闭"),
-    "vgTicketNumber": m65,
+    "vgTicketNumber": m66,
     "vgTicketSupportReplied": MessageLookupByLibrary.simpleMessage("客服已回"),
-    "vgTimeout": MessageLookupByLibrary.simpleMessage("超时"),
+    "vgTimeout": MessageLookupByLibrary.simpleMessage("未连通"),
     "vgTotal": MessageLookupByLibrary.simpleMessage("合计"),
     "vgTotalDownload": MessageLookupByLibrary.simpleMessage("总下行"),
     "vgTotalUpload": MessageLookupByLibrary.simpleMessage("总上行"),
-    "vgTrafficNGb": m66,
+    "vgTrafficNGb": m67,
     "vgTrafficStillOnTun": MessageLookupByLibrary.simpleMessage(
       "设备流量仍由易联的虚拟网卡承载，上网不受影响；",
     ),
@@ -1432,7 +1438,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgTunAlsoNotInControlNote": MessageLookupByLibrary.simpleMessage(
       "而虚拟网卡也没有接管，所以现在可能真的上不了网。",
     ),
-    "vgTunDeviceWide": m67,
+    "vgTunDeviceWide": m68,
     "vgTunDeviceWideDesc": MessageLookupByLibrary.simpleMessage(
       "接管整台设备流量；需关闭其他 VPN，并完成系统权限授权",
     ),
@@ -1458,6 +1464,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgTunServiceNotEnabled": MessageLookupByLibrary.simpleMessage(
       "易联后台 TUN 服务未启用，请在系统设置允许易联后台项目后重试。",
     ),
+    "vgTunTakenByOtherVpn": m69,
     "vgTunTwiceNoTakeover": MessageLookupByLibrary.simpleMessage(
       "TUN 连续两次启动仍未能接管系统流量",
     ),
@@ -1482,10 +1489,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "余额、订单、重置订阅、修改密码",
     ),
     "vgV2RayFamilyClient": MessageLookupByLibrary.simpleMessage("V2Ray 系客户端"),
-    "vgVersionBuildWith": m68,
+    "vgVersionBuildWith": m70,
     "vgVersionLabel": MessageLookupByLibrary.simpleMessage("版本"),
-    "vgVersionNumber": m69,
-    "vgVersionTapToCheck": m70,
+    "vgVersionNumber": m71,
+    "vgVersionTapToCheck": m72,
     "vgViewLogs": MessageLookupByLibrary.simpleMessage("查看日志"),
     "vgViewLogsSubtitle": MessageLookupByLibrary.simpleMessage("实时连接日志，排查问题用"),
     "vgViewOrdersResumePayment": MessageLookupByLibrary.simpleMessage(
@@ -1495,14 +1502,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgVirtualNicTun": MessageLookupByLibrary.simpleMessage("虚拟网卡(TUN)"),
     "vgVirtualNicVpn": MessageLookupByLibrary.simpleMessage("虚拟网卡(VPN)"),
     "vgVogueslyInControl": MessageLookupByLibrary.simpleMessage("易联接管中"),
-    "vgVogueslyInControlWith": m71,
+    "vgVogueslyInControlWith": m73,
     "vgVogueslyListening": MessageLookupByLibrary.simpleMessage("易联正在监听"),
     "vgVpnCouldNotConnect": MessageLookupByLibrary.simpleMessage(
       "VPN 未能建立连接(可能权限被拒或系统限制),请重新连接",
     ),
     "vgWaitingForPayment": MessageLookupByLibrary.simpleMessage("等待支付到账"),
     "vgWeChat": MessageLookupByLibrary.simpleMessage("微信"),
-    "vgWebViewInitFailed": m72,
+    "vgWebViewInitFailed": m74,
     "vgWithdraw": MessageLookupByLibrary.simpleMessage("提现"),
     "vgWithdrawFailed": MessageLookupByLibrary.simpleMessage("提现失败"),
     "vgWithdrawMethod": MessageLookupByLibrary.simpleMessage(
@@ -1532,7 +1539,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnTip": MessageLookupByLibrary.simpleMessage("重启VPN后改变生效"),
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage("WebDAV配置"),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("白名单模式"),
-    "yearsAgo": m73,
+    "yearsAgo": m75,
     "zh_CN": MessageLookupByLibrary.simpleMessage("中文简体"),
   };
 }

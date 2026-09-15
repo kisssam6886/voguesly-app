@@ -327,9 +327,13 @@ Future<LocalDiagnosis> diagnoseLocal({
 
   // ① 虚拟网卡(主路径)
   var tunOurs = false;
+  // 另一个 VPN/代理抢咗默认路由嗰个虚拟网卡名(用嚟畀顶部结论专门警告)。
+  // 空 = 冇被抢;非空 = 用户开咗 TUN 但公网流量落咗第三方嘅 utun。
+  var tunForeign = <String>[];
   if (system.isMacOS) {
     final tun = await _macTun();
     tunOurs = tun.ours;
+    if (!tunOurs) tunForeign = tun.foreign;
     items.add(DiagItem(
       title: currentAppLocalizations.vgVirtualNicTun,
       value: tunOurs ? currentAppLocalizations.vgVogueslyInControlWith(tun.name ?? '') : (tunPreferred ? currentAppLocalizations.vgNotInControl : currentAppLocalizations.vgNotEnabled),
@@ -418,10 +422,16 @@ Future<LocalDiagnosis> diagnoseLocal({
   // ── 一句话结论 ──────────────────────────────────────────────────────────
   final hasTransport = tunOurs || ours;
   final portBlocked = inUse && !portOurs;
+  // 用户开咗虚拟网卡,但公网流量落咗第三方嘅 TUN ⇒ 易联嘅规则/节点其实唔生效,
+  // 但系统代理可能仲指住易联,令 hasTransport 睇落 true、误报「正常」。要专门警告。
+  final tunTakenByOther = tunPreferred && !tunOurs && tunForeign.isNotEmpty;
   final String verdict;
   final DiagLevel level;
   if (portBlocked) {
     verdict = currentAppLocalizations.vgLocalPortHeldSuggestChange(owner ?? '');
+    level = DiagLevel.bad;
+  } else if (tunTakenByOther) {
+    verdict = currentAppLocalizations.vgTunTakenByOtherVpn(tunForeign.join('、'));
     level = DiagLevel.bad;
   } else if (!hasTransport) {
     verdict = currentAppLocalizations.vgNoPathCarryingTraffic;

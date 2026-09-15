@@ -660,7 +660,7 @@
   "vgResetVogueslySystemProxy": "Reset Voguesly's system proxy",
   "vgResetProxyHint": "This only rewrites Voguesly's own settings. It will not close or modify your other proxy apps.",
   "vgTesting": "Testing…",
-  "vgTimeout": "Timeout",
+  "vgTimeout": "No response",
   "vgCheckFailedConnectFirst": "Check failed. Connect first, then try again.",
   "vgIpAddress": "IP address",
   "vgCountryRegion": "Country / region",
@@ -689,6 +689,15 @@
   "vgPublicTrafficOnOurTun": "Public traffic is going through Voguesly's virtual NIC. This is the main path and does not rely on the system proxy.",
   "vgPublicTrafficOnOtherTun": "Public traffic is going through {p0}, which is not Voguesly's virtual NIC — ",
   "vgLikelyAnotherVpnTookRoute": "another VPN has most likely taken the default route.",
+  "vgTunTakenByOtherVpn": "Voguesly is on, but public traffic is going through {p0}, not Voguesly’s virtual NIC — your nodes and rules are not actually in effect. Quit that app completely, or turn off its network takeover, then reconnect in Voguesly.",
+  "@vgTunTakenByOtherVpn": {
+    "type": "text",
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
   "vgTunOnButNoUtun": "Virtual NIC is enabled in settings, but public traffic is not going through utun. Authorisation may be incomplete.",
   "vgTunOffUsingCompatMode": "Virtual NIC is off; you are currently on System Proxy compatibility mode.",
   "vgRouteTableSeesOurTun": "The routing table shows Voguesly's virtual NIC. This is the main path and does not rely on the system proxy.",
@@ -990,5 +999,14 @@
   "vgVirtualNic": "the virtual NIC",
   "vgMe": "Me",
   "vgSupport": "Support",
-  "vgLoadingEllipsis": "Loading…"
+  "vgLoadingEllipsis": "Loading…",
+  "vgCopiedLogsToClipboard": "Copied {p0} log lines to clipboard",
+  "@vgCopiedLogsToClipboard": {
+    "type": "text",
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  }
 }

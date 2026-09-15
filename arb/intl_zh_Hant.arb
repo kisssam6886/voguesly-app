@@ -660,7 +660,7 @@
   "vgResetVogueslySystemProxy": "重設易聯的系統代理",
   "vgResetProxyHint": "只會重寫易聯自己的設定，不會關閉或修改你其他的代理軟件。",
   "vgTesting": "測試中…",
-  "vgTimeout": "逾時",
+  "vgTimeout": "未連通",
   "vgCheckFailedConnectFirst": "檢測失敗，請先連線後重試",
   "vgIpAddress": "IP 位址",
   "vgCountryRegion": "國家／地區",
@@ -689,6 +689,15 @@
   "vgPublicTrafficOnOurTun": "公網流量正在走易聯的虛擬網卡。這是主路徑，不依賴系統代理。",
   "vgPublicTrafficOnOtherTun": "公網流量正在走 {p0}，但並非易聯的虛擬網卡 —— ",
   "vgLikelyAnotherVpnTookRoute": "很可能是另一個 VPN 搶了預設路由。",
+  "vgTunTakenByOtherVpn": "易聯開著，但公網流量走了 {p0}，不是易聯的虛擬網卡 —— 你的節點和規則其實沒生效。請關閉那個軟體（完全退出），或在它裡面把網路接管關掉，然後回到易聯重新連接。",
+  "@vgTunTakenByOtherVpn": {
+    "type": "text",
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  },
   "vgTunOnButNoUtun": "設定中已開啟虛擬網卡，但公網流量並未走 utun。可能是授權未完成。",
   "vgTunOffUsingCompatMode": "你未開啟虛擬網卡，目前正在使用系統代理相容模式。",
   "vgRouteTableSeesOurTun": "路由表中可見易聯的虛擬網卡。這是主路徑，不依賴系統代理。",
@@ -990,5 +999,14 @@
   "vgVirtualNic": "虛擬網卡",
   "vgMe": "我",
   "vgSupport": "客服",
-  "vgLoadingEllipsis": "載入中…"
+  "vgLoadingEllipsis": "載入中…",
+  "vgCopiedLogsToClipboard": "已複製 {p0} 條日誌到剪貼簿",
+  "@vgCopiedLogsToClipboard": {
+    "type": "text",
+    "placeholders": {
+      "p0": {
+        "type": "Object"
+      }
+    }
+  }
 }
