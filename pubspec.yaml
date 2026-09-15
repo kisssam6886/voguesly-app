@@ -140,3 +140,6 @@ flutter_intl:
   class_name: AppLocalizations
   arb_dir: arb
   output_dir: lib/l10n
+
+dependency_overrides:
+  path_provider_foundation: 2.4.1  # 2.5.0+ 引入 objective_c(native assets) universal build 黑屏
