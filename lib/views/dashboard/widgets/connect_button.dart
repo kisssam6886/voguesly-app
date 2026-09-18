@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../voguesly/voguesly_onboarding_sheet.dart';
 import '../../../voguesly/voguesly_subscription.dart';
+import '../../../voguesly/voguesly_tips.dart';
 
 /// 仪表盘大圆圈连接掣(消费者向):
 /// 未连=白底醒目圈「开启易联」+ 脉冲动效;撳后 3-2-1 倒计时;已连=绿圈「已连接·轻触断开」。
@@ -31,6 +32,17 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
   int _count = 0;
   Timer? _timer;
   late final AnimationController _pulse;
+  bool _showConnectTip = false; // 首次进入嘅「点一下圆圈就能连上」气泡(只出一次)
+
+  Future<void> _loadTipFlag() async {
+    final seen = await vogueslyTipSeen(kVogueslyTipConnectSeen);
+    if (mounted && !seen) setState(() => _showConnectTip = true);
+  }
+
+  void _dismissConnectTip() {
+    if (_showConnectTip) setState(() => _showConnectTip = false);
+    markVogueslyTipSeen(kVogueslyTipConnectSeen);
+  }
 
   @override
   void initState() {
@@ -45,7 +57,15 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
       // 只同步真实状态;「正在开启」中间态(3-2-1)由倒计时管,唔畀连接太快冲走个倒计时。
       if (next) _attempting = false; // 已连上 → 本次尝试结束
       setState(() => isStart = next);
+      if (next) {
+        // 第一次连上:收起气泡,再弹一次「小贴士」(购买套餐 / 客服 / 更新订阅 喺边)。
+        _dismissConnectTip();
+        Future.delayed(const Duration(milliseconds: 1200), () {
+          if (mounted) maybeShowVogueslyFeatureTips(context);
+        });
+      }
     }, fireImmediately: true);
+    _loadTipFlag();
   }
 
   @override
@@ -202,6 +222,8 @@ class _ConnectButtonState extends ConsumerState<ConnectButton>
     return Column(
       children: [
         const SizedBox(height: 8),
+        if (_showConnectTip && hasProfile && !isStart && !connecting)
+          VogueslyConnectTipBubble(onDismiss: _dismissConnectTip),
         GestureDetector(
           onTap: () => _onTap(hasProfile),
           behavior: HitTestBehavior.opaque,

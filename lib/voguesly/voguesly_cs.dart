@@ -2,7 +2,9 @@ import 'dart:io';
 import 'package:fl_clash/common/app_localizations.dart';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:fl_clash/widgets/scaffold.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -212,6 +214,20 @@ class _VogueslyCsPanelState extends ConsumerState<VogueslyCsPanel> {
     return Container(
       color: surface,
       child: WebViewWidget(controller: _ctrl!),
+    );
+  }
+}
+
+/// 一级 tab「客服」用嘅页(2026-09-18 Sam:客服升一级):CommonScaffold 包住现有 VogueslyCsPanel。
+/// 桌面侧栏「在线客服」/ 安卓底栏「客服」都指呢度;「我的」页大按钮仍走 VogueslyCsPanel.open()。
+class VogueslySupportPage extends StatelessWidget {
+  const VogueslySupportPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return CommonScaffold(
+      title: Intl.message('support'),
+      body: const VogueslyCsPanel(),
     );
   }
 }

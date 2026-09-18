@@ -4694,6 +4694,216 @@ class AppLocalizations {
     );
   }
 
+  /// `Home`
+  String get vgNavHome {
+    return Intl.message(
+      'Home',
+      name: 'vgNavHome',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Plans`
+  String get vgNavShop {
+    return Intl.message(
+      'Plans',
+      name: 'vgNavShop',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Check`
+  String get vgNavDetect {
+    return Intl.message(
+      'Check',
+      name: 'vgNavDetect',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Lines`
+  String get vgNavLines {
+    return Intl.message(
+      'Lines',
+      name: 'vgNavLines',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Support`
+  String get vgNavSupport {
+    return Intl.message(
+      'Support',
+      name: 'vgNavSupport',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Me`
+  String get vgNavMine {
+    return Intl.message(
+      'Me',
+      name: 'vgNavMine',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Switch line`
+  String get vgNavLinesDesktop {
+    return Intl.message(
+      'Switch line',
+      name: 'vgNavLinesDesktop',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Could not open the payment app. Make sure WeChat/Alipay is installed, or pay by scanning the QR code.`
+  String get vgOpenPaymentFailed {
+    return Intl.message(
+      'Could not open the payment app. Make sure WeChat/Alipay is installed, or pay by scanning the QR code.',
+      name: 'vgOpenPaymentFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Re-authorize`
+  String get vgReauthorizeTun {
+    return Intl.message(
+      'Re-authorize',
+      name: 'vgReauthorizeTun',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `TUN authorization failed`
+  String get vgTunAuthFailedTitle {
+    return Intl.message(
+      'TUN authorization failed',
+      name: 'vgTunAuthFailedTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Installing the new version…`
+  String get vgInstallingUpdate {
+    return Intl.message(
+      'Installing the new version…',
+      name: 'vgInstallingUpdate',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Installed. Relaunching Voguesly…`
+  String get vgRelaunchingApp {
+    return Intl.message(
+      'Installed. Relaunching Voguesly…',
+      name: 'vgRelaunchingApp',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Automatic install failed; the installer has been opened instead. Drag Voguesly to Applications.`
+  String get vgInstallFallbackFinder {
+    return Intl.message(
+      'Automatic install failed; the installer has been opened instead. Drag Voguesly to Applications.',
+      name: 'vgInstallFallbackFinder',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `First time? Just tap the circle to connect. Nothing else to set up.`
+  String get vgTipConnectFirst {
+    return Intl.message(
+      'First time? Just tap the circle to connect. Nothing else to set up.',
+      name: 'vgTipConnectFirst',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Quick tips`
+  String get vgTipsTitle {
+    return Intl.message(
+      'Quick tips',
+      name: 'vgTipsTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Buy or renew a plan: sidebar “Buy plan”`
+  String get vgTipShopDesktop {
+    return Intl.message(
+      'Buy or renew a plan: sidebar “Buy plan”',
+      name: 'vgTipShopDesktop',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Buy or renew a plan: bottom tab “Plans”`
+  String get vgTipShopMobile {
+    return Intl.message(
+      'Buy or renew a plan: bottom tab “Plans”',
+      name: 'vgTipShopMobile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Need help: sidebar “Live chat”`
+  String get vgTipSupportDesktop {
+    return Intl.message(
+      'Need help: sidebar “Live chat”',
+      name: 'vgTipSupportDesktop',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Need help: bottom tab “Support”`
+  String get vgTipSupportMobile {
+    return Intl.message(
+      'Need help: bottom tab “Support”',
+      name: 'vgTipSupportMobile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `All lines red / cannot connect: tap sidebar “Update subscription” first`
+  String get vgTipUpdateSubDesktop {
+    return Intl.message(
+      'All lines red / cannot connect: tap sidebar “Update subscription” first',
+      name: 'vgTipUpdateSubDesktop',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `All lines red / cannot connect: go to “Me” → “Update subscription” first`
+  String get vgTipUpdateSubMobile {
+    return Intl.message(
+      'All lines red / cannot connect: go to “Me” → “Update subscription” first',
+      name: 'vgTipUpdateSubMobile',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Empty response, please try again`
   String get vgEmptyResponseRetry {
     return Intl.message(

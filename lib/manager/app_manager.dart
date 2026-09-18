@@ -18,7 +18,6 @@ import 'package:fl_clash/voguesly/voguesly_shop.dart';
 import 'package:fl_clash/voguesly/voguesly_stat.dart';
 import 'package:fl_clash/voguesly/voguesly_subscription.dart';
 import 'package:fl_clash/voguesly/voguesly_user_center.dart';
-import 'package:intl/intl.dart';
 
 /// 侧栏「有新版本」入口用嘅版本号(null = 已係最新 / 未检查到)。
 ///
@@ -358,7 +357,7 @@ class AppSidebarContainer extends ConsumerWidget {
                           for (var i = 0; i < navigationItems.length; i++)
                             _SidebarNavRow(
                               icon: navigationItems[i].icon,
-                              label: Intl.message(navigationItems[i].label.name),
+                              label: vogueslyNavLabel(navigationItems[i].label, desktop: true),
                               selected: i == currentIndex,
                               showLabel: showLabel,
                               onTap: () =>
@@ -404,24 +403,8 @@ class AppSidebarContainer extends ConsumerWidget {
                                 .read(contentOverlayProvider.notifier)
                                 .set(ContentOverlay.notice),
                           ),
-                          _SidebarLink(
-                            icon: Icons.data_usage_outlined,
-                            label: currentAppLocalizations.vgDataUsage,
-                            showLabel: showLabel,
-                            selected: overlay == ContentOverlay.stat,
-                            onTap: () => ref
-                                .read(contentOverlayProvider.notifier)
-                                .set(ContentOverlay.stat),
-                          ),
-                          _SidebarLink(
-                            icon: Icons.support_agent_outlined,
-                            label: currentAppLocalizations.vgLiveChat,
-                            showLabel: showLabel,
-                            selected: overlay == ContentOverlay.cs,
-                            // Win/Linux 无 webview 桌面实现 → open() 改行系统浏览器(防崩);
-                            // macOS 仍走半框 overlay。
-                            onTap: () => VogueslyCsPanel.open(context),
-                          ),
+                          // [2026-09-18 减法] 「流量明细」快捷删走(仪表盘账号卡已有用量,ContentOverlay.stat 仍可由用户中心入);
+                          // 「在线客服」由快捷升做上方一级 nav(PageLabel.support),呢度唔再重复。
                           // 「检查更新」**常驻**。
                           // ⚠️ 2026-08-05 初版写成 `if (updateVersion != null)` 先出现,
                           // 结果係:已经喺最新版嘅用户(即大多数)**永远见唔到呢个入口**,

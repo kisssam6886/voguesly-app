@@ -37,17 +37,23 @@ const defaultAccessControlProps = AccessControlProps();
 const defaultThemeProps = ThemeProps(primaryColor: defaultPrimaryColor);
 
 // 简洁消费者向主页:账号 + 大圆圈连接 + 当前线路 + 网络速度 + 模式。
-// 桌面端同时保留 TUN(设备接管)和系统代理(兼容模式)两个明确的开关，
-// 让用户不需要进入进阶页面才能恢复可用的兼容路径。
+// [2026-09-18 Sam 拍板减法] 仪表盘只留普通用户要嘅 5 张卡 + 出站模式(用户会切全局)。
+// TUN / 系统代理两个工程开关收入「我的 → 进阶 → 网络设置」(network.dart 两个 switch 一直都有),
+// 大圆圈係唯一主控(TUN-first)。用户仍可喺仪表盘「编辑」自己加返呢两张卡。
 const List<DashboardWidget> defaultDashboardWidgets = [
   DashboardWidget.vogueslyAccount,
   DashboardWidget.connectButton,
   DashboardWidget.currentRoute,
   DashboardWidget.networkSpeed,
   DashboardWidget.outboundMode,
+];
+
+/// 一次性迁移:旧版预设带住嘅两张工程卡,读配置时静静拿走(用户手动加返嘅下次读又会被拿走 —
+/// 接受呢个代价,因为进阶页有同一开关;唔想咁就改用版本号迁移)。
+const Set<DashboardWidget> _retiredDashboardWidgets = {
   DashboardWidget.tunButton,
   DashboardWidget.systemProxyButton,
-];
+};
 
 List<DashboardWidget> dashboardWidgetsSafeFormJson(
   List<dynamic>? dashboardWidgets,
@@ -55,6 +61,7 @@ List<DashboardWidget> dashboardWidgetsSafeFormJson(
   try {
     return dashboardWidgets
             ?.map((e) => $enumDecode(_$DashboardWidgetEnumMap, e))
+            .where((e) => !_retiredDashboardWidgets.contains(e))
             .toList() ??
         defaultDashboardWidgets;
   } catch (_) {

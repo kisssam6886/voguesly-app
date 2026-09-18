@@ -1,9 +1,12 @@
+import 'package:fl_clash/common/app_localizations.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/views/views.dart';
+import 'package:fl_clash/voguesly/voguesly_cs.dart';
 import 'package:fl_clash/voguesly/voguesly_detection.dart';
 import 'package:fl_clash/voguesly/voguesly_shop.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class Navigation {
   static Navigation? _instance;
@@ -45,6 +48,17 @@ class Navigation {
         modes: hasProxies
             ? [NavigationItemMode.mobile, NavigationItemMode.desktop]
             : [],
+      ),
+      // 2026-09-18 Sam:客服好重要(用户反馈入口),升做一级 tab —— 安卓底栏第 5 位、桌面侧栏「在线客服」。
+      // 打开嘅就係现有 VogueslyCsPanel(webview),唔另写页。keep:false 免得 webview 长驻后台。
+      NavigationItem(
+        keep: false,
+        icon: const Icon(Icons.support_agent),
+        label: PageLabel.support,
+        builder: (_) => const VogueslySupportPage(
+          key: GlobalObjectKey(PageLabel.support),
+        ),
+        modes: [NavigationItemMode.desktop, NavigationItemMode.mobile],
       ),
       NavigationItem(
         icon: const Icon(Icons.folder),
@@ -107,3 +121,27 @@ class Navigation {
 }
 
 final navigation = Navigation();
+
+/// 2026-09-18 Sam 拍板命名:桌面侧栏四字对称,安卓底栏两字。
+///   桌面:易联首页 / 购买套餐 / 网络检测 / 切换线路 / 在线客服 / 我的账户
+///   安卓:首页 / 套餐 / 检测 / 线路 / 客服 / 我的
+/// 桌面直接用各页标题 key(dashboard/shop/detection/support/tools 已改成四字),
+/// 只有「线路」因为 `proxies` key 仲有 6 处工程页用紧「线路」两字,桌面另用 vgNavLinesDesktop。
+String vogueslyNavLabel(PageLabel label, {required bool desktop}) {
+  final l = currentAppLocalizations;
+  if (desktop) {
+    return switch (label) {
+      PageLabel.proxies => l.vgNavLinesDesktop,
+      _ => Intl.message(label.name),
+    };
+  }
+  return switch (label) {
+    PageLabel.dashboard => l.vgNavHome,
+    PageLabel.shop => l.vgNavShop,
+    PageLabel.detection => l.vgNavDetect,
+    PageLabel.proxies => l.vgNavLines,
+    PageLabel.support => l.vgNavSupport,
+    PageLabel.tools => l.vgNavMine,
+    _ => Intl.message(label.name),
+  };
+}

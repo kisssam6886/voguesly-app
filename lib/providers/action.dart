@@ -917,11 +917,29 @@ class SetupAction extends _$SetupAction {
           // 授权失败唔好落盘关 TUN(旧实现落咗盘 → 加上迁移强制关咗系统代理 = 断网)。
           // 保住用户嘅 TUN 意图,同时即刻拉起兼容模式顶住,重连/重开 App 会再试 TUN。
           _ensureFallbackTransport(currentAppLocalizations.vgTunNotAuthorized);
+          // [2026-09-18] 唔再只係静默降级:弹带「重新授权」掣嘅框,撳咗即重跑授权
+          //   (restartCore 会再入呢度 → authorizeCore 再弹一次系统密码框)。
+          _offerTunReauthorize();
           break;
       }
     }
     ref.read(realTunEnableProvider.notifier).value = enableTun;
     return Result.success(enableTun);
+  }
+
+  Future<void> _offerTunReauthorize() async {
+    final ok = await globalState.showMessage(
+      title: currentAppLocalizations.vgTunAuthFailedTitle,
+      message: TextSpan(
+        text: currentAppLocalizations.vgTunNotAuthorized +
+            currentAppLocalizations.vgReopenTunAfterPermission,
+      ),
+      confirmText: currentAppLocalizations.vgReauthorizeTun,
+    );
+    if (ok != true) return;
+    _authorizeFailedThisSession = false;
+    _desktopTunProvenBroken = false;
+    await ref.read(coreActionProvider.notifier).restartCore();
   }
 
   Future<void> _setupConfig({

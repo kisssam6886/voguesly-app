@@ -409,11 +409,12 @@ Future<LocalDiagnosis> diagnoseLocal({
                 currentAppLocalizations.vgPortHeldByOther2),
   ));
 
-  // ④ 同场运行嘅其他代理软件 —— 纯提示,唔当错
+  // ④ 同场运行嘅其他代理软件 —— [2026-09-18] 有第三方就当 warn(旧文案绿字「共存没有问题」误导,
+  //   TUN 模式实际唔可以共存,0.9.74 已有「TUN 被抢」弹窗,检测页文案要对齐)
   items.add(DiagItem(
     title: currentAppLocalizations.vgRunningAlongside,
     value: thirdParty.isEmpty ? currentAppLocalizations.vgNoOtherProxyDetected : thirdParty.join('、'),
-    level: DiagLevel.info,
+    level: thirdParty.isEmpty ? DiagLevel.info : DiagLevel.warn,
     detail: thirdParty.isEmpty
         ? null
         : currentAppLocalizations.vgCoexistFine,

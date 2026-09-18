@@ -66,8 +66,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
         const _AccelModeItem(),
         const _LocaleItem(),
         const _ThemeItem(),
-        const _SettingItem(),
-        // 进阶项全部收埋落子页(基本配置/请求/连接/资源/备份/访问控制/进阶配置),保持简洁
+        // 进阶项全部收埋落子页(应用设置/日志/基本配置/请求/连接/资源/备份/访问控制/进阶配置),保持简洁
         const _AdvancedItem(),
       ],
     );
@@ -85,9 +84,8 @@ class _ToolViewState extends ConsumerState<ToolsView> {
       const _SubscriptionEntry(),
       const _QuickActions(),
       const _AccountServices(),
-      const _FeedbackItem(),
+      // [2026-09-18 减法] 反馈(账号服务已有)删;日志 / 应用设置(12 个开关)收入「进阶」。
       const _MyTicketsItem(),
-      const _LogsViewItem(),
       ..._getSettingList(),
       // 诊断项(请求/连接/资源)收入「进阶工具」子页,「我的」一级唔再露工程化菜单。
       ..._getOtherList(vm2.b),
@@ -270,6 +268,8 @@ class _AdvancedToolsView extends ConsumerWidget {
     final diagnostics =
         ref.watch(moreToolsSelectorStateProvider).navigationItems;
     final items = <Widget>[
+      const _SettingItem(), // 应用设置(12 个开关)—— 2026-09-18 由「我的」一级收落嚟
+      const _LogsViewItem(),
       const _ConfigItem(),
       const _BackupItem(),
       if (system.isDesktop) const _HotkeyItem(),
@@ -587,6 +587,7 @@ class _AccountServices extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _FeedbackItem extends StatelessWidget {
   const _FeedbackItem();
 

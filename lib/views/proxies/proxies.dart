@@ -144,7 +144,7 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
       resizeToAvoidBottomInset: false,
       floatingActionButton: _buildFAB(),
       actions: _buildActions(context),
-      title: context.appLocalizations.proxies,
+      title: currentAppLocalizations.vgNavLinesDesktop, // 2026-09-18 命名:切换线路
       searchState: AppBarSearchState(onSearch: _onSearch),
       body: switch (proxiesType) {
         ProxiesType.tab => ProxiesTabView(key: _proxiesTabKey),

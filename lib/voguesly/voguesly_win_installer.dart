@@ -74,9 +74,12 @@ class WinInstaller {
       );
       onState(const WinInstallState(stage: WinInstallStage.launching));
       // detached:安装程序独立进程,即使本 app 之后被 installer 关掉都唔影响。
+      // [2026-09-18 一键更新] /SILENT = 只显示安装进度条、唔使逐页撳 Next;
+      // 安装程序 [Code] InitializeSetup 会停 helper 服务 + 关旧 app,
+      // [Run] postinstall(已拿走 skipifsilent)装完自动重开新版。
       await Process.start(
         path,
-        const [],
+        const ['/SILENT', '/NORESTART', '/SP-'],
         mode: ProcessStartMode.detached,
         runInShell: false,
       );

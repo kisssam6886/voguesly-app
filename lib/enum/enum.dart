@@ -339,6 +339,7 @@ enum PageLabel {
   shop,
   detection,
   proxies,
+  support, // 2026-09-18 客服升一级 tab(安卓底栏 / 桌面侧栏)
   profiles,
   tools,
   logs,

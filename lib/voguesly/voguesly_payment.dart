@@ -3,6 +3,7 @@ import 'package:fl_clash/common/app_localizations.dart';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:fl_clash/state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -224,7 +225,7 @@ class VogueslyPayment {
       case VogueslyCheckoutKind.url:
         final uri = Uri.tryParse(res.payload);
         if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          await _launchPay(uri);
         }
         _wait(navCtx, ref, tradeNo, res.payload, qrData: null, onPaid: onPaid);
         break;
@@ -303,7 +304,7 @@ class VogueslyPayment {
                 onPressed: () async {
                   final uri = Uri.tryParse(payload);
                   if (uri != null) {
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    await _launchPay(uri);
                   }
                 },
                 child: Text(currentAppLocalizations.vgOpenPayment),
@@ -313,7 +314,7 @@ class VogueslyPayment {
                 onPressed: () async {
                   final uri = Uri.tryParse(payload);
                   if (uri != null) {
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    await _launchPay(uri);
                   }
                 },
                 child: Text(currentAppLocalizations.vgReopenPayment),
@@ -349,6 +350,17 @@ class VogueslyPayment {
         ),
       ),
     );
+  }
+
+  /// [2026-09-18] 「打开支付」/ 外部支付页:launchUrl 喺冇装微信/支付宝或系统拒开时会抛,
+  /// 之前冇包 → 直接 crash 到 error zone。改成 toast 提示,用户改用扫码。
+  static Future<void> _launchPay(Uri uri) async {
+    try {
+      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!ok) globalState.showNotifier(currentAppLocalizations.vgOpenPaymentFailed);
+    } catch (_) {
+      globalState.showNotifier(currentAppLocalizations.vgOpenPaymentFailed);
+    }
   }
 
   static void _toast(BuildContext context, String msg) {

@@ -116,15 +116,14 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
     final columns = max(4 * ((dashboardState.contentWidth / 280).ceil()), 8);
     final spacing = 14.mAp;
     // 固定简洁主页:忽略旧 saved grid config,直接用消费者集。
-    // 两种桌面接管方式都在主页显式展示；文案区分「设备接管」与「兼容模式」，
-    // 圆圈状态只反映真正已启动的路径，避免用户在进阶页来回寻找开关。
+    // [2026-09-18 Sam 拍板减法] TUN / 系统代理两个工程开关唔再露喺主页
+    // (大圆圈 TUN-first 係唯一主控;两个开关喺「我的 → 进阶 → 网络设置」仍然有),
+    // 出站模式(规则/全部走代理)留低 —— 用户会用。
     const orderedWidgets = [
       DashboardWidget.vogueslyAccount,
       DashboardWidget.connectButton,
       DashboardWidget.currentRoute,
       DashboardWidget.outboundMode,
-      DashboardWidget.tunButton,
-      DashboardWidget.systemProxyButton,
       DashboardWidget.trafficUsage,
       DashboardWidget.networkSpeed,
     ];
