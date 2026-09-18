@@ -4914,6 +4914,46 @@ class AppLocalizations {
     );
   }
 
+  /// `No plan yet: start a free trial or buy a plan, then tap the circle to connect`
+  String get vgNoPlanBanner {
+    return Intl.message(
+      'No plan yet: start a free trial or buy a plan, then tap the circle to connect',
+      name: 'vgNoPlanBanner',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Your plan has expired. Renew to keep using it.`
+  String get vgPlanExpiredBanner {
+    return Intl.message(
+      'Your plan has expired. Renew to keep using it.',
+      name: 'vgPlanExpiredBanner',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Free trial`
+  String get vgTryFreeFirst {
+    return Intl.message(
+      'Free trial',
+      name: 'vgTryFreeFirst',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Renew`
+  String get vgRenewNow {
+    return Intl.message(
+      'Renew',
+      name: 'vgRenewNow',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Empty response, please try again`
   String get vgEmptyResponseRetry {
     return Intl.message(

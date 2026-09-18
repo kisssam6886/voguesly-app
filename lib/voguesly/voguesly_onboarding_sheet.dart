@@ -3,15 +3,12 @@ import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'voguesly_api.dart';
 import 'voguesly_auth.dart';
+import 'voguesly_noplan.dart' show vogueslyGoToShop;
 import 'voguesly_subscription.dart';
 
-/// 网页套餐页(免费测试 + ¥3.9 验证包均在此购买/查看)。
-// 现役 panel 域名(voguesly.com 已被 GFW 污染,见 kVogueslyHosts)。
-const String _kPlanUrl = 'https://ylink.im/#/shop';
 
 /// 全新用户引导:登入但未有套餐时弹出。
 /// 可领免费测试 → app 内一键开通(call /user/trial/apply)+自动导入订阅;
@@ -126,8 +123,11 @@ class _OnboardingBodyState extends ConsumerState<_OnboardingBody> {
     }
   }
 
+  /// [0.9.80] 购买改为去 app 内「购买套餐」tab(¥3.9 验证包同正式套餐都喺度,支付全程 app 内),
+  /// 唔再弹外部浏览器去网页(新用户喺浏览器要再登录一次,流失点)。
   Future<void> _openPlanWeb() async {
-    await launchUrl(Uri.parse(_kPlanUrl), mode: LaunchMode.externalApplication);
+    Navigator.of(context).maybePop();
+    vogueslyGoToShop();
   }
 
   @override

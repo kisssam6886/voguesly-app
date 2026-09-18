@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'voguesly_auth.dart';
+import 'voguesly_noplan.dart' show vogueslyUserLacksPlan;
 
 /// 记录「当前磁盘上 voguesly 订阅属于边个账号」的 owner 标记(= 导入时嘅 token)。
 /// restore 启动时凭此判定:profile 系咪真系属本账号,先决定可唔可以 skip 重导(防串号)。
@@ -99,6 +100,15 @@ Future<bool> _doImportVogueslySubscription() async {
     final auth = container.read(vogueslyAuthProvider.notifier);
     final token = container.read(vogueslyAuthProvider).token;
     final action = container.read(profilesActionProvider.notifier);
+    // [0.9.80] 明确判「未有套餐/已到期」:之前靠「订阅校验失败」间接推断(服务端畀无套餐用户嘅
+    //   配置有个空组,核心一定拒),对用户就变成一句冇头冇尾嘅「更新失败」。
+    //   用户对象可能係旧(刚买完/刚领试用)→ 先 refresh 一次再判。
+    if (vogueslyUserLacksPlan(container.read(vogueslyAuthProvider).user)) {
+      await auth.refreshUser();
+      if (vogueslyUserLacksPlan(container.read(vogueslyAuthProvider).user)) {
+        return false; // 唔係失败:未开通。引导由 VogueslyNoPlanBanner / vogueslyGuideIfNoPlan 负责
+      }
+    }
     // 1) 先拉成功新订阅(**先拉后删**):任何拉取/校验失败都唔会删走旧订阅,
     //    用户最多停喺「旧订阅(仍可用)」而非掉到「无订阅·点我开通」。
     //    串号防线唔靠呢度删——靠 owner token 绑定(restore-skip 校验 + 下面成功后删旧账号 profile)。

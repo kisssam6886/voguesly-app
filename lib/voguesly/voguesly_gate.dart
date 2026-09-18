@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../pages/pages.dart';
 import 'voguesly_auth.dart';
 import 'voguesly_login_page.dart';
+import 'voguesly_noplan.dart';
 import 'voguesly_subscription.dart';
 
 /// 登录门: 未登录 -> 登录页; 已登录 -> 自动导入订阅 + 进主界面。
@@ -47,6 +48,13 @@ class _VogueslyGateState extends ConsumerState<VogueslyGate> {
       return; // 确属同账号 + 现役域名订阅,免重载
     }
     final ok = await importVogueslySubscription();
+    // [0.9.80] 全新登录/注册入嚟而未有套餐 → 自动弹一次开通引导(免费试用一键开通 / 购买),
+    //   唔好等用户自己撞到「点我开通」。恢复登录(restored)唔弹,首页有常驻提示条。
+    if (!ok && !restored && mounted) {
+      Future.delayed(const Duration(milliseconds: 900), () {
+        if (mounted) vogueslyGuideIfNoPlan();
+      });
+    }
     // 导入失败(网络)→ 复位守卫,令下次 rebuild(如 resume/网络恢复/重测)可自动重导,
     // 唔会一次失败就永久停喺空订阅。失败态由 vogueslyImportFailedProvider 反映到连接圈。
     if (!ok) _importTried = false;

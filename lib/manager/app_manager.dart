@@ -8,6 +8,7 @@ import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/voguesly/voguesly_auth.dart';
 import 'package:fl_clash/state.dart';
 import 'package:flutter/foundation.dart';
+import 'package:fl_clash/voguesly/voguesly_noplan.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_clash/voguesly/voguesly_cs.dart';
@@ -268,6 +269,8 @@ class AppSidebarContainer extends ConsumerWidget {
         : await ref
             .read(profilesActionProvider.notifier)
             .refreshVogueslyProfile(vog.first, showLoading: true);
+    // [0.9.80] 未有套餐唔係「更新失败」:改弹开通引导
+    if (!ok && vogueslyGuideIfNoPlan()) return;
     globalState.showNotifier(ok ? currentAppLocalizations.vgSubscriptionUpdated : currentAppLocalizations.vgUpdateFailedRetry);
   }
 

@@ -13,6 +13,7 @@ import 'package:fl_clash/views/backup_and_restore.dart';
 import 'package:fl_clash/views/config/config.dart';
 import 'package:fl_clash/views/hotkey.dart';
 import 'package:fl_clash/widgets/widgets.dart';
+import 'package:fl_clash/voguesly/voguesly_noplan.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -871,6 +872,7 @@ class _SubscriptionEntry extends ConsumerWidget {
         .read(profilesActionProvider.notifier)
         .refreshVogueslyProfile(profile, showLoading: true);
     if (!context.mounted) return;
+    if (!ok && vogueslyGuideIfNoPlan(context)) return; // [0.9.80] 未有套餐 → 引导,唔弹「更新失败」
     globalState.showNotifier(ok ? currentAppLocalizations.vgSubscriptionUpdated : currentAppLocalizations.vgUpdateFailedRetry);
   }
 
@@ -947,9 +949,18 @@ class _SubscriptionEntry extends ConsumerWidget {
               children: [
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: (profile == null || updating)
+                    // [0.9.80] 未有订阅时唔好灰咗个掣:撳落去 = 开通引导(无套餐)或者重新导入
+                    onPressed: updating
                         ? null
-                        : () => _refresh(context, ref, profile),
+                        : (profile == null
+                            ? () async {
+                                if (vogueslyGuideIfNoPlan(context)) return;
+                                final ok = await importVogueslySubscription();
+                                globalState.showNotifier(ok
+                                    ? currentAppLocalizations.vgSubscriptionUpdated
+                                    : currentAppLocalizations.vgUpdateFailedRetry);
+                              }
+                            : () => _refresh(context, ref, profile)),
                     icon: updating
                         ? const SizedBox(
                             width: 18,
