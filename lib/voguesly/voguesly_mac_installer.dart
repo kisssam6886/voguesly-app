@@ -224,6 +224,10 @@ class MacInstaller {
       final mv = await _run('/bin/mv', [staging, target]);
       if (mv.exitCode != 0) return null;
       await _run('/usr/bin/xattr', ['-dr', 'com.apple.quarantine', target]);
+      // [2026-09-18] 装好即删安装包:0.9.79 实测两部 Mac 更新后 updates/ 都留低一个 106MB dmg。
+      try {
+        await File(dmgPath).delete();
+      } catch (_) {}
       commonPrint.log('[update] installed new bundle at $target');
       return target;
     } catch (e) {
@@ -346,4 +350,21 @@ class _MacUpdateSheetState extends State<MacUpdateSheet> {
     MacInstallStage.opening => currentAppLocalizations.vgPreparingInstall,
     MacInstallStage.error => currentAppLocalizations.vgDownloadFailed,
   };
+}
+
+/// 启动时清走上次更新留低嘅安装包(dmg / pkg / setup.exe)。
+/// Windows 安装程序运行期间删唔到自己,只能下次启动先清;macOS 自动装失败退返 Finder 路亦会留低。
+/// 只删 1 小时前嘅档,免得撞正下载紧。
+Future<void> cleanupVogueslyUpdateLeftovers() async {
+  try {
+    final dir = Directory(p.join(await appPath.homeDirPath, 'updates'));
+    if (!await dir.exists()) return;
+    final cutoff = DateTime.now().subtract(const Duration(hours: 1));
+    await for (final e in dir.list()) {
+      try {
+        final st = await e.stat();
+        if (st.modified.isBefore(cutoff)) await e.delete(recursive: true);
+      } catch (_) {}
+    }
+  } catch (_) {}
 }
