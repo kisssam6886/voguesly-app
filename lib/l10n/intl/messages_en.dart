@@ -1839,6 +1839,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Sign up and connect automatically",
     ),
     "vgSignUpFailed": MessageLookupByLibrary.simpleMessage("Sign-up failed"),
+    "vgCaptchaTitle": MessageLookupByLibrary.simpleMessage("Security check"),
+    "vgCaptchaRequired": MessageLookupByLibrary.simpleMessage("Please complete the security check first"),
+    "vgCaptchaUnavailable": MessageLookupByLibrary.simpleMessage("Verification service is temporarily unavailable, please try again later"),
     "vgSignUpWithGoogle": MessageLookupByLibrary.simpleMessage(
       "Sign up with Google",
     ),

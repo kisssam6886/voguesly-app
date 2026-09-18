@@ -4664,6 +4664,36 @@ class AppLocalizations {
     );
   }
 
+  /// `Security check`
+  String get vgCaptchaTitle {
+    return Intl.message(
+      'Security check',
+      name: 'vgCaptchaTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please complete the security check first`
+  String get vgCaptchaRequired {
+    return Intl.message(
+      'Please complete the security check first',
+      name: 'vgCaptchaRequired',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Verification service is temporarily unavailable, please try again later`
+  String get vgCaptchaUnavailable {
+    return Intl.message(
+      'Verification service is temporarily unavailable, please try again later',
+      name: 'vgCaptchaUnavailable',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Empty response, please try again`
   String get vgEmptyResponseRetry {
     return Intl.message(

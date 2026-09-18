@@ -1340,6 +1340,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgSignUp": MessageLookupByLibrary.simpleMessage("注册"),
     "vgSignUpAutoConnect": MessageLookupByLibrary.simpleMessage("注册即自动连接节点"),
     "vgSignUpFailed": MessageLookupByLibrary.simpleMessage("注册失败"),
+    "vgCaptchaTitle": MessageLookupByLibrary.simpleMessage("安全验证"),
+    "vgCaptchaRequired": MessageLookupByLibrary.simpleMessage("请先完成安全验证"),
+    "vgCaptchaUnavailable": MessageLookupByLibrary.simpleMessage("验证服务暂时不可用,请稍后再试"),
     "vgSignUpWithGoogle": MessageLookupByLibrary.simpleMessage("使用 Google 注册"),
     "vgSignedInLoadingPlan": MessageLookupByLibrary.simpleMessage(
       "账号已登录 · 套餐加载中…",

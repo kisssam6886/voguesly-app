@@ -13,6 +13,7 @@ import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'voguesly_auth.dart';
+import 'voguesly_captcha.dart';
 
 // Google 官方四色 G(彩色,比单色 g_mobiledata 明显)。
 const String _kGoogleG =
@@ -81,13 +82,36 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
     super.dispose();
   }
 
+  /// 后台开 Turnstile 时:注册 / 发邮箱码前先在 app 内嵌 webview 过一次人机验证,
+  /// 拿 token 随请求送出(2026-09-18 起唔再走免验证码逃生口,见 voguesly_captcha.dart)。
+  /// 返回 '' = 后台冇开验证码,直接请求;null = 用户取消 / 验证不可用(已提示),调用方 return。
+  Future<String?> _captchaTokenIfNeeded() async {
+    var config = ref.read(vogueslyClientConfigProvider).asData?.value;
+    // 配置未拉到(首屏网络抖)→ 即场再拉一次,唔好凭「未知」跳过验证码令后端一定拒
+    config ??= await ref.read(vogueslyApiProvider).getClientConfig();
+    if (!mounted) return null;
+    if (!config.isCaptcha) return '';
+    final siteKey = config.turnstileSiteKey ?? '';
+    if (config.captchaType != 'turnstile' || siteKey.isEmpty) return '';
+    final token = await showVogueslyCaptcha(context, siteKey: siteKey);
+    if (!mounted) return null;
+    if (token == null || token.isEmpty) {
+      _toast(currentAppLocalizations.vgCaptchaRequired);
+      return null;
+    }
+    return token;
+  }
+
   Future<void> _sendCode() async {
     if (!_email.text.contains('@')) {
       _toast(currentAppLocalizations.vgEnterValidEmailFirst);
       return;
     }
-    final ok =
-        await ref.read(vogueslyAuthProvider.notifier).sendEmailVerify(_email.text);
+    final captcha = await _captchaTokenIfNeeded();
+    if (captcha == null) return;
+    final ok = await ref.read(vogueslyAuthProvider.notifier).sendEmailVerify(
+        _email.text,
+        captchaToken: captcha.isEmpty ? null : captcha);
     if (!mounted) return;
     _toast(ok ? currentAppLocalizations.vgCodeSent : currentAppLocalizations.vgSendFailedRetry);
     if (ok) {
@@ -118,9 +142,14 @@ class _VogueslyLoginPageState extends ConsumerState<VogueslyLoginPage> {
     FocusScope.of(context).unfocus();
     if (await _offlineGuard()) return;
     final notifier = ref.read(vogueslyAuthProvider.notifier);
+    String? captcha = '';
+    if (_registerMode) {
+      captcha = await _captchaTokenIfNeeded();
+      if (captcha == null) return;
+    }
     final ok = _registerMode
-        ? await notifier.register(
-            _email.text, _password.text, _inviteCode.text, _emailCode.text)
+        ? await notifier.register(_email.text, _password.text, _inviteCode.text,
+            _emailCode.text, captcha.isEmpty ? null : captcha)
         : await notifier.login(_email.text, _password.text);
     if (!mounted) return;
     if (ok) {

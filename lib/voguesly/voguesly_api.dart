@@ -29,9 +29,14 @@ import 'package:dio/dio.dart';
 const List<String> kVogueslyHosts = [
   'https://ylink.im',           // 主(CF;后端 app_url/subscribe_url)
   'https://cp.samseah.qzz.io',  // CF 备①(独立 CF zone/IP)  — 实测 200×3
-  'https://w.ylink.im',         // CF 备②(同 zone 唔同子域) — 实测 200×3
-  'https://go.ylink.im',        // 非CF 直连 SG 逃生(异构路);唔稳,排最尾兜底
+  'https://cp.ylink.im',        // CF 备②(同 zone 唔同子域;2026-09-18 換走 w.ylink.im:佢係靜態站,/api 301 去 w.samzi.ccwu.cc)
+  'https://esc.ylink.uk',       // 非CF 直连 AWS东京 逃生口(2026-09-18 替换已封嘅 go.ylink.im/138.2.91.177)
 ];
+
+/// 逃生口(非 CF 直连):**2026-09-18 起唔再免验证码**。之前 AWS 反代硬塞 yl_esc cookie
+/// 令 register 跳过 Turnstile,开咗 5 分钟就入咗两个 bot(uid630/631);Sam 拍板改成
+/// 同网页一样过 Turnstile(见 voguesly_captcha.dart),逃生口只係多一条可达路径,唔係后门。
+const String kVogueslyEscapeHost = 'https://esc.ylink.uk';
 
 /// 易联(voguesly) 后端 XBoard API 服务。
 /// 登录 -> auth_data(令牌, 后续放 Authorization 头) -> 拉套餐/订阅。
@@ -66,10 +71,11 @@ class VogueslyApi {
     Map<String, dynamic>? headers,
     bool idempotent = true,
     bool retryOn401 = false,
+    List<String>? hosts, // 指定只轮呢批 host(逃生口专用);null = 用默认 _hosts
   }) async {
     Object? lastError;
     Response? soft401;
-    for (final host in _hosts) {
+    for (final host in (hosts ?? _hosts)) {
       try {
         final resp = await _dio.request(
           '$host/api/v1$path',
@@ -112,11 +118,14 @@ class VogueslyApi {
 
   /// 注册(XBoard 注册即自动登录, 同样返 auth_data)。
   /// emailCode: 后台 email_verify 开时必填(邮箱验证码)。
+  /// captchaToken: 后台 captcha_enable 开时必填(app 內嵌 Turnstile 拿到嘅 token,
+  ///   XBoard CaptchaService 读 `turnstile_token`)。
   Future<VogueslyAuthResult> register({
     required String email,
     required String password,
     String? inviteCode,
     String? emailCode,
+    String? captchaToken,
   }) {
     final extra = <String, dynamic>{};
     if (inviteCode != null && inviteCode.trim().isNotEmpty) {
@@ -124,6 +133,9 @@ class VogueslyApi {
     }
     if (emailCode != null && emailCode.trim().isNotEmpty) {
       extra['email_code'] = emailCode.trim();
+    }
+    if (captchaToken != null && captchaToken.isNotEmpty) {
+      extra['turnstile_token'] = captchaToken;
     }
     return _postAuth(
       '/passport/auth/register',
@@ -148,12 +160,17 @@ class VogueslyApi {
   }
 
   /// 发送邮箱验证码(后台 email_verify 开时,注册前调用)。返回是否成功。
-  Future<bool> sendEmailVerify(String email) async {
+  Future<bool> sendEmailVerify(String email, {String? captchaToken}) async {
     try {
       final resp = await _try(
         '/passport/comm/sendEmailVerify',
         method: 'POST',
-        data: {'email': email.trim()},
+        data: {
+          'email': email.trim(),
+          // 呢个端点同 register 一样过 CaptchaService
+          if (captchaToken != null && captchaToken.isNotEmpty)
+            'turnstile_token': captchaToken,
+        },
         idempotent: false, // 发邮件:已发出唔重试,免重复发码
       );
       final json = resp.data as Map<String, dynamic>?;
@@ -170,6 +187,7 @@ class VogueslyApi {
     String failMsg, {
     Map<String, dynamic>? extra,
     bool idempotent = true,
+    List<String>? hosts,
   }) async {
     try {
       final body = <String, dynamic>{
@@ -177,8 +195,8 @@ class VogueslyApi {
         'password': password,
       };
       if (extra != null) body.addAll(extra);
-      final resp =
-          await _try(path, method: 'POST', data: body, idempotent: idempotent);
+      final resp = await _try(path,
+          method: 'POST', data: body, idempotent: idempotent, hosts: hosts);
       final json = resp.data as Map<String, dynamic>?;
       if (resp.statusCode == 200 && json?['data'] != null) {
         final d = json!['data'] as Map<String, dynamic>;

@@ -105,6 +105,7 @@ class VogueslyAuthNotifier extends Notifier<VogueslyAuthState> {
     String password, [
     String? inviteCode,
     String? emailCode,
+    String? captchaToken,
   ]) =>
       _authenticate(
         () => _api.register(
@@ -112,6 +113,7 @@ class VogueslyAuthNotifier extends Notifier<VogueslyAuthState> {
           password: password,
           inviteCode: inviteCode,
           emailCode: emailCode,
+          captchaToken: captchaToken,
         ),
       );
 
@@ -220,7 +222,8 @@ class VogueslyAuthNotifier extends Notifier<VogueslyAuthState> {
   }
 
   /// 发送邮箱验证码(注册前,后台 email_verify 开时用)。
-  Future<bool> sendEmailVerify(String email) => _api.sendEmailVerify(email);
+  Future<bool> sendEmailVerify(String email, {String? captchaToken}) =>
+      _api.sendEmailVerify(email, captchaToken: captchaToken);
 
   void logout() {
     unawaited(_clearToken());
