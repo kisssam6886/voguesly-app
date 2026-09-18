@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:fl_clash/common/app_localizations.dart';
+import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/enum/enum.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -72,22 +74,35 @@ class _VogueslyCaptchaDialogState extends State<_VogueslyCaptchaDialog> {
     }
   }
 
+  String? _lastError; // 最后一次载入错误(显示喺失败文案后面,方便排查)
+
   void _initFlutterWebview() {
     try {
-      _ctrl = WebViewController()
+      final c = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..setBackgroundColor(Colors.transparent)
         ..addJavaScriptChannel('VogueslyCaptcha', onMessageReceived: (m) {
           _onMessage(m.message);
         })
         ..setNavigationDelegate(NavigationDelegate(
           onWebResourceError: (e) {
-            // 只对主文档载入失败换下一个 host;widget 内部资源错误由页面自己处理
-            if (e.isForMainFrame ?? true) _nextHost();
+            // ⚠️ 0.9.77 教训:呢度一定要收窄 ——
+            //   -999 = NSURLErrorCancelled(我哋自己 loadRequest 换 host 时旧请求被取消)
+            //   唔可以当失败,否则换一次 host 触发一次 cancelled 再换…一路换到 _failed。
+            if (e.errorCode == -999) return;
+            if (!(e.isForMainFrame ?? true)) return;
+            _lastError = '${e.errorCode} ${e.description}';
+            commonPrint.log('[captcha] host#$_hostIdx load error: $_lastError (${e.url})',
+                logLevel: LogLevel.warning);
+            _nextHost();
           },
-        ))
-        ..loadRequest(_pageUri(0));
-    } catch (_) {
+        ));
+      // ⚠️ 唔好 setBackgroundColor:wkwebview 实现会碰 scrollView,macOS 冇呢样嘢会直接抛
+      //   → 0.9.77 一开对话框就「验证服务暂时不可用」。页面自己透明底 + Dialog surface 色已经够。
+      _ctrl = c;
+      c.loadRequest(_pageUri(0));
+    } catch (e) {
+      _lastError = '$e';
+      commonPrint.log('[captcha] webview init failed: $e', logLevel: LogLevel.warning);
       _ctrl = null;
       if (mounted) setState(() => _failed = true);
     }
@@ -100,7 +115,11 @@ class _VogueslyCaptchaDialogState extends State<_VogueslyCaptchaDialog> {
       c.webMessage.listen((message) {
         _onMessage(message is String ? message : jsonEncode(message));
       });
-      c.onLoadError.listen((_) => _nextHost());
+      c.onLoadError.listen((err) {
+        _lastError = '$err';
+        commonPrint.log('[captcha] host#$_hostIdx load error: $err', logLevel: LogLevel.warning);
+        _nextHost();
+      });
       await c.loadUrl(_pageUri(0).toString());
       if (!mounted) {
         await c.dispose();
@@ -110,7 +129,9 @@ class _VogueslyCaptchaDialogState extends State<_VogueslyCaptchaDialog> {
         _win = c;
         _winReady = true;
       });
-    } catch (_) {
+    } catch (e) {
+      _lastError = '$e';
+      commonPrint.log('[captcha] WebView2 init failed: $e', logLevel: LogLevel.warning);
       if (mounted) setState(() => _failed = true);
     }
   }
@@ -134,6 +155,7 @@ class _VogueslyCaptchaDialogState extends State<_VogueslyCaptchaDialog> {
 
   void _nextHost() {
     if (_done || !mounted) return;
+    if (_failed) return;
     final next = _hostIdx + 1;
     if (next >= kVogueslyHosts.length) {
       setState(() => _failed = true);
@@ -187,6 +209,15 @@ class _VogueslyCaptchaDialogState extends State<_VogueslyCaptchaDialog> {
             Text(l.vgCaptchaUnavailable,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium),
+            if (_lastError != null) ...[
+              const SizedBox(height: 4),
+              Text(_lastError!,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            ],
             const SizedBox(height: 10),
             FilledButton.tonal(onPressed: _retryAll, child: Text(l.vgRetry)),
           ],

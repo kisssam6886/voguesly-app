@@ -84,8 +84,12 @@ class _ToolViewState extends ConsumerState<ToolsView> {
       const _SubscriptionEntry(),
       const _QuickActions(),
       const _AccountServices(),
-      // [2026-09-18 减法] 反馈(账号服务已有)删;日志 / 应用设置(12 个开关)收入「进阶」。
+      // ⚠️ [2026-09-18 Sam 明确要求] 反馈问题/上传日志 · 我的工单 · 查看日志 三项**必须留喺一级**,
+      //   係特登为小白设计:一键上传日志 → Sam 即时收到 TG 通知;工单未关时唔可以再上传,所以要有「我的工单」入口;
+      //   服务器出事时用户可以自己复制日志链接。唔准再收入「进阶」。只有「应用设置」(12 个开关)收入进阶。
+      const _FeedbackItem(),
       const _MyTicketsItem(),
+      const _LogsViewItem(),
       ..._getSettingList(),
       // 诊断项(请求/连接/资源)收入「进阶工具」子页,「我的」一级唔再露工程化菜单。
       ..._getOtherList(vm2.b),
@@ -269,7 +273,6 @@ class _AdvancedToolsView extends ConsumerWidget {
         ref.watch(moreToolsSelectorStateProvider).navigationItems;
     final items = <Widget>[
       const _SettingItem(), // 应用设置(12 个开关)—— 2026-09-18 由「我的」一级收落嚟
-      const _LogsViewItem(),
       const _ConfigItem(),
       const _BackupItem(),
       if (system.isDesktop) const _HotkeyItem(),
@@ -587,7 +590,6 @@ class _AccountServices extends StatelessWidget {
   }
 }
 
-// ignore: unused_element
 class _FeedbackItem extends StatelessWidget {
   const _FeedbackItem();
 
