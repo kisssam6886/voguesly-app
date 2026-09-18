@@ -102,7 +102,9 @@ class Migration {
     final appRaw = configMap['appSettingProps'];
     if (appRaw is Map) {
       final app = Map<String, Object?>.from(appRaw);
-      if (app['testUrl'] == legacyGstaticTestUrl) {
+      if (app['testUrl'] == legacyGstaticTestUrl ||
+          app['testUrl'] == legacyHttpCloudflareTestUrl) {
+        // 0.9.79:http cp.cloudflare 亦算旧默认,一并搬去 https(用户自己改过嘅唔郁)
         app['testUrl'] = defaultTestUrl;
         configMap['appSettingProps'] = app;
       }

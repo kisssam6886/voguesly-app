@@ -90,7 +90,10 @@ const maxLaptopWidth = 840;
 /// 拣 `cp.cloudflare.com` 嘅理由:唯一**两边都满足**嘅候选 —— 国内直连通(实测 385ms,
 /// 令 DIRECT 有真数字),境外出口又快又稳(HK 6ms / SG 10ms,anycast 多 IP,唔会撞单点烂路由)。
 /// 用 http 唔用 https:免 TLS 握手噪音,量到更接近纯 RTT(mihomo 上游默认都係 http 204)。
-const defaultTestUrl = 'http://cp.cloudflare.com/generate_204';
+// [2026-09-18 0.9.79] http → https:mihomo 源码明写 unified-delay 第二次 HEAD 用 HTTP 会被劫持/唔兼容而失败
+//   (adapter.go URLTest 嘅 log.Warnln),HTTPS 先稳。cp.cloudflare.com 係 anycast,每个出口都近。
+const defaultTestUrl = 'https://cp.cloudflare.com/generate_204';
+const legacyHttpCloudflareTestUrl = 'http://cp.cloudflare.com/generate_204';
 
 /// 旧默认值,只畀迁移逻辑认「呢个係我哋以前钉嘅默认」用,唔好再攞去测速。
 const legacyGstaticTestUrl = 'https://www.gstatic.com/generate_204';

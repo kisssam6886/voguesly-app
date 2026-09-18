@@ -6,6 +6,7 @@ import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/widgets/widgets.dart';
+import 'package:fl_clash/voguesly/voguesly_update_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -171,11 +172,18 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
                       },
                     ),
                   )
-                : Grid(
-                    crossAxisCount: columns,
-                    crossAxisSpacing: spacing,
-                    mainAxisSpacing: spacing,
-                    children: children,
+                : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // [0.9.79] 有新版本时嘅非模态 banner(稍后 / 一键更新)
+                      const VogueslyUpdateBanner(),
+                      Grid(
+                        crossAxisCount: columns,
+                        crossAxisSpacing: spacing,
+                        mainAxisSpacing: spacing,
+                        children: children,
+                      ),
+                    ],
                   ),
           ),
         ),

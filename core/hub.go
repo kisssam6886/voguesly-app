@@ -349,28 +349,29 @@ func handleGetExternalProvider(externalProviderName string) string {
 
 func handleUpdateGeoData(geoType string, geoName string, fn func(value string)) {
 	go func() {
-		path := constant.Path.Resolve(geoName)
+		// [mihomo v1.19.31] updater.Update*WithPath 已移除,改用无参版本(路径由 constant.Path 决定,同 app 数据目录一致)
+		_ = constant.Path.Resolve(geoName)
 		switch geoType {
 		case "MMDB":
-			err := updater.UpdateMMDBWithPath(path)
+			err := updater.UpdateMMDB()
 			if err != nil {
 				fn(err.Error())
 				return
 			}
 		case "ASN":
-			err := updater.UpdateASNWithPath(path)
+			err := updater.UpdateASN()
 			if err != nil {
 				fn(err.Error())
 				return
 			}
 		case "GEOIP":
-			err := updater.UpdateGeoIpWithPath(path)
+			err := updater.UpdateGeoIp()
 			if err != nil {
 				fn(err.Error())
 				return
 			}
 		case "GEOSITE":
-			err := updater.UpdateGeoSiteWithPath(path)
+			err := updater.UpdateGeoSite()
 			if err != nil {
 				fn(err.Error())
 				return

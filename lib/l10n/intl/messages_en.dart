@@ -1837,6 +1837,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Sign up and connect automatically",
     ),
     "vgSignUpFailed": MessageLookupByLibrary.simpleMessage("Sign-up failed"),
+    "vgUpdateLater": MessageLookupByLibrary.simpleMessage("Later"),
     "vgInstallingUpdate": MessageLookupByLibrary.simpleMessage("Installing the new version…"),
     "vgRelaunchingApp": MessageLookupByLibrary.simpleMessage("Installed. Relaunching Voguesly…"),
     "vgInstallFallbackFinder": MessageLookupByLibrary.simpleMessage("Automatic install failed; the installer has been opened instead. Drag Voguesly to Applications."),

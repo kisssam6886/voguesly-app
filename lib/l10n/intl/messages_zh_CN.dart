@@ -1338,6 +1338,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vgSignUp": MessageLookupByLibrary.simpleMessage("注册"),
     "vgSignUpAutoConnect": MessageLookupByLibrary.simpleMessage("注册即自动连接节点"),
     "vgSignUpFailed": MessageLookupByLibrary.simpleMessage("注册失败"),
+    "vgUpdateLater": MessageLookupByLibrary.simpleMessage("稍后"),
     "vgInstallingUpdate": MessageLookupByLibrary.simpleMessage("正在安装新版本…"),
     "vgRelaunchingApp": MessageLookupByLibrary.simpleMessage("安装完成，正在重新打开易联…"),
     "vgInstallFallbackFinder": MessageLookupByLibrary.simpleMessage("自动安装未成功，已改为打开安装包：请把 Voguesly 拖到「应用程序」"),

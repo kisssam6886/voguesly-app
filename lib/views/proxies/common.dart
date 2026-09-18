@@ -68,9 +68,36 @@ Future<void> proxyDelayTest(Proxy proxy, [String? testUrl]) async {
   ref
       .read(proxiesActionProvider.notifier)
       .setDelay(Delay(url: currentTestUrl, name: state.proxyName, value: 0));
+  var result = await coreController.getDelay(currentTestUrl, state.proxyName);
+  // [2026-09-18 0.9.79 Sam 拍板] Timeout 先自动再测一次先算「未连通」(同巡检脚本一致):
+  //   单次 timeout 好多时係冷握手/瞬时抖动,唔係节点死。
+  if ((result.value ?? -1) <= 0) {
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    result = await coreController.getDelay(currentTestUrl, state.proxyName);
+  }
   ref
       .read(proxiesActionProvider.notifier)
-      .setDelay(await coreController.getDelay(currentTestUrl, state.proxyName));
+      .setDelay(_smoothDelay(result));
+}
+
+/// [2026-09-18 0.9.79 Sam 拍板] 显示「最近 3 次 unified-delay 嘅中位数」而唔係最后一次:
+/// 单次数字受瞬时抖动影响大,中位数先反映真实体感。timeout 唔入样本,而且会清空样本
+/// (节点由通变死,唔应该仲显示旧嘅好数字)。样本只喺本次运行内保留。
+final Map<String, List<int>> _delaySamples = {};
+const int _kDelaySampleWindow = 3;
+
+Delay _smoothDelay(Delay latest) {
+  final key = '${latest.url}|${latest.name}';
+  final v = latest.value ?? -1;
+  if (v <= 0) {
+    _delaySamples.remove(key);
+    return latest;
+  }
+  final samples = (_delaySamples[key] ??= <int>[])..add(v);
+  if (samples.length > _kDelaySampleWindow) samples.removeAt(0);
+  final sorted = List<int>.of(samples)..sort();
+  final median = sorted[sorted.length ~/ 2];
+  return latest.copyWith(value: median);
 }
 
 /// 整组延迟测试嘅并发上限。

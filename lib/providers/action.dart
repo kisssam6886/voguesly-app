@@ -70,9 +70,10 @@ class CommonAction extends _$CommonAction {
   }
 
   Future<void> autoCheckUpdate() async {
-    if (!ref.read(appSettingProvider).autoCheckUpdate) return;
-    final res = await request.checkForUpdate();
-    checkUpdateResultHandle(data: res);
+    // [2026-09-18 0.9.79 Sam] 启动时唔再弹模态「发现新版本」打断用户:
+    //   有新版由 app_manager._silentCheckUpdate 写 provider → 主页顶 banner(稍后/一键更新)+ 侧栏高亮。
+    //   模态框只喺用户主动撳(manualCheckUpdate)先出。
+    return;
   }
 
   // 「我的」页版本号手动点检查:唔理「不再提示」开关,一定检查+一定显示结果

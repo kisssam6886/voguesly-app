@@ -4904,6 +4904,16 @@ class AppLocalizations {
     );
   }
 
+  /// `Later`
+  String get vgUpdateLater {
+    return Intl.message(
+      'Later',
+      name: 'vgUpdateLater',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Empty response, please try again`
   String get vgEmptyResponseRetry {
     return Intl.message(
